@@ -1451,7 +1451,12 @@ function initials(name) {
 }
 
 // ===== STATUS HELPERS =====
-function statusCategory(status) {
+function statusCategory(status, statusCategoryKey) {
+  if (statusCategoryKey) {
+    if (statusCategoryKey === 'done') return 'done';
+    if (statusCategoryKey === 'indeterminate') return 'inprogress';
+    return 'todo';
+  }
   const s = (status||'').toLowerCase();
   if (s.includes('done') || s.includes('완료') || s.includes('closed') || s.includes('resolved')) return 'done';
   if (s.includes('progress') || s.includes('review') || s.includes('진행') || s.includes('testing') || s.includes('in dev') || s.includes('개발')) return 'inprogress';
@@ -1461,7 +1466,7 @@ function statusLabel(cat) {
   return cat === 'done' ? '완료' : cat === 'inprogress' ? '진행 중' : '할 일';
 }
 function statusBadgeClass(status) {
-  const cat = statusCategory(status);
+  const cat = statusCategory(status, null);
   return cat === 'done' ? 'badge-done' : cat === 'inprogress' ? 'badge-inprogress' : 'badge-todo';
 }
 function priorityBadgeClass(priority) {
@@ -1527,18 +1532,16 @@ async function jiraFetch(path, params = {}) {
 
 async function fetchAllIssues(jql, fields) {
   const all = [];
-  let startAt = 0;
+  let nextPageToken = null;
   const maxResults = 100;
   while (true) {
-    const data = await jiraFetch('/rest/api/3/search/jql', {
-      jql,
-      startAt,
-      maxResults,
-      fields: fields.join(','),
-    });
+    const params = { jql, maxResults, fields: fields.join(',') };
+    if (nextPageToken) params.nextPageToken = nextPageToken;
+    const data = await jiraFetch('/rest/api/3/search/jql', params);
     all.push(...(data.issues || []));
-    if (data.isLast || !data.issues || data.issues.length === 0 || all.length >= 500) break;
-    startAt += data.issues.length;
+    if (data.isLast || !data.issues || data.issues.length === 0 || !data.nextPageToken) break;
+    nextPageToken = data.nextPageToken;
+    showLoading(`이슈 불러오는 중... ${all.length}개`);
   }
   return all;
 }
@@ -1709,7 +1712,7 @@ function updateStats(issues) {
   let total = issues.length, todo = 0, inprogress = 0, done = 0, overdue = 0;
   const now = new Date();
   for (const iss of issues) {
-    const cat = statusCategory(iss.fields?.status?.name || '');
+    const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
     if (cat === 'todo') todo++;
     else if (cat === 'inprogress') inprogress++;
     else if (cat === 'done') done++;
@@ -1754,7 +1757,7 @@ function renderCharts() {
   // --- Donut Chart ---
   let todo=0, inprog=0, done=0;
   for (const iss of issues) {
-    const cat = statusCategory(iss.fields?.status?.name || '');
+    const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
     if (cat === 'todo') todo++;
     else if (cat === 'inprogress') inprog++;
     else done++;
@@ -1845,7 +1848,7 @@ function renderCharts() {
     const pk = iss.fields?.project?.key || '?';
     const pn = iss.fields?.project?.name || pk;
     if (!projMap[pk]) projMap[pk] = { name: pn, todo: 0, inprogress: 0, done: 0 };
-    const cat = statusCategory(iss.fields?.status?.name || '');
+    const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
     projMap[pk][cat]++;
   }
   const projEntries = Object.entries(projMap).sort((a,b)=>(b[1].todo+b[1].inprogress+b[1].done)-(a[1].todo+a[1].inprogress+a[1].done)).slice(0,12);
@@ -1906,7 +1909,7 @@ function renderProjects(issues) {
     const pk = iss.fields?.project?.key || '?';
     const pn = iss.fields?.project?.name || pk;
     if (!projMap[pk]) projMap[pk] = { name: pn, key: pk, todo: 0, inprogress: 0, done: 0, total: 0 };
-    const cat = statusCategory(iss.fields?.status?.name || '');
+    const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
     projMap[pk][cat]++;
     projMap[pk].total++;
   }
@@ -1966,7 +1969,7 @@ function renderTeam(issues) {
     const name = a?.displayName || '미배정';
     const accountId = a?.accountId || 'unassigned';
     if (!teamMap[accountId]) teamMap[accountId] = { name, accountId, todo: 0, inprogress: 0, done: 0, total: 0 };
-    const cat = statusCategory(iss.fields?.status?.name || '');
+    const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
     teamMap[accountId][cat]++;
     teamMap[accountId].total++;
   }
