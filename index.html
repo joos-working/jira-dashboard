@@ -1681,7 +1681,7 @@ async function loadDashboard() {
   showLoading('JIRA 데이터를 불러오는 중...');
   try {
     const days = state.dateRange;
-    const jql = `ORDER BY updated DESC`;
+    const jql = `project in (ALS, ASP, BEG, CAMP, KPD, WP, RHD) ORDER BY updated DESC`;
     const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate'];
 
     showLoading(`이슈 목록 조회 중 (최근 ${days}일)...`);
