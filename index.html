@@ -1019,8 +1019,11 @@
     .empty-state span { font-size: 12px; color: var(--text4); margin-top: 6px; display: block; }
 
     /* ===== RESPONSIVE ===== */
+    @media (max-width: 1400px) {
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
+    }
     @media (max-width: 1200px) {
-      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+      .stats-grid { grid-template-columns: repeat(4, 1fr); }
       .charts-row-3 { grid-template-columns: 1fr 1fr; }
     }
     @media (max-width: 900px) {
@@ -1059,6 +1062,66 @@
       background: var(--surface2);
     }
     .priority-icon { font-size: 13px; }
+
+    /* ===== GAUGE (circular completion) ===== */
+    .gauge-wrap { display:flex; align-items:center; justify-content:center; margin:12px 0 6px; }
+    .gauge-svg { width:80px; height:80px; }
+    .gauge-track { fill:none; stroke:var(--surface3); stroke-width:8; }
+    .gauge-fill { fill:none; stroke-width:8; stroke-linecap:round; transition:stroke-dashoffset 0.8s cubic-bezier(0.34,1.56,0.64,1); transform:rotate(-90deg); transform-origin:50% 50%; }
+    .gauge-text { font-size:13px; font-weight:800; fill:var(--text); text-anchor:middle; dominant-baseline:middle; }
+
+    /* ===== BOTTLENECK / OLDEST ISSUES ===== */
+    .bottleneck-table { width:100%; border-collapse:collapse; font-size:12px; }
+    .bottleneck-table th { padding:8px 10px; background:var(--surface2); color:var(--text3); font-weight:600; text-transform:uppercase; font-size:10px; letter-spacing:.05em; border-bottom:1px solid var(--border); text-align:left; }
+    .bottleneck-table td { padding:9px 10px; border-bottom:1px solid var(--border); vertical-align:middle; color:var(--text2); }
+    .bottleneck-table tr:last-child td { border-bottom:none; }
+    .bottleneck-table tr:hover td { background:var(--surface2); }
+    .days-badge { display:inline-block; padding:2px 7px; border-radius:var(--radius-full); font-size:11px; font-weight:700; }
+    .days-badge.ok { background:var(--surface3); color:var(--text3); }
+    .days-badge.warn { background:var(--warning-light); color:var(--warning); }
+    .days-badge.crit { background:var(--danger-light); color:var(--danger); }
+
+    /* ===== DUE SOON ===== */
+    .due-soon-list { display:flex; flex-direction:column; gap:8px; }
+    .due-soon-item { display:flex; align-items:center; gap:12px; padding:10px 14px; border-radius:var(--radius-sm); background:var(--warning-light); border-left:3px solid var(--warning); }
+    .due-soon-item.overdue { background:var(--danger-light); border-left-color:var(--danger); }
+    .due-soon-key { font-size:11px; font-weight:700; color:var(--primary); text-decoration:none; flex-shrink:0; min-width:68px; }
+    .due-soon-key:hover { text-decoration:underline; }
+    .due-soon-summary { flex:1; font-size:12px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-weight:500; }
+    .due-soon-date { font-size:11px; font-weight:600; color:var(--warning); flex-shrink:0; }
+    .due-soon-item.overdue .due-soon-date { color:var(--danger); }
+
+    /* ===== MY ISSUES TAB ===== */
+    .my-stats-row { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:20px; }
+    .my-stat-card { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:16px; text-align:center; box-shadow:var(--shadow-sm); }
+    .my-stat-value { font-size:28px; font-weight:800; line-height:1; }
+    .my-stat-label { font-size:11px; color:var(--text3); margin-top:6px; font-weight:600; text-transform:uppercase; letter-spacing:.05em; }
+    .my-group { margin-bottom:20px; }
+    .my-group-title { font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); margin-bottom:10px; display:flex; align-items:center; gap:8px; }
+    .my-group-title .count-chip { background:var(--surface3); color:var(--text2); padding:1px 7px; border-radius:var(--radius-full); font-size:11px; }
+    .my-issue-row { display:flex; align-items:center; gap:10px; padding:9px 12px; border-radius:var(--radius-sm); background:var(--surface); border:1px solid var(--border); margin-bottom:6px; transition:all var(--transition); }
+    .my-issue-row:hover { border-color:var(--primary-mid); box-shadow:var(--shadow-sm); }
+    .my-issue-row.overdue { border-left:3px solid var(--danger); background:var(--danger-light); }
+    .my-issue-key { font-size:11px; font-weight:700; color:var(--primary); text-decoration:none; min-width:70px; flex-shrink:0; }
+    .my-issue-key:hover { text-decoration:underline; }
+    .my-issue-summary { flex:1; font-size:12px; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .my-issue-meta { display:flex; align-items:center; gap:6px; flex-shrink:0; }
+    .overdue-tag { font-size:10px; font-weight:700; background:var(--danger); color:#fff; padding:1px 6px; border-radius:var(--radius-full); }
+
+    /* ===== TREND TAB ===== */
+    .trend-chart-wrap { position:relative; }
+    .trend-chart-wrap canvas { max-height:260px; }
+
+    /* ===== LABEL CLOUD ===== */
+    .label-cloud { display:flex; flex-wrap:wrap; gap:8px; padding:4px 0; }
+    .label-chip { display:inline-flex; align-items:center; gap:4px; padding:4px 10px; border-radius:var(--radius-full); font-size:12px; font-weight:600; background:var(--primary-light); color:var(--primary); border:1px solid var(--primary-mid); cursor:pointer; transition:all var(--transition); }
+    .label-chip:hover { background:var(--primary); color:#fff; }
+    .label-chip .lc-count { font-size:10px; background:rgba(0,0,0,.12); border-radius:var(--radius-full); padding:1px 5px; }
+
+    /* ===== STATS GRID EXTENDED ===== */
+    .stats-grid-7 { grid-template-columns: repeat(7, 1fr); }
+    @media (max-width:1400px) { .stats-grid-7 { grid-template-columns:repeat(4,1fr); } }
+    @media (max-width:900px) { .stats-grid-7 { grid-template-columns:repeat(2,1fr); } }
   </style>
 </head>
 <body>
@@ -1165,6 +1228,14 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
         이슈
       </button>
+      <button class="nav-tab" data-tab="trend" onclick="switchTab('trend')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+        트렌드
+      </button>
+      <button class="nav-tab" data-tab="myissues" onclick="switchTab('myissues')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        내 이슈
+      </button>
     </nav>
 
     <div style="flex:1"></div>
@@ -1205,7 +1276,7 @@
     <!-- ===== 개요 탭 ===== -->
     <div class="tab-panel active" id="tab-overview">
       <!-- Stat Cards -->
-      <div class="stats-grid">
+      <div class="stats-grid stats-grid-7">
         <div class="stat-card total">
           <div class="stat-card-header">
             <span class="stat-card-label">전체 이슈</span>
@@ -1255,6 +1326,26 @@
           </div>
           <div class="stat-card-value" id="stat-overdue">—</div>
           <div class="stat-card-change text-danger">기한 초과 이슈</div>
+        </div>
+        <div class="stat-card" style="--card-color:var(--success);">
+          <div class="stat-card-header">
+            <span class="stat-card-label">이번 주 완료</span>
+            <div class="stat-card-icon" style="background:var(--success-light);color:var(--success);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-week-done" style="color:var(--success);">—</div>
+          <div class="stat-card-change text-muted">이번 주 해결된 이슈</div>
+        </div>
+        <div class="stat-card" style="--card-color:var(--purple);">
+          <div class="stat-card-header">
+            <span class="stat-card-label">이번 주 생성</span>
+            <div class="stat-card-icon" style="background:var(--purple-light);color:var(--purple);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-week-created" style="color:var(--purple);">—</div>
+          <div class="stat-card-change text-muted">이번 주 생성된 이슈</div>
         </div>
       </div>
 
@@ -1311,6 +1402,49 @@
         </div>
       </div>
 
+      <!-- Due Soon + Bottleneck row -->
+      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
+        <!-- 마감 임박 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">⚠️ 마감 임박 (7일 이내)</span>
+            <span class="chip text-muted" id="due-soon-count">0건</span>
+          </div>
+          <div class="card-body" style="padding-top:12px;">
+            <div id="due-soon-list" class="due-soon-list">
+              <div class="empty-state" style="padding:20px 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>마감 임박 이슈 없음</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- 병목 분석 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🔴 병목 분석 (오래된 미완료 이슈)</span>
+            <span class="chip text-muted">상위 10건</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="bottleneck-wrap">
+              <div class="empty-state" style="padding:20px 0;"><p>데이터 없음</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Avg Resolution Time -->
+      <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📊 프로젝트별 평균 처리 시간 (완료 이슈)</span>
+            <span class="chip text-muted" id="avg-resolution-subtitle"></span>
+          </div>
+          <div class="card-body">
+            <div class="trend-chart-wrap">
+              <canvas id="chart-avg-resolution" style="max-height:200px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Activity -->
       <div class="card">
         <div class="card-header">
@@ -1340,6 +1474,34 @@
         <div class="empty-state" style="grid-column:1/-1;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
           <p>데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    </div>
+
+      <!-- Label/Component Distribution -->
+      <div style="margin-top:20px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">레이블 분포</span>
+            <span class="chip text-muted" id="label-count-chip"></span>
+          </div>
+          <div class="card-body">
+            <div id="label-cloud" class="label-cloud">
+              <span class="text-muted text-sm">데이터를 불러오는 중...</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">레이블별 이슈 수</span>
+          </div>
+          <div class="card-body">
+            <div class="trend-chart-wrap">
+              <canvas id="chart-labels" style="max-height:220px;"></canvas>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -1407,6 +1569,67 @@
           <div class="pagination-info" id="pagination-info"></div>
           <div class="pagination-controls" id="pagination-controls"></div>
         </div>
+      </div>
+    </div>
+
+    <!-- ===== 트렌드 탭 ===== -->
+    <div class="tab-panel" id="tab-trend">
+      <div class="section-header">
+        <div>
+          <div class="section-title">트렌드 분석</div>
+          <div class="section-subtitle">주간/월별 이슈 생성 및 완료 추이</div>
+        </div>
+      </div>
+      <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">주간 이슈 생성 vs 완료 (최근 12주)</span>
+          </div>
+          <div class="card-body">
+            <div class="trend-chart-wrap">
+              <canvas id="chart-weekly-trend" style="max-height:260px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">월별 트렌드</span>
+          </div>
+          <div class="card-body">
+            <div class="trend-chart-wrap">
+              <canvas id="chart-monthly-trend" style="max-height:260px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 내 이슈 탭 ===== -->
+    <div class="tab-panel" id="tab-myissues">
+      <div class="section-header">
+        <div>
+          <div class="section-title">내 이슈</div>
+          <div class="section-subtitle" id="my-issues-subtitle">내가 담당한 이슈 목록</div>
+        </div>
+      </div>
+      <div class="my-stats-row">
+        <div class="my-stat-card">
+          <div class="my-stat-value" id="my-stat-todo" style="color:var(--text3);">—</div>
+          <div class="my-stat-label">할 일</div>
+        </div>
+        <div class="my-stat-card">
+          <div class="my-stat-value" id="my-stat-inprogress" style="color:var(--info);">—</div>
+          <div class="my-stat-label">진행 중</div>
+        </div>
+        <div class="my-stat-card">
+          <div class="my-stat-value" id="my-stat-done" style="color:var(--success);">—</div>
+          <div class="my-stat-label">완료</div>
+        </div>
+      </div>
+      <div id="my-issues-groups">
+        <div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>로그인 후 내 이슈를 확인하세요</p></div>
       </div>
     </div>
 
@@ -1604,7 +1827,12 @@ function toggleTheme() {
   localStorage.setItem(THEME_KEY, newTheme);
   updateThemeIcon(newTheme);
   // redraw charts with new colors
-  if (state.issues.length) renderCharts();
+  if (state.issues.length) {
+    renderCharts();
+    renderAvgResolution(state.issues);
+    renderTrendCharts(state.issues);
+    renderLabelCloud(state.issues);
+  }
 }
 function updateThemeIcon(theme) {
   const icon = document.getElementById('theme-icon');
@@ -1632,6 +1860,13 @@ function showApp() {
 function switchTab(tab) {
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+  // lazy render trend charts on first visit
+  if (tab === 'trend' && state.issues.length && !state.charts.weeklyTrend) {
+    renderTrendCharts(state.issues);
+  }
+  if (tab === 'myissues' && state.issues.length) {
+    renderMyIssues(state.issues);
+  }
 }
 
 // ===== DATE RANGE =====
@@ -1682,7 +1917,7 @@ async function loadDashboard() {
   try {
     const days = state.dateRange;
     const jql = `project in (ALS, ASP, BEG, CAMP, KPD, WP, RHD) AND issuetype != Epic ORDER BY updated DESC`;
-    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate'];
+    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components'];
 
     showLoading(`이슈 목록 조회 중 (최근 ${days}일)...`);
     const issues = await fetchAllIssues(jql, fields);
@@ -1693,6 +1928,12 @@ async function loadDashboard() {
     renderActivityList(issues);
     renderProjects(issues);
     renderTeam(issues);
+    renderBottleneck(issues);
+    renderDueSoon(issues);
+    renderAvgResolution(issues);
+    renderTrendCharts(issues);
+    renderLabelCloud(issues);
+    renderMyIssues(issues);
     populateFilters(issues);
     state.filteredIssues = [...issues];
     state.currentPage = 1;
@@ -1711,20 +1952,31 @@ async function loadDashboard() {
 function updateStats(issues) {
   let total = issues.length, todo = 0, inprogress = 0, done = 0, overdue = 0;
   const now = new Date();
+  // Start of this week (Monday)
+  const weekStart = new Date(now);
+  weekStart.setHours(0,0,0,0);
+  weekStart.setDate(now.getDate() - ((now.getDay()+6)%7));
+  let weekDone = 0, weekCreated = 0;
   for (const iss of issues) {
     const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
     if (cat === 'todo') todo++;
     else if (cat === 'inprogress') inprogress++;
     else if (cat === 'done') done++;
-    // overdue: has duedate, not done, past due
     const due = iss.fields?.duedate;
     if (due && cat !== 'done' && new Date(due) < now) overdue++;
+    // weekly stats
+    const rd = iss.fields?.resolutiondate;
+    if (rd && new Date(rd) >= weekStart) weekDone++;
+    const cr = iss.fields?.created;
+    if (cr && new Date(cr) >= weekStart) weekCreated++;
   }
   document.getElementById('stat-total').textContent = total.toLocaleString();
   document.getElementById('stat-todo').textContent = todo.toLocaleString();
   document.getElementById('stat-inprogress').textContent = inprogress.toLocaleString();
   document.getElementById('stat-done').textContent = done.toLocaleString();
   document.getElementById('stat-overdue').textContent = overdue.toLocaleString();
+  document.getElementById('stat-week-done').textContent = weekDone.toLocaleString();
+  document.getElementById('stat-week-created').textContent = weekCreated.toLocaleString();
   const pct = total > 0 ? Math.round(done/total*100) : 0;
   document.getElementById('stat-done-pct').textContent = `완료율 ${pct}%`;
 }
@@ -1774,9 +2026,20 @@ function renderCharts() {
     options: {
       ...baseOpts,
       cutout: '68%',
+      animation: { animateRotate: true, duration: 600 },
       plugins: { legend: { display: false }, tooltip: {
         callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}개 (${Math.round(ctx.raw/total*100)}%)` }
       }},
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const catMap = ['todo','inprogress','done'];
+        const cat = catMap[els[0].index];
+        switchTab('issues');
+        // map cat back to a status filter value by finding matching status
+        const statusNames = [...new Set(state.issues.map(i=>i.fields?.status?.name).filter(Boolean))];
+        const match = statusNames.find(s => statusCategory(s, null) === cat);
+        if (match) { document.getElementById('filter-status').value = match; filterIssues(); }
+      }
     }
   });
   // Donut legend
@@ -1808,11 +2071,18 @@ function renderCharts() {
     },
     options: {
       ...baseOpts, indexAxis: 'y',
+      animation: { duration: 600 },
       scales: {
         x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
         y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } }
       },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}개` } } }
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}개` } } },
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const typeName = typeEntries[els[0].index][0];
+        switchTab('issues');
+        document.getElementById('filter-type').value = typeName; filterIssues();
+      }
     }
   });
 
@@ -1834,11 +2104,18 @@ function renderCharts() {
     },
     options: {
       ...baseOpts,
+      animation: { duration: 600 },
       scales: {
         x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
         y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } }
       },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}개` } } }
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}개` } } },
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const prioName = prioOrder[els[0].index];
+        switchTab('issues');
+        document.getElementById('filter-priority').value = prioName; filterIssues();
+      }
     }
   });
 
@@ -1864,13 +2141,21 @@ function renderCharts() {
       ]
     },
     options: {
-      ...baseOpts, scales: {
+      ...baseOpts,
+      animation: { duration: 600 },
+      scales: {
         x: { stacked: true, grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
         y: { stacked: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } }
       },
       plugins: {
         legend: { display: true, position: 'top', align: 'end', labels: { color: legendColor, font: { size: 11 }, boxWidth: 12, padding: 16 } },
         tooltip: { mode: 'index', intersect: false }
+      },
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const projKey = projEntries[els[0].index][0];
+        switchTab('issues');
+        document.getElementById('filter-project').value = projKey; filterIssues();
       }
     }
   });
@@ -1924,12 +2209,26 @@ function renderProjects(issues) {
     const pct = p.total > 0 ? Math.round(p.done/p.total*100) : 0;
     const color = projectColor(i);
     const letter = p.key.slice(0,2);
+    // Gauge: circle circumference for r=32 is ~201
+    const r = 32, circ = 2 * Math.PI * r;
+    const dashOffset = circ - (pct/100)*circ;
+    const gaugeColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--info)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
     return `<div class="project-card" onclick="filterByProject('${escHtml(p.key)}')">
       <div class="project-card-header">
         <div class="project-icon" style="background:${color}">${letter}</div>
         <div class="project-info">
           <div class="project-name">${escHtml(p.name)}</div>
           <div class="project-key">${escHtml(p.key)}</div>
+        </div>
+        <div class="gauge-wrap" style="margin:0;flex-shrink:0;">
+          <svg class="gauge-svg" viewBox="0 0 80 80">
+            <circle class="gauge-track" cx="40" cy="40" r="${r}"/>
+            <circle class="gauge-fill" cx="40" cy="40" r="${r}"
+              stroke="${gaugeColor}"
+              stroke-dasharray="${circ.toFixed(1)}"
+              stroke-dashoffset="${dashOffset.toFixed(1)}"/>
+            <text class="gauge-text" x="40" y="40">${pct}%</text>
+          </svg>
         </div>
       </div>
       <div class="project-stats">
@@ -2168,6 +2467,329 @@ function goPage(p) {
   state.currentPage = p;
   renderIssuesTable();
   document.getElementById('tab-issues').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== BOTTLENECK ANALYSIS =====
+function renderBottleneck(issues) {
+  const now = new Date();
+  const unresolved = issues
+    .filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done')
+    .map(i => {
+      const created = new Date(i.fields?.created||now);
+      const daysOpen = Math.floor((now - created) / 86400000);
+      return { ...i, daysOpen };
+    })
+    .sort((a,b) => a.daysOpen - b.daysOpen ? b.daysOpen - a.daysOpen : 0)
+    .slice(0,10);
+
+  const wrap = document.getElementById('bottleneck-wrap');
+  if (!unresolved.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:20px 0;"><p>미완료 이슈 없음</p></div>`;
+    return;
+  }
+  wrap.innerHTML = `<div style="overflow-x:auto;"><table class="bottleneck-table">
+    <thead><tr><th>키</th><th>요약</th><th>프로젝트</th><th>경과일</th><th>담당자</th></tr></thead>
+    <tbody>${unresolved.map(i => {
+      const f = i.fields||{};
+      const key = i.key||'';
+      const summary = f.summary||'(제목 없음)';
+      const proj = f.project?.key||'';
+      const assignee = f.assignee?.displayName||'미배정';
+      const d = i.daysOpen;
+      const cls = d >= 60 ? 'crit' : d >= 30 ? 'warn' : 'ok';
+      const url = `${JIRA_BROWSE}/browse/${key}`;
+      return `<tr>
+        <td><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>
+        <td><div class="issue-summary" style="max-width:220px;" title="${escHtml(summary)}">${escHtml(summary)}</div></td>
+        <td><span class="chip">${escHtml(proj)}</span></td>
+        <td><span class="days-badge ${cls}">${d}일</span></td>
+        <td style="font-size:12px;">${escHtml(assignee)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+// ===== DUE SOON =====
+function renderDueSoon(issues) {
+  const now = new Date();
+  const in7 = new Date(now.getTime() + 7*86400000);
+  const dueSoon = issues
+    .filter(i => {
+      const due = i.fields?.duedate;
+      if (!due) return false;
+      const dueDate = new Date(due);
+      const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
+      return cat !== 'done' && dueDate <= in7;
+    })
+    .sort((a,b) => new Date(a.fields.duedate) - new Date(b.fields.duedate));
+
+  const el = document.getElementById('due-soon-list');
+  const countEl = document.getElementById('due-soon-count');
+  countEl.textContent = `${dueSoon.length}건`;
+  if (!dueSoon.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>마감 임박 이슈 없음</p></div>`;
+    return;
+  }
+  el.innerHTML = dueSoon.map(i => {
+    const f = i.fields||{};
+    const key = i.key||'';
+    const summary = f.summary||'(제목 없음)';
+    const due = new Date(f.duedate);
+    const isOverdue = due < now;
+    const url = `${JIRA_BROWSE}/browse/${key}`;
+    const daysLeft = Math.ceil((due - now) / 86400000);
+    const dueLabel = isOverdue ? `${Math.abs(daysLeft)}일 초과` : daysLeft === 0 ? '오늘 마감' : `${daysLeft}일 후`;
+    return `<div class="due-soon-item${isOverdue?' overdue':''}">
+      <a class="due-soon-key" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a>
+      <div class="due-soon-summary" title="${escHtml(summary)}">${escHtml(summary)}</div>
+      <span class="due-soon-date">${dueLabel}</span>
+    </div>`;
+  }).join('');
+}
+
+// ===== AVG RESOLUTION TIME =====
+function renderAvgResolution(issues) {
+  const { gridColor, tickColor } = getChartColors();
+  const projMap = {};
+  for (const iss of issues) {
+    const pk = iss.fields?.project?.key||'?';
+    const cr = iss.fields?.created;
+    const rd = iss.fields?.resolutiondate;
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    if (cat !== 'done' || !cr || !rd) continue;
+    const days = (new Date(rd) - new Date(cr)) / 86400000;
+    if (!projMap[pk]) projMap[pk] = { sum:0, count:0 };
+    projMap[pk].sum += days;
+    projMap[pk].count++;
+  }
+  const entries = Object.entries(projMap)
+    .map(([k,v]) => ({ key:k, avg: v.count>0 ? Math.round(v.sum/v.count) : 0 }))
+    .filter(e => e.avg > 0)
+    .sort((a,b) => b.avg - a.avg);
+
+  const subtitle = document.getElementById('avg-resolution-subtitle');
+  subtitle.textContent = entries.length ? `${entries.length}개 프로젝트` : '완료된 이슈 없음';
+
+  if (state.charts.avgResolution) state.charts.avgResolution.destroy();
+  if (!entries.length) return;
+  const colors = entries.map(e => e.avg > 30 ? '#de350b' : e.avg > 14 ? '#ff991f' : '#36b37e');
+  state.charts.avgResolution = new Chart(document.getElementById('chart-avg-resolution'), {
+    type: 'bar',
+    data: {
+      labels: entries.map(e=>e.key),
+      datasets: [{ label:'평균 처리일', data: entries.map(e=>e.avg), backgroundColor: colors, borderRadius:5, borderSkipped:false }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      indexAxis: 'y',
+      animation: { duration:600 },
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}}, title:{display:true,text:'일(days)',color:tickColor,font:{size:11}} },
+        y: { grid:{display:false}, ticks:{color:tickColor,font:{size:11}} }
+      },
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`평균 ${ctx.raw}일` } } }
+    }
+  });
+}
+
+// ===== TREND CHARTS =====
+function renderTrendCharts(issues) {
+  const { gridColor, tickColor, legendColor } = getChartColors();
+  const now = new Date();
+
+  // Weekly: last 12 weeks
+  const weeks = [];
+  for (let w=11; w>=0; w--) {
+    const end = new Date(now);
+    end.setDate(end.getDate() - w*7);
+    end.setHours(23,59,59,999);
+    const start = new Date(end);
+    start.setDate(start.getDate() - 6);
+    start.setHours(0,0,0,0);
+    const label = `${(start.getMonth()+1)}/${start.getDate()}`;
+    weeks.push({ label, start, end, created:0, done:0 });
+  }
+  for (const iss of issues) {
+    const cr = iss.fields?.created ? new Date(iss.fields.created) : null;
+    const rd = iss.fields?.resolutiondate ? new Date(iss.fields.resolutiondate) : null;
+    for (const wk of weeks) {
+      if (cr && cr >= wk.start && cr <= wk.end) wk.created++;
+      if (rd && rd >= wk.start && rd <= wk.end) wk.done++;
+    }
+  }
+
+  if (state.charts.weeklyTrend) state.charts.weeklyTrend.destroy();
+  state.charts.weeklyTrend = new Chart(document.getElementById('chart-weekly-trend'), {
+    type: 'line',
+    data: {
+      labels: weeks.map(w=>w.label),
+      datasets: [
+        { label:'생성', data: weeks.map(w=>w.created), borderColor:'#6554c0', backgroundColor:'rgba(101,84,192,0.12)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6 },
+        { label:'완료', data: weeks.map(w=>w.done), borderColor:'#36b37e', backgroundColor:'rgba(54,179,126,0.12)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6 }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      animation:{ duration:700 },
+      scales: {
+        x: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}} },
+        y: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}}, beginAtZero:true }
+      },
+      plugins: { legend:{ display:true, labels:{color:legendColor,font:{size:11},boxWidth:12} }, tooltip:{ mode:'index', intersect:false } }
+    }
+  });
+
+  // Monthly: last 12 months
+  const months = [];
+  for (let m=11; m>=0; m--) {
+    const d = new Date(now.getFullYear(), now.getMonth()-m, 1);
+    months.push({ year:d.getFullYear(), month:d.getMonth(), label:`${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}`, created:0, done:0 });
+  }
+  for (const iss of issues) {
+    const cr = iss.fields?.created ? new Date(iss.fields.created) : null;
+    const rd = iss.fields?.resolutiondate ? new Date(iss.fields.resolutiondate) : null;
+    for (const mo of months) {
+      if (cr && cr.getFullYear()===mo.year && cr.getMonth()===mo.month) mo.created++;
+      if (rd && rd.getFullYear()===mo.year && rd.getMonth()===mo.month) mo.done++;
+    }
+  }
+
+  if (state.charts.monthlyTrend) state.charts.monthlyTrend.destroy();
+  state.charts.monthlyTrend = new Chart(document.getElementById('chart-monthly-trend'), {
+    type: 'bar',
+    data: {
+      labels: months.map(m=>m.label),
+      datasets: [
+        { label:'생성', data: months.map(m=>m.created), backgroundColor:'rgba(101,84,192,0.75)', borderRadius:4, borderSkipped:false },
+        { label:'완료', data: months.map(m=>m.done), backgroundColor:'rgba(54,179,126,0.75)', borderRadius:4, borderSkipped:false }
+      ]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      animation:{ duration:700 },
+      scales: {
+        x: { grid:{display:false}, ticks:{color:tickColor,font:{size:11}} },
+        y: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}}, beginAtZero:true }
+      },
+      plugins: { legend:{ display:true, labels:{color:legendColor,font:{size:11},boxWidth:12} }, tooltip:{ mode:'index', intersect:false } }
+    }
+  });
+}
+
+// ===== LABEL CLOUD =====
+function renderLabelCloud(issues) {
+  const labelMap = {};
+  for (const iss of issues) {
+    const labels = iss.fields?.labels || [];
+    for (const lbl of labels) {
+      labelMap[lbl] = (labelMap[lbl]||0)+1;
+    }
+  }
+  const entries = Object.entries(labelMap).sort((a,b)=>b[1]-a[1]);
+  const cloudEl = document.getElementById('label-cloud');
+  const countEl = document.getElementById('label-count-chip');
+  countEl.textContent = `${entries.length}개 레이블`;
+  if (!entries.length) {
+    cloudEl.innerHTML = `<span class="text-muted text-sm">레이블 데이터 없음</span>`;
+  } else {
+    const maxCount = entries[0][1];
+    cloudEl.innerHTML = entries.slice(0,40).map(([lbl,cnt]) => {
+      const size = 11 + Math.round((cnt/maxCount)*8);
+      return `<span class="label-chip" style="font-size:${size}px;" onclick="filterByLabel('${escHtml(lbl)}')">${escHtml(lbl)}<span class="lc-count">${cnt}</span></span>`;
+    }).join('');
+  }
+
+  // Label bar chart
+  const top = entries.slice(0,15);
+  const { gridColor, tickColor } = getChartColors();
+  if (state.charts.labels) state.charts.labels.destroy();
+  if (!top.length) return;
+  state.charts.labels = new Chart(document.getElementById('chart-labels'), {
+    type:'bar',
+    data: {
+      labels: top.map(e=>e[0]),
+      datasets:[{ data:top.map(e=>e[1]), backgroundColor: top.map((_,i)=>PROJECT_COLORS[i%PROJECT_COLORS.length]), borderRadius:5, borderSkipped:false }]
+    },
+    options: {
+      responsive:true, maintainAspectRatio:true,
+      animation:{duration:600},
+      indexAxis:'y',
+      scales:{
+        x:{ grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}} },
+        y:{ grid:{display:false}, ticks:{color:tickColor,font:{size:11}} }
+      },
+      plugins:{ legend:{display:false}, tooltip:{ callbacks:{label:ctx=>` ${ctx.raw}개`} } },
+      onClick:(evt,els)=>{ if(!els.length) return; filterByLabel(top[els[0].index][0]); }
+    }
+  });
+}
+
+function filterByLabel(label) {
+  switchTab('issues');
+  document.getElementById('issue-search').value = label;
+  filterIssues();
+}
+
+// ===== MY ISSUES =====
+function renderMyIssues(issues) {
+  const userId = state.currentUser?.accountId;
+  const subtitle = document.getElementById('my-issues-subtitle');
+  if (!userId) {
+    document.getElementById('my-issues-groups').innerHTML = `<div class="empty-state"><p>사용자 정보를 불러올 수 없습니다</p></div>`;
+    return;
+  }
+
+  const now = new Date();
+  const mine = issues.filter(i => i.fields?.assignee?.accountId === userId);
+  subtitle.textContent = `내 담당 이슈: 총 ${mine.length}개`;
+
+  let myTodo=0, myInProgress=0, myDone=0;
+  const groups = { todo:[], inprogress:[], done:[] };
+  for (const iss of mine) {
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    if (cat==='todo') { myTodo++; groups.todo.push(iss); }
+    else if (cat==='inprogress') { myInProgress++; groups.inprogress.push(iss); }
+    else { myDone++; groups.done.push(iss); }
+  }
+  document.getElementById('my-stat-todo').textContent = myTodo;
+  document.getElementById('my-stat-inprogress').textContent = myInProgress;
+  document.getElementById('my-stat-done').textContent = myDone;
+
+  const groupOrder = [
+    { key:'inprogress', label:'진행 중', color:'var(--info)', issues: groups.inprogress },
+    { key:'todo', label:'할 일', color:'var(--text3)', issues: groups.todo },
+    { key:'done', label:'완료', color:'var(--success)', issues: groups.done },
+  ];
+
+  const container = document.getElementById('my-issues-groups');
+  if (!mine.length) {
+    container.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg><p>담당 이슈가 없습니다</p></div>`;
+    return;
+  }
+
+  container.innerHTML = groupOrder.map(g => {
+    if (!g.issues.length) return '';
+    return `<div class="my-group">
+      <div class="my-group-title" style="color:${g.color};">${g.label}<span class="count-chip">${g.issues.length}</span></div>
+      ${g.issues.map(iss => {
+        const f = iss.fields||{};
+        const key = iss.key||'';
+        const summary = f.summary||'(제목 없음)';
+        const due = f.duedate;
+        const isOverdue = due && statusCategory(f.status?.name||'',f.status?.statusCategory?.key)!=='done' && new Date(due)<now;
+        const url = `${JIRA_BROWSE}/browse/${key}`;
+        return `<div class="my-issue-row${isOverdue?' overdue':''}">
+          <a class="my-issue-key" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a>
+          <div class="my-issue-summary" title="${escHtml(summary)}">${escHtml(summary)}</div>
+          <div class="my-issue-meta">
+            ${isOverdue?'<span class="overdue-tag">기한초과</span>':''}
+            ${due?`<span style="font-size:11px;color:var(--text3);">${formatDate(due)}</span>`:''}
+            <span class="badge ${statusBadgeClass(f.status?.name||'')}">${escHtml(f.status?.name||'')}</span>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>`;
+  }).join('');
 }
 
 // ===== HELPERS =====
