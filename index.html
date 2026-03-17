@@ -1537,9 +1537,8 @@ async function fetchAllIssues(jql, fields) {
       fields: fields.join(','),
     });
     all.push(...(data.issues || []));
-    if (all.length >= data.total || !data.issues || data.issues.length === 0) break;
+    if (data.isLast || !data.issues || data.issues.length === 0) break;
     startAt += data.issues.length;
-    if (all.length >= 2000) break; // safety cap
   }
   return all;
 }
