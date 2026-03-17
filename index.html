@@ -1537,7 +1537,7 @@ async function fetchAllIssues(jql, fields) {
       fields: fields.join(','),
     });
     all.push(...(data.issues || []));
-    if (data.isLast || !data.issues || data.issues.length === 0) break;
+    if (data.isLast || !data.issues || data.issues.length === 0 || all.length >= 500) break;
     startAt += data.issues.length;
   }
   return all;
