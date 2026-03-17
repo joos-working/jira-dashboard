@@ -1,0 +1,2213 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>JIRA Dashboard</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    /* ===== CSS VARIABLES & RESET ===== */
+    :root {
+      --bg: #f0f4f8;
+      --bg2: #e8edf3;
+      --surface: #ffffff;
+      --surface2: #f7f9fc;
+      --surface3: #eef2f7;
+      --border: #e2e8f0;
+      --border2: #cbd5e0;
+      --text: #1a202c;
+      --text2: #4a5568;
+      --text3: #718096;
+      --text4: #a0aec0;
+      --primary: #0052CC;
+      --primary-dark: #003d99;
+      --primary-light: #e8f0fe;
+      --primary-mid: #b3c8f5;
+      --success: #36b37e;
+      --success-light: #e3fcef;
+      --warning: #ff991f;
+      --warning-light: #fff4e5;
+      --danger: #de350b;
+      --danger-light: #ffebe6;
+      --info: #0065ff;
+      --info-light: #e6f0ff;
+      --purple: #6554c0;
+      --purple-light: #ede9ff;
+      --teal: #00b8d9;
+      --teal-light: #e6f9ff;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+      --shadow: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.10), 0 4px 8px rgba(0,0,0,0.06);
+      --shadow-lg: 0 16px 40px rgba(0,0,0,0.12), 0 8px 16px rgba(0,0,0,0.08);
+      --radius-sm: 6px;
+      --radius: 10px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+      --radius-full: 9999px;
+      --transition: 0.18s ease;
+      --font: 'Pretendard', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Apple SD Gothic Neo', sans-serif;
+      --nav-h: 60px;
+      --sidebar-w: 220px;
+    }
+
+    [data-theme="dark"] {
+      --bg: #0f1117;
+      --bg2: #1a1d27;
+      --surface: #1e2130;
+      --surface2: #252840;
+      --surface3: #2c3050;
+      --border: #2d3250;
+      --border2: #3d4470;
+      --text: #e8eaf6;
+      --text2: #b0b8d8;
+      --text3: #7880a8;
+      --text4: #4d5580;
+      --primary: #4c9aff;
+      --primary-dark: #2684ff;
+      --primary-light: #1a2a4a;
+      --primary-mid: #1e3a6a;
+      --success: #57d9a3;
+      --success-light: #0d2e1e;
+      --warning: #ffab00;
+      --warning-light: #2e1f00;
+      --danger: #ff5630;
+      --danger-light: #2e0e00;
+      --info: #4c9aff;
+      --info-light: #0d1e3a;
+      --purple: #998dd9;
+      --purple-light: #1e1640;
+      --teal: #00c7e6;
+      --teal-light: #00222e;
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-md: 0 8px 24px rgba(0,0,0,0.5);
+      --shadow-lg: 0 16px 40px rgba(0,0,0,0.6);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { font-size: 14px; scroll-behavior: smooth; }
+
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+      transition: background var(--transition), color var(--transition);
+    }
+
+    /* ===== SCROLLBAR ===== */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 99px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text4); }
+
+    /* ===== UTILITY ===== */
+    .hidden { display: none !important; }
+    .flex { display: flex; }
+    .flex-col { display: flex; flex-direction: column; }
+    .items-center { align-items: center; }
+    .justify-between { justify-content: space-between; }
+    .justify-center { justify-content: center; }
+    .gap-1 { gap: 4px; }
+    .gap-2 { gap: 8px; }
+    .gap-3 { gap: 12px; }
+    .gap-4 { gap: 16px; }
+    .gap-5 { gap: 20px; }
+    .gap-6 { gap: 24px; }
+    .w-full { width: 100%; }
+    .text-sm { font-size: 12px; }
+    .text-xs { font-size: 11px; }
+    .font-medium { font-weight: 500; }
+    .font-semibold { font-weight: 600; }
+    .font-bold { font-weight: 700; }
+    .text-muted { color: var(--text3); }
+    .text-primary { color: var(--primary); }
+    .text-success { color: var(--success); }
+    .text-danger { color: var(--danger); }
+    .text-warning { color: var(--warning); }
+    .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .rounded { border-radius: var(--radius); }
+    .cursor-pointer { cursor: pointer; }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      font-family: var(--font);
+      cursor: pointer;
+      transition: all var(--transition);
+      border: 1px solid transparent;
+      outline: none;
+      white-space: nowrap;
+      user-select: none;
+    }
+    .btn:active { transform: scale(0.97); }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      border-color: var(--primary);
+    }
+    .btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text2);
+      border-color: transparent;
+    }
+    .btn-ghost:hover { background: var(--surface3); color: var(--text); }
+    .btn-outline {
+      background: transparent;
+      color: var(--text2);
+      border-color: var(--border2);
+    }
+    .btn-outline:hover { background: var(--surface3); color: var(--text); }
+    .btn-danger {
+      background: var(--danger-light);
+      color: var(--danger);
+      border-color: transparent;
+    }
+    .btn-danger:hover { background: var(--danger); color: #fff; }
+    .btn-sm { padding: 5px 10px; font-size: 12px; }
+    .btn-lg { padding: 11px 22px; font-size: 15px; border-radius: var(--radius); }
+    .btn-icon {
+      padding: 7px;
+      border-radius: var(--radius-sm);
+      width: 34px;
+      height: 34px;
+    }
+
+    /* ===== BADGES ===== */
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.02em;
+    }
+    .badge-todo { background: var(--surface3); color: var(--text3); }
+    .badge-inprogress { background: var(--info-light); color: var(--info); }
+    .badge-done { background: var(--success-light); color: var(--success); }
+    .badge-overdue { background: var(--danger-light); color: var(--danger); }
+    .badge-bug { background: var(--danger-light); color: var(--danger); }
+    .badge-story { background: var(--success-light); color: var(--success); }
+    .badge-task { background: var(--info-light); color: var(--info); }
+    .badge-epic { background: var(--purple-light); color: var(--purple); }
+    .badge-subtask { background: var(--teal-light); color: var(--teal); }
+    .badge-highest { background: var(--danger-light); color: var(--danger); }
+    .badge-high { background: var(--warning-light); color: var(--warning); }
+    .badge-medium { background: var(--info-light); color: var(--info); }
+    .badge-low { background: var(--success-light); color: var(--success); }
+    .badge-lowest { background: var(--surface3); color: var(--text3); }
+
+    /* ===== INPUTS ===== */
+    .input {
+      width: 100%;
+      padding: 9px 12px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      background: var(--surface);
+      outline: none;
+      transition: border-color var(--transition), box-shadow var(--transition);
+    }
+    .input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px var(--primary-light);
+    }
+    .input::placeholder { color: var(--text4); }
+    .input-group { position: relative; }
+    .input-group .input { padding-right: 40px; }
+    .input-group .input-suffix {
+      position: absolute;
+      right: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      cursor: pointer;
+      color: var(--text3);
+      padding: 2px;
+    }
+    .input-group .input-suffix:hover { color: var(--text); }
+
+    select.input { cursor: pointer; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; padding-right: 32px; }
+
+    /* ===== LOGIN SCREEN ===== */
+    #login-screen {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 24px;
+      background: linear-gradient(135deg, #0052CC 0%, #0747A6 40%, #172B4D 100%);
+      position: fixed;
+      inset: 0;
+      z-index: 1000;
+    }
+    .login-card {
+      background: var(--surface);
+      border-radius: var(--radius-xl);
+      padding: 48px 44px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: var(--shadow-lg);
+      animation: slideUp 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(28px) scale(0.97); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+    .login-logo {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 32px;
+    }
+    .login-logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, #0052CC, #0747A6);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .login-logo-icon svg { width: 26px; height: 26px; }
+    .login-logo-text {
+      display: flex;
+      flex-direction: column;
+    }
+    .login-logo-title { font-size: 22px; font-weight: 700; color: var(--text); letter-spacing: -0.5px; }
+    .login-logo-sub { font-size: 12px; color: var(--text3); margin-top: 1px; }
+    .login-heading { font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 6px; }
+    .login-subheading { font-size: 13px; color: var(--text3); margin-bottom: 28px; line-height: 1.6; }
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 6px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+    .login-footer { margin-top: 24px; text-align: center; }
+    .login-footer a { color: var(--primary); text-decoration: none; font-size: 12px; }
+    .login-footer a:hover { text-decoration: underline; }
+    .login-url-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: var(--primary-light);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 24px;
+      width: 100%;
+      justify-content: center;
+    }
+    .error-msg {
+      display: none;
+      padding: 10px 14px;
+      background: var(--danger-light);
+      color: var(--danger);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      margin-top: 12px;
+      border-left: 3px solid var(--danger);
+    }
+    .error-msg.show { display: flex; align-items: center; gap: 8px; }
+
+    /* ===== APP LAYOUT ===== */
+    #app { display: none; flex-direction: column; min-height: 100vh; }
+    #app.visible { display: flex; }
+
+    /* ===== TOP HEADER ===== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 200;
+      background: var(--surface);
+      border-bottom: 1px solid var(--border);
+      height: var(--nav-h);
+      display: flex;
+      align-items: center;
+      padding: 0 20px;
+      gap: 16px;
+      box-shadow: var(--shadow-sm);
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .header-logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      flex-shrink: 0;
+    }
+    .header-logo-icon {
+      width: 32px;
+      height: 32px;
+      background: linear-gradient(135deg, #0052CC, #0747A6);
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .header-logo-icon svg { width: 18px; height: 18px; }
+    .header-logo-text {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.4px;
+    }
+    .header-divider {
+      width: 1px;
+      height: 24px;
+      background: var(--border);
+      flex-shrink: 0;
+    }
+    .header-nav {
+      display: flex;
+      align-items: center;
+      gap: 2px;
+      flex: 1;
+    }
+    .nav-tab {
+      padding: 6px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text3);
+      cursor: pointer;
+      transition: all var(--transition);
+      border: none;
+      background: none;
+      font-family: var(--font);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      white-space: nowrap;
+    }
+    .nav-tab:hover { background: var(--surface3); color: var(--text); }
+    .nav-tab.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .nav-tab svg { width: 15px; height: 15px; }
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .date-range-select {
+      padding: 6px 28px 6px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text2);
+      background: var(--surface);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      outline: none;
+      transition: border-color var(--transition);
+    }
+    .date-range-select:hover { border-color: var(--primary); }
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-full);
+      background: linear-gradient(135deg, var(--primary), var(--purple));
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+    .user-info {
+      display: flex;
+      flex-direction: column;
+      cursor: pointer;
+    }
+    .user-name { font-size: 12px; font-weight: 600; color: var(--text); line-height: 1.2; }
+    .user-email { font-size: 10px; color: var(--text3); line-height: 1.2; }
+
+    /* ===== MAIN CONTENT ===== */
+    .main-content {
+      flex: 1;
+      padding: 24px;
+      max-width: 1400px;
+      width: 100%;
+      margin: 0 auto;
+    }
+
+    /* ===== TAB PANELS ===== */
+    .tab-panel { display: none; animation: fadeIn 0.2s ease; }
+    .tab-panel.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* ===== SECTION HEADERS ===== */
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.3px;
+    }
+    .section-subtitle { font-size: 12px; color: var(--text3); margin-top: 2px; }
+
+    /* ===== STAT CARDS ===== */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition);
+      cursor: default;
+    }
+    .stat-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+    .stat-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .stat-card-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text3);
+    }
+    .stat-card-icon {
+      width: 30px;
+      height: 30px;
+      border-radius: var(--radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .stat-card-icon svg { width: 16px; height: 16px; }
+    .stat-card-value {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      letter-spacing: -1px;
+    }
+    .stat-card-change {
+      font-size: 11px;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 3px;
+    }
+    .stat-card.total .stat-card-icon { background: var(--primary-light); color: var(--primary); }
+    .stat-card.total .stat-card-value { color: var(--primary); }
+    .stat-card.todo .stat-card-icon { background: var(--surface3); color: var(--text3); }
+    .stat-card.inprogress .stat-card-icon { background: var(--info-light); color: var(--info); }
+    .stat-card.inprogress .stat-card-value { color: var(--info); }
+    .stat-card.done .stat-card-icon { background: var(--success-light); color: var(--success); }
+    .stat-card.done .stat-card-value { color: var(--success); }
+    .stat-card.overdue .stat-card-icon { background: var(--danger-light); color: var(--danger); }
+    .stat-card.overdue .stat-card-value { color: var(--danger); }
+
+    /* ===== CARDS ===== */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-sm);
+      overflow: hidden;
+      transition: background var(--transition), border-color var(--transition);
+    }
+    .card-header {
+      padding: 16px 20px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .card-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+    }
+    .card-body { padding: 20px; }
+
+    /* ===== CHARTS GRID ===== */
+    .charts-row {
+      display: grid;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .charts-row-2 { grid-template-columns: 1fr 1fr; }
+    .charts-row-3 { grid-template-columns: 1.2fr 0.8fr 1fr; }
+    .chart-container {
+      position: relative;
+      width: 100%;
+    }
+    .chart-container canvas {
+      max-height: 220px;
+    }
+    .donut-wrapper {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+    }
+    .donut-chart { flex: 0 0 160px; height: 160px; }
+    .donut-legend {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: var(--text2);
+    }
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+    .legend-label { flex: 1; }
+    .legend-count { font-weight: 600; color: var(--text); }
+    .legend-pct { color: var(--text3); font-size: 11px; }
+
+    /* ===== ACTIVITY LIST ===== */
+    .activity-list { display: flex; flex-direction: column; gap: 0; }
+    .activity-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+    .activity-item:last-child { border-bottom: none; padding-bottom: 0; }
+    .activity-item:first-child { padding-top: 0; }
+    .activity-key {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      flex-shrink: 0;
+      min-width: 70px;
+    }
+    .activity-key:hover { text-decoration: underline; }
+    .activity-summary {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .activity-meta {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex-shrink: 0;
+    }
+    .activity-time { font-size: 11px; color: var(--text4); }
+
+    /* ===== PROJECT CARDS ===== */
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 16px;
+    }
+    .project-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 20px;
+      cursor: pointer;
+      transition: all var(--transition);
+      box-shadow: var(--shadow-sm);
+    }
+    .project-card:hover { box-shadow: var(--shadow); transform: translateY(-2px); border-color: var(--primary-mid); }
+    .project-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .project-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 800;
+      color: white;
+      flex-shrink: 0;
+    }
+    .project-info { flex: 1; min-width: 0; }
+    .project-name { font-size: 14px; font-weight: 600; color: var(--text); margin-bottom: 2px; }
+    .project-key { font-size: 11px; color: var(--text3); font-weight: 500; }
+    .project-stats {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .project-stat {
+      text-align: center;
+      padding: 8px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+    }
+    .project-stat-value { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1; }
+    .project-stat-label { font-size: 10px; color: var(--text3); margin-top: 3px; font-weight: 500; }
+    .progress-bar {
+      width: 100%;
+      height: 6px;
+      background: var(--surface3);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--success));
+      border-radius: var(--radius-full);
+      transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--text3);
+      margin-top: 6px;
+    }
+
+    /* ===== TEAM SECTION ===== */
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 14px;
+    }
+    .team-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition);
+    }
+    .team-card:hover { box-shadow: var(--shadow); transform: translateY(-1px); }
+    .team-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 14px;
+    }
+    .team-avatar {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 15px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .team-info { flex: 1; min-width: 0; }
+    .team-name { font-size: 14px; font-weight: 600; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .team-role { font-size: 11px; color: var(--text3); margin-top: 1px; }
+    .team-stats {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .team-stat {
+      flex: 1;
+      text-align: center;
+      padding: 8px 4px;
+      background: var(--surface2);
+      border-radius: var(--radius-sm);
+    }
+    .team-stat-value { font-size: 18px; font-weight: 700; color: var(--text); line-height: 1; }
+    .team-stat-label { font-size: 10px; color: var(--text3); margin-top: 3px; font-weight: 500; }
+    .team-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--surface3);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+      display: flex;
+    }
+    .team-bar-segment {
+      height: 100%;
+      transition: width 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    /* ===== ISSUES TABLE ===== */
+    .filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .filter-bar .search-wrap {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+    .filter-bar .search-wrap svg {
+      position: absolute;
+      left: 10px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text3);
+      width: 14px;
+      height: 14px;
+      pointer-events: none;
+    }
+    .filter-bar .search-input {
+      width: 100%;
+      padding: 7px 12px 7px 32px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 13px;
+      color: var(--text);
+      background: var(--surface2);
+      outline: none;
+      transition: all var(--transition);
+    }
+    .filter-bar .search-input:focus { border-color: var(--primary); background: var(--surface); box-shadow: 0 0 0 3px var(--primary-light); }
+    .filter-bar select {
+      padding: 7px 28px 7px 10px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: var(--font);
+      font-size: 12px;
+      color: var(--text2);
+      background: var(--surface2);
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23718096' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 8px center;
+      outline: none;
+      transition: all var(--transition);
+    }
+    .filter-bar select:focus { border-color: var(--primary); background: var(--surface); }
+    .table-wrapper {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+      box-shadow: var(--shadow-sm);
+    }
+    .issues-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .issues-table thead th {
+      background: var(--surface2);
+      padding: 10px 14px;
+      text-align: left;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text3);
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+      user-select: none;
+      white-space: nowrap;
+      transition: color var(--transition);
+    }
+    .issues-table thead th:hover { color: var(--text); }
+    .issues-table thead th.sorted { color: var(--primary); }
+    .issues-table thead th .sort-icon { margin-left: 4px; font-size: 10px; }
+    .issues-table tbody tr {
+      border-bottom: 1px solid var(--border);
+      transition: background var(--transition);
+    }
+    .issues-table tbody tr:last-child { border-bottom: none; }
+    .issues-table tbody tr:hover { background: var(--surface2); }
+    .issues-table tbody td { padding: 10px 14px; vertical-align: middle; color: var(--text2); }
+    .issue-key-link {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+    .issue-key-link:hover { text-decoration: underline; }
+    .issue-summary {
+      max-width: 300px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      color: var(--text);
+      font-weight: 500;
+    }
+    .assignee-cell {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+      white-space: nowrap;
+    }
+    .assignee-avatar-sm {
+      width: 22px;
+      height: 22px;
+      border-radius: var(--radius-full);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 10px;
+      font-weight: 700;
+      color: white;
+      flex-shrink: 0;
+    }
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border-top: 1px solid var(--border);
+      background: var(--surface2);
+    }
+    .pagination-info { font-size: 12px; color: var(--text3); }
+    .pagination-controls { display: flex; align-items: center; gap: 4px; }
+    .page-btn {
+      padding: 5px 10px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      background: var(--surface);
+      color: var(--text2);
+      font-size: 12px;
+      cursor: pointer;
+      font-family: var(--font);
+      transition: all var(--transition);
+      font-weight: 500;
+    }
+    .page-btn:hover { border-color: var(--primary); color: var(--primary); }
+    .page-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .page-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ===== LOADING STATE ===== */
+    .loading-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(var(--bg-raw, 240,244,248), 0.8);
+      backdrop-filter: blur(4px);
+      z-index: 500;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .loading-overlay.show { display: flex; }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 3px solid var(--border);
+      border-top-color: var(--primary);
+      border-radius: var(--radius-full);
+      animation: spin 0.7s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loading-text { font-size: 13px; color: var(--text3); font-weight: 500; }
+
+    /* ===== SKELETON ===== */
+    .skeleton {
+      background: linear-gradient(90deg, var(--surface3) 25%, var(--surface2) 50%, var(--surface3) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+
+    /* ===== TOAST ===== */
+    .toast-container {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .toast {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 16px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow-md);
+      font-size: 13px;
+      color: var(--text);
+      max-width: 360px;
+      animation: toastIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    @keyframes toastIn { from { opacity: 0; transform: translateX(24px); } to { opacity: 1; transform: translateX(0); } }
+    .toast.error { border-left: 3px solid var(--danger); }
+    .toast.success { border-left: 3px solid var(--success); }
+    .toast.info { border-left: 3px solid var(--primary); }
+    .toast svg { flex-shrink: 0; }
+
+    /* ===== EMPTY STATE ===== */
+    .empty-state {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 48px 24px;
+      text-align: center;
+      color: var(--text3);
+    }
+    .empty-state svg { width: 48px; height: 48px; margin-bottom: 16px; opacity: 0.4; }
+    .empty-state p { font-size: 14px; font-weight: 500; color: var(--text3); }
+    .empty-state span { font-size: 12px; color: var(--text4); margin-top: 6px; display: block; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1200px) {
+      .stats-grid { grid-template-columns: repeat(3, 1fr); }
+      .charts-row-3 { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 900px) {
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .charts-row-2 { grid-template-columns: 1fr; }
+      .header-nav { display: none; }
+    }
+    @media (max-width: 600px) {
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .main-content { padding: 16px; }
+      .login-card { padding: 32px 24px; }
+    }
+
+    /* ===== MISC ===== */
+    .divider { height: 1px; background: var(--border); margin: 16px 0; }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 600;
+      background: var(--surface3);
+      color: var(--text2);
+    }
+    .tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 500;
+      border: 1px solid var(--border);
+      color: var(--text3);
+      background: var(--surface2);
+    }
+    .priority-icon { font-size: 13px; }
+  </style>
+</head>
+<body>
+
+<!-- ===== LOADING OVERLAY ===== -->
+<div class="loading-overlay" id="loading-overlay">
+  <div class="spinner"></div>
+  <div class="loading-text" id="loading-text">데이터를 불러오는 중...</div>
+</div>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div class="toast-container" id="toast-container"></div>
+
+<!-- ===== LOGIN SCREEN ===== -->
+<div id="login-screen">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005z" fill="#fff"/>
+          <path d="M6.001 6.056H17.572a5.218 5.218 0 0 1-5.232 5.215H10.21V13.33A5.215 5.215 0 0 1 5 8.118V7.062a1.005 1.005 0 0 1 1.001-1.006z" fill="rgba(255,255,255,0.7)"/>
+          <path d="M.43.599H12a5.218 5.218 0 0 1-5.232 5.215H4.638v2.058A5.215 5.215 0 0 1-.568 2.657V1.603A1.005 1.005 0 0 1 .43.599z" fill="rgba(255,255,255,0.4)"/>
+        </svg>
+      </div>
+      <div class="login-logo-text">
+        <div class="login-logo-title">JIRA Dashboard</div>
+        <div class="login-logo-sub">gonopticsdev.atlassian.net</div>
+      </div>
+    </div>
+
+    <div class="login-url-badge">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>
+      gonopticsdev.atlassian.net
+    </div>
+
+    <div class="login-heading">로그인</div>
+    <div class="login-subheading">JIRA 이메일과 API 토큰으로 연결합니다. 자격증명은 브라우저에 안전하게 저장됩니다.</div>
+
+    <form id="login-form" onsubmit="handleLogin(event)">
+      <div class="form-group">
+        <label class="form-label" for="login-email">이메일</label>
+        <input class="input" type="email" id="login-email" placeholder="you@company.com" required autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label" for="login-token">API 토큰</label>
+        <div class="input-group">
+          <input class="input" type="password" id="login-token" placeholder="API 토큰을 입력하세요" required autocomplete="off" />
+          <span class="input-suffix" onclick="toggleTokenVisibility()">
+            <svg id="eye-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="error-msg" id="login-error">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        <span id="login-error-text">인증에 실패했습니다.</span>
+      </div>
+
+      <button type="submit" class="btn btn-primary btn-lg w-full" style="margin-top:20px;" id="login-btn">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg>
+        연결하기
+      </button>
+    </form>
+
+    <div class="login-footer">
+      <a href="https://id.atlassian.com/manage-profile/security/api-tokens" target="_blank" rel="noopener">
+        API 토큰 발급받기 →
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app">
+  <!-- HEADER -->
+  <header class="header">
+    <div class="header-logo">
+      <div class="header-logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" width="18" height="18">
+          <path d="M11.571 11.513H0a5.218 5.218 0 0 0 5.232 5.215h2.13v2.057A5.215 5.215 0 0 0 12.575 24V12.518a1.005 1.005 0 0 0-1.004-1.005z" fill="#fff"/>
+          <path d="M6.001 6.056H17.572a5.218 5.218 0 0 1-5.232 5.215H10.21V13.33A5.215 5.215 0 0 1 5 8.118V7.062a1.005 1.005 0 0 1 1.001-1.006z" fill="rgba(255,255,255,0.7)"/>
+          <path d="M.43.599H12a5.218 5.218 0 0 1-5.232 5.215H4.638v2.058A5.215 5.215 0 0 1-.568 2.657V1.603A1.005 1.005 0 0 1 .43.599z" fill="rgba(255,255,255,0.4)"/>
+        </svg>
+      </div>
+      <span class="header-logo-text">JIRA Dashboard</span>
+    </div>
+
+    <div class="header-divider"></div>
+
+    <nav class="header-nav">
+      <button class="nav-tab active" data-tab="overview" onclick="switchTab('overview')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        개요
+      </button>
+      <button class="nav-tab" data-tab="projects" onclick="switchTab('projects')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        프로젝트
+      </button>
+      <button class="nav-tab" data-tab="team" onclick="switchTab('team')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        팀
+      </button>
+      <button class="nav-tab" data-tab="issues" onclick="switchTab('issues')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+        이슈
+      </button>
+    </nav>
+
+    <div style="flex:1"></div>
+
+    <div class="header-actions">
+      <select class="date-range-select" id="date-range-select" onchange="onDateRangeChange()">
+        <option value="30">최근 30일</option>
+        <option value="60">최근 60일</option>
+        <option value="90" selected>최근 90일</option>
+        <option value="180">최근 180일</option>
+      </select>
+
+      <button class="btn btn-ghost btn-icon" onclick="toggleTheme()" title="다크/라이트 모드">
+        <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+      </button>
+
+      <button class="btn btn-ghost btn-icon" onclick="refreshData()" title="새로고침" id="refresh-btn">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+
+      <div class="header-divider"></div>
+
+      <div class="user-avatar" id="user-avatar" title="사용자 정보">?</div>
+      <div class="user-info">
+        <div class="user-name" id="user-name">연결 중...</div>
+        <div class="user-email" id="user-email-display"></div>
+      </div>
+
+      <button class="btn btn-ghost btn-icon" onclick="handleLogout()" title="로그아웃" style="color: var(--danger);">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- ===== 개요 탭 ===== -->
+    <div class="tab-panel active" id="tab-overview">
+      <!-- Stat Cards -->
+      <div class="stats-grid">
+        <div class="stat-card total">
+          <div class="stat-card-header">
+            <span class="stat-card-label">전체 이슈</span>
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-total">—</div>
+          <div class="stat-card-change text-muted">기간 내 전체 이슈</div>
+        </div>
+        <div class="stat-card todo">
+          <div class="stat-card-header">
+            <span class="stat-card-label">할 일</span>
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-todo">—</div>
+          <div class="stat-card-change text-muted">대기 중인 이슈</div>
+        </div>
+        <div class="stat-card inprogress">
+          <div class="stat-card-header">
+            <span class="stat-card-label">진행 중</span>
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-inprogress">—</div>
+          <div class="stat-card-change text-muted">작업 중인 이슈</div>
+        </div>
+        <div class="stat-card done">
+          <div class="stat-card-header">
+            <span class="stat-card-label">완료</span>
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-done">—</div>
+          <div class="stat-card-change text-muted" id="stat-done-pct">완료율 —%</div>
+        </div>
+        <div class="stat-card overdue">
+          <div class="stat-card-header">
+            <span class="stat-card-label">기한 초과</span>
+            <div class="stat-card-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-overdue">—</div>
+          <div class="stat-card-change text-danger">기한 초과 이슈</div>
+        </div>
+      </div>
+
+      <!-- Charts Row 1 -->
+      <div class="charts-row charts-row-3" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">상태별 분포</span>
+          </div>
+          <div class="card-body">
+            <div class="donut-wrapper">
+              <div class="donut-chart">
+                <canvas id="chart-donut"></canvas>
+              </div>
+              <div class="donut-legend" id="donut-legend"></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">이슈 타입별</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="chart-type"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">우선순위별</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container">
+              <canvas id="chart-priority"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Charts Row 2 -->
+      <div class="charts-row" style="grid-template-columns: 1fr; margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">프로젝트별 상태 분포</span>
+          </div>
+          <div class="card-body" style="padding-bottom:12px;">
+            <div class="chart-container" style="min-height:180px;">
+              <canvas id="chart-project-status" style="max-height:200px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Activity -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">최근 업데이트된 이슈</span>
+          <span class="chip text-muted">최근 10건</span>
+        </div>
+        <div class="card-body" style="padding-top:4px; padding-bottom:4px;">
+          <div class="activity-list" id="activity-list">
+            <div class="empty-state">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+              <p>데이터를 불러오는 중...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 프로젝트 탭 ===== -->
+    <div class="tab-panel" id="tab-projects">
+      <div class="section-header">
+        <div>
+          <div class="section-title">프로젝트</div>
+          <div class="section-subtitle" id="projects-subtitle">프로젝트별 이슈 현황</div>
+        </div>
+      </div>
+      <div class="projects-grid" id="projects-grid">
+        <div class="empty-state" style="grid-column:1/-1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+          <p>데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 팀 탭 ===== -->
+    <div class="tab-panel" id="tab-team">
+      <div class="section-header">
+        <div>
+          <div class="section-title">팀 워크로드</div>
+          <div class="section-subtitle">담당자별 이슈 현황 (워크로드 순)</div>
+        </div>
+      </div>
+      <div class="team-grid" id="team-grid">
+        <div class="empty-state" style="grid-column:1/-1;">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>
+          <p>데이터를 불러오는 중...</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== 이슈 탭 ===== -->
+    <div class="tab-panel" id="tab-issues">
+      <!-- Filter Bar -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+          <input type="text" class="search-input" id="issue-search" placeholder="이슈 검색..." oninput="filterIssues()" />
+        </div>
+        <select id="filter-project" onchange="filterIssues()"><option value="">모든 프로젝트</option></select>
+        <select id="filter-status" onchange="filterIssues()"><option value="">모든 상태</option></select>
+        <select id="filter-assignee" onchange="filterIssues()"><option value="">모든 담당자</option></select>
+        <select id="filter-priority" onchange="filterIssues()">
+          <option value="">모든 우선순위</option>
+          <option value="Highest">Highest</option>
+          <option value="High">High</option>
+          <option value="Medium">Medium</option>
+          <option value="Low">Low</option>
+          <option value="Lowest">Lowest</option>
+        </select>
+        <select id="filter-type" onchange="filterIssues()"><option value="">모든 타입</option></select>
+        <button class="btn btn-ghost btn-sm" onclick="clearFilters()">초기화</button>
+      </div>
+
+      <div class="table-wrapper">
+        <div style="overflow-x:auto;">
+          <table class="issues-table" id="issues-table">
+            <thead>
+              <tr>
+                <th onclick="sortIssues('key')" data-col="key">키 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('summary')" data-col="summary">요약 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('type')" data-col="type">타입 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('status')" data-col="status">상태 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('priority')" data-col="priority">우선순위 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('assignee')" data-col="assignee">담당자 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('project')" data-col="project">프로젝트 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('updated')" data-col="updated">업데이트 <span class="sort-icon">↕</span></th>
+              </tr>
+            </thead>
+            <tbody id="issues-tbody">
+              <tr><td colspan="8" style="text-align:center; padding:32px; color:var(--text3);">데이터를 불러오는 중...</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination" style="display:none;">
+          <div class="pagination-info" id="pagination-info"></div>
+          <div class="pagination-controls" id="pagination-controls"></div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+</div>
+
+<script>
+// ===== CONSTANTS =====
+const JIRA_BASE = '/jira-api';
+const JIRA_BROWSE = 'https://gonopticsdev.atlassian.net';
+const STORAGE_KEY = 'jira_creds';
+const THEME_KEY = 'jira_theme';
+const PAGE_SIZE = 50;
+
+// ===== STATE =====
+let state = {
+  creds: null,
+  issues: [],
+  filteredIssues: [],
+  currentPage: 1,
+  sortCol: 'updated',
+  sortDir: 'desc',
+  dateRange: 90,
+  charts: {},
+  currentUser: null,
+};
+
+// ===== COLOR HELPERS =====
+const PROJECT_COLORS = ['#0052CC','#6554c0','#00b8d9','#ff991f','#36b37e','#de350b','#00875a','#0747a6','#bf2600','#403294'];
+const AVATAR_COLORS = ['#0052CC','#6554c0','#00b8d9','#ff991f','#36b37e','#de350b','#00875a','#403294','#172b4d','#505f79'];
+
+function projectColor(idx) { return PROJECT_COLORS[idx % PROJECT_COLORS.length]; }
+function avatarColor(str) {
+  let h = 0;
+  for (let i = 0; i < (str||'').length; i++) h = (h * 31 + str.charCodeAt(i)) >>> 0;
+  return AVATAR_COLORS[h % AVATAR_COLORS.length];
+}
+function initials(name) {
+  if (!name) return '?';
+  const p = name.trim().split(/\s+/);
+  return p.length >= 2 ? (p[0][0] + p[p.length-1][0]).toUpperCase() : name.slice(0,2).toUpperCase();
+}
+
+// ===== STATUS HELPERS =====
+function statusCategory(status) {
+  const s = (status||'').toLowerCase();
+  if (s.includes('done') || s.includes('완료') || s.includes('closed') || s.includes('resolved')) return 'done';
+  if (s.includes('progress') || s.includes('review') || s.includes('진행') || s.includes('testing') || s.includes('in dev') || s.includes('개발')) return 'inprogress';
+  return 'todo';
+}
+function statusLabel(cat) {
+  return cat === 'done' ? '완료' : cat === 'inprogress' ? '진행 중' : '할 일';
+}
+function statusBadgeClass(status) {
+  const cat = statusCategory(status);
+  return cat === 'done' ? 'badge-done' : cat === 'inprogress' ? 'badge-inprogress' : 'badge-todo';
+}
+function priorityBadgeClass(priority) {
+  const p = (priority||'').toLowerCase();
+  if (p === 'highest') return 'badge-highest';
+  if (p === 'high') return 'badge-high';
+  if (p === 'medium') return 'badge-medium';
+  if (p === 'low') return 'badge-low';
+  return 'badge-lowest';
+}
+function priorityIcon(priority) {
+  const p = (priority||'').toLowerCase();
+  if (p === 'highest') return '🔴';
+  if (p === 'high') return '🟠';
+  if (p === 'medium') return '🟡';
+  if (p === 'low') return '🔵';
+  return '⚪';
+}
+function typeBadgeClass(type) {
+  const t = (type||'').toLowerCase();
+  if (t.includes('bug')) return 'badge-bug';
+  if (t.includes('story')) return 'badge-story';
+  if (t.includes('task')) return 'badge-task';
+  if (t.includes('epic')) return 'badge-epic';
+  if (t.includes('sub')) return 'badge-subtask';
+  return 'badge-task';
+}
+
+// ===== TIME HELPERS =====
+function timeAgo(dateStr) {
+  if (!dateStr) return '—';
+  const now = new Date(), d = new Date(dateStr);
+  const diff = (now - d) / 1000;
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return `${Math.floor(diff/60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff/3600)}시간 전`;
+  if (diff < 604800) return `${Math.floor(diff/86400)}일 전`;
+  return d.toLocaleDateString('ko-KR', { month:'short', day:'numeric' });
+}
+function formatDate(dateStr) {
+  if (!dateStr) return '—';
+  return new Date(dateStr).toLocaleDateString('ko-KR', { year:'numeric', month:'short', day:'numeric' });
+}
+
+// ===== API =====
+async function jiraFetch(path, params = {}) {
+  const { email, token } = state.creds;
+  const url = new URL('/.netlify/functions/jira', window.location.origin);
+  url.searchParams.set('path', path);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+  const resp = await fetch(url.toString(), {
+    headers: {
+      'Authorization': `Basic ${btoa(`${email}:${token}`)}`,
+      'Accept': 'application/json',
+    }
+  });
+  if (!resp.ok) {
+    const err = await resp.text().catch(() => '');
+    throw new Error(`HTTP ${resp.status}: ${err.slice(0,200)}`);
+  }
+  return resp.json();
+}
+
+async function fetchAllIssues(jql, fields) {
+  const all = [];
+  let startAt = 0;
+  const maxResults = 100;
+  while (true) {
+    const data = await jiraFetch('/rest/api/3/search/jql', {
+      jql,
+      startAt,
+      maxResults,
+      fields: fields.join(','),
+    });
+    all.push(...(data.issues || []));
+    if (all.length >= data.total || !data.issues || data.issues.length === 0) break;
+    startAt += data.issues.length;
+    if (all.length >= 2000) break; // safety cap
+  }
+  return all;
+}
+
+// ===== AUTH =====
+async function handleLogin(e) {
+  e.preventDefault();
+  const email = document.getElementById('login-email').value.trim();
+  const token = document.getElementById('login-token').value.trim();
+  const btn = document.getElementById('login-btn');
+  const errEl = document.getElementById('login-error');
+  const errText = document.getElementById('login-error-text');
+
+  errEl.classList.remove('show');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> 연결 중...';
+
+  try {
+    state.creds = { email, token };
+    const me = await jiraFetch('/rest/api/3/myself');
+    state.currentUser = me;
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, token }));
+    showApp();
+    await loadDashboard();
+  } catch(err) {
+    state.creds = null;
+    errText.textContent = '인증에 실패했습니다. 이메일과 API 토큰을 확인하세요.';
+    errEl.classList.add('show');
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/><polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/></svg> 연결하기';
+  }
+}
+
+function handleLogout() {
+  if (!confirm('로그아웃 하시겠습니까?')) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state.creds = null;
+  state.issues = [];
+  state.currentUser = null;
+  Object.values(state.charts).forEach(c => c && c.destroy && c.destroy());
+  state.charts = {};
+  document.getElementById('app').classList.remove('visible');
+  document.getElementById('login-screen').style.display = 'flex';
+  document.getElementById('login-email').value = '';
+  document.getElementById('login-token').value = '';
+}
+
+function toggleTokenVisibility() {
+  const inp = document.getElementById('login-token');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+}
+
+// ===== THEME =====
+function toggleTheme() {
+  const html = document.documentElement;
+  const isDark = html.getAttribute('data-theme') === 'dark';
+  const newTheme = isDark ? 'light' : 'dark';
+  html.setAttribute('data-theme', newTheme);
+  localStorage.setItem(THEME_KEY, newTheme);
+  updateThemeIcon(newTheme);
+  // redraw charts with new colors
+  if (state.issues.length) renderCharts();
+}
+function updateThemeIcon(theme) {
+  const icon = document.getElementById('theme-icon');
+  if (theme === 'dark') {
+    icon.innerHTML = '<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>';
+  } else {
+    icon.innerHTML = '<circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>';
+  }
+}
+
+// ===== SHOW/HIDE APP =====
+function showApp() {
+  document.getElementById('login-screen').style.display = 'none';
+  document.getElementById('app').classList.add('visible');
+  if (state.currentUser) {
+    const name = state.currentUser.displayName || state.creds.email;
+    document.getElementById('user-avatar').textContent = initials(name);
+    document.getElementById('user-avatar').style.background = `linear-gradient(135deg, ${avatarColor(name)}, ${avatarColor(name+'x')})`;
+    document.getElementById('user-name').textContent = name;
+    document.getElementById('user-email-display').textContent = state.creds.email;
+  }
+}
+
+// ===== TABS =====
+function switchTab(tab) {
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
+}
+
+// ===== DATE RANGE =====
+function onDateRangeChange() {
+  state.dateRange = parseInt(document.getElementById('date-range-select').value);
+  loadDashboard();
+}
+
+// ===== LOADING =====
+function showLoading(text) {
+  document.getElementById('loading-text').textContent = text || '데이터를 불러오는 중...';
+  document.getElementById('loading-overlay').classList.add('show');
+}
+function hideLoading() {
+  document.getElementById('loading-overlay').classList.remove('show');
+}
+
+// ===== TOAST =====
+function showToast(msg, type = 'info', duration = 4000) {
+  const icons = {
+    error: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#de350b" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>',
+    success: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#36b37e" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>',
+    info: '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0052CC" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>',
+  };
+  const el = document.createElement('div');
+  el.className = `toast ${type}`;
+  el.innerHTML = `${icons[type]||icons.info}<span>${msg}</span>`;
+  document.getElementById('toast-container').appendChild(el);
+  setTimeout(() => { el.style.opacity='0'; el.style.transform='translateX(16px)'; el.style.transition='all 0.3s ease'; setTimeout(()=>el.remove(), 300); }, duration);
+}
+
+// ===== MAIN LOAD =====
+async function refreshData() {
+  const btn = document.getElementById('refresh-btn');
+  btn.style.animation = 'spin 0.7s linear infinite';
+  try {
+    await loadDashboard();
+    showToast('데이터가 새로고침되었습니다.', 'success');
+  } catch(e) {
+    showToast('새로고침 중 오류가 발생했습니다.', 'error');
+  } finally {
+    btn.style.animation = '';
+  }
+}
+
+async function loadDashboard() {
+  showLoading('JIRA 데이터를 불러오는 중...');
+  try {
+    const days = state.dateRange;
+    const jql = `created >= -${days}d ORDER BY updated DESC`;
+    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate'];
+
+    showLoading(`이슈 목록 조회 중 (최근 ${days}일)...`);
+    const issues = await fetchAllIssues(jql, fields);
+    state.issues = issues;
+
+    updateStats(issues);
+    renderCharts();
+    renderActivityList(issues);
+    renderProjects(issues);
+    renderTeam(issues);
+    populateFilters(issues);
+    state.filteredIssues = [...issues];
+    state.currentPage = 1;
+    renderIssuesTable();
+
+    showToast(`${issues.length.toLocaleString()}개 이슈 로드 완료`, 'success', 3000);
+  } catch(err) {
+    console.error(err);
+    showToast(`오류: ${err.message}`, 'error', 6000);
+  } finally {
+    hideLoading();
+  }
+}
+
+// ===== STATS =====
+function updateStats(issues) {
+  let total = issues.length, todo = 0, inprogress = 0, done = 0, overdue = 0;
+  const now = new Date();
+  for (const iss of issues) {
+    const cat = statusCategory(iss.fields?.status?.name || '');
+    if (cat === 'todo') todo++;
+    else if (cat === 'inprogress') inprogress++;
+    else if (cat === 'done') done++;
+    // overdue: has duedate, not done, past due
+    const due = iss.fields?.duedate;
+    if (due && cat !== 'done' && new Date(due) < now) overdue++;
+  }
+  document.getElementById('stat-total').textContent = total.toLocaleString();
+  document.getElementById('stat-todo').textContent = todo.toLocaleString();
+  document.getElementById('stat-inprogress').textContent = inprogress.toLocaleString();
+  document.getElementById('stat-done').textContent = done.toLocaleString();
+  document.getElementById('stat-overdue').textContent = overdue.toLocaleString();
+  const pct = total > 0 ? Math.round(done/total*100) : 0;
+  document.getElementById('stat-done-pct').textContent = `완료율 ${pct}%`;
+}
+
+// ===== CHARTS =====
+function getChartColors() {
+  const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+  return {
+    gridColor: isDark ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.06)',
+    tickColor: isDark ? '#7880a8' : '#718096',
+    legendColor: isDark ? '#b0b8d8' : '#4a5568',
+  };
+}
+function getStatusColors(opacity=1) {
+  return {
+    todo: `rgba(160,174,192,${opacity})`,
+    inprogress: `rgba(0,101,255,${opacity})`,
+    done: `rgba(54,179,126,${opacity})`,
+  };
+}
+
+function renderCharts() {
+  const issues = state.issues;
+  const { gridColor, tickColor, legendColor } = getChartColors();
+  const baseOpts = {
+    responsive: true, maintainAspectRatio: true,
+    plugins: { legend: { display: false } },
+  };
+
+  // --- Donut Chart ---
+  let todo=0, inprog=0, done=0;
+  for (const iss of issues) {
+    const cat = statusCategory(iss.fields?.status?.name || '');
+    if (cat === 'todo') todo++;
+    else if (cat === 'inprogress') inprog++;
+    else done++;
+  }
+  const total = issues.length || 1;
+  const sc = getStatusColors();
+  if (state.charts.donut) state.charts.donut.destroy();
+  state.charts.donut = new Chart(document.getElementById('chart-donut'), {
+    type: 'doughnut',
+    data: {
+      labels: ['할 일', '진행 중', '완료'],
+      datasets: [{ data: [todo, inprog, done], backgroundColor: [sc.todo, sc.inprogress, sc.done], borderWidth: 0, hoverOffset: 6 }]
+    },
+    options: {
+      ...baseOpts,
+      cutout: '68%',
+      plugins: { legend: { display: false }, tooltip: {
+        callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}개 (${Math.round(ctx.raw/total*100)}%)` }
+      }},
+    }
+  });
+  // Donut legend
+  const legendEl = document.getElementById('donut-legend');
+  legendEl.innerHTML = [
+    { label: '할 일', count: todo, color: sc.todo },
+    { label: '진행 중', count: inprog, color: sc.inprogress },
+    { label: '완료', count: done, color: sc.done },
+  ].map(i => `<div class="legend-item">
+    <div class="legend-dot" style="background:${i.color}"></div>
+    <span class="legend-label">${i.label}</span>
+    <span class="legend-count">${i.count.toLocaleString()}</span>
+    <span class="legend-pct">${Math.round(i.count/total*100)}%</span>
+  </div>`).join('');
+
+  // --- Type Bar Chart ---
+  const typeMap = {};
+  for (const iss of issues) {
+    const t = iss.fields?.issuetype?.name || 'Unknown';
+    typeMap[t] = (typeMap[t]||0)+1;
+  }
+  const typeEntries = Object.entries(typeMap).sort((a,b)=>b[1]-a[1]).slice(0,8);
+  if (state.charts.type) state.charts.type.destroy();
+  state.charts.type = new Chart(document.getElementById('chart-type'), {
+    type: 'bar',
+    data: {
+      labels: typeEntries.map(e=>e[0]),
+      datasets: [{ data: typeEntries.map(e=>e[1]), backgroundColor: typeEntries.map((_,i)=>PROJECT_COLORS[i%PROJECT_COLORS.length]), borderRadius: 5, borderSkipped: false }]
+    },
+    options: {
+      ...baseOpts, indexAxis: 'y',
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } }
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}개` } } }
+    }
+  });
+
+  // --- Priority Chart ---
+  const prioOrder = ['Highest','High','Medium','Low','Lowest'];
+  const prioColors = ['#de350b','#ff991f','#0065ff','#36b37e','#a0aec0'];
+  const prioMap = {};
+  for (const iss of issues) {
+    const p = iss.fields?.priority?.name || 'Medium';
+    prioMap[p] = (prioMap[p]||0)+1;
+  }
+  const prioData = prioOrder.map(p => prioMap[p]||0);
+  if (state.charts.priority) state.charts.priority.destroy();
+  state.charts.priority = new Chart(document.getElementById('chart-priority'), {
+    type: 'bar',
+    data: {
+      labels: prioOrder,
+      datasets: [{ data: prioData, backgroundColor: prioColors, borderRadius: 5, borderSkipped: false }]
+    },
+    options: {
+      ...baseOpts,
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } }
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}개` } } }
+    }
+  });
+
+  // --- Project Status Stacked Bar ---
+  const projMap = {};
+  for (const iss of issues) {
+    const pk = iss.fields?.project?.key || '?';
+    const pn = iss.fields?.project?.name || pk;
+    if (!projMap[pk]) projMap[pk] = { name: pn, todo: 0, inprogress: 0, done: 0 };
+    const cat = statusCategory(iss.fields?.status?.name || '');
+    projMap[pk][cat]++;
+  }
+  const projEntries = Object.entries(projMap).sort((a,b)=>(b[1].todo+b[1].inprogress+b[1].done)-(a[1].todo+a[1].inprogress+a[1].done)).slice(0,12);
+  if (state.charts.projectStatus) state.charts.projectStatus.destroy();
+  state.charts.projectStatus = new Chart(document.getElementById('chart-project-status'), {
+    type: 'bar',
+    data: {
+      labels: projEntries.map(([k,v])=>v.name.length>14?v.name.slice(0,14)+'…':v.name),
+      datasets: [
+        { label: '할 일', data: projEntries.map(([,v])=>v.todo), backgroundColor: sc.todo, borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 } },
+        { label: '진행 중', data: projEntries.map(([,v])=>v.inprogress), backgroundColor: sc.inprogress },
+        { label: '완료', data: projEntries.map(([,v])=>v.done), backgroundColor: sc.done, borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 } },
+      ]
+    },
+    options: {
+      ...baseOpts, scales: {
+        x: { stacked: true, grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
+        y: { stacked: true, grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } } }
+      },
+      plugins: {
+        legend: { display: true, position: 'top', align: 'end', labels: { color: legendColor, font: { size: 11 }, boxWidth: 12, padding: 16 } },
+        tooltip: { mode: 'index', intersect: false }
+      }
+    }
+  });
+}
+
+// ===== ACTIVITY LIST =====
+function renderActivityList(issues) {
+  const recent = [...issues].sort((a,b) => new Date(b.fields.updated) - new Date(a.fields.updated)).slice(0, 10);
+  const el = document.getElementById('activity-list');
+  if (!recent.length) {
+    el.innerHTML = `<div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg><p>최근 활동이 없습니다</p></div>`;
+    return;
+  }
+  el.innerHTML = recent.map(iss => {
+    const key = iss.key;
+    const summary = iss.fields?.summary || '(제목 없음)';
+    const status = iss.fields?.status?.name || '';
+    const assignee = iss.fields?.assignee?.displayName || '미배정';
+    const updated = iss.fields?.updated;
+    const url = `${JIRA_BROWSE}/browse/${key}`;
+    return `<div class="activity-item">
+      <a class="activity-key" href="${url}" target="_blank" rel="noopener">${key}</a>
+      <div class="activity-summary" title="${escHtml(summary)}">${escHtml(summary)}</div>
+      <div class="activity-meta">
+        <span class="badge ${statusBadgeClass(status)}">${escHtml(status)}</span>
+        <span class="activity-time">${timeAgo(updated)}</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== PROJECTS =====
+function renderProjects(issues) {
+  const projMap = {};
+  for (const iss of issues) {
+    const pk = iss.fields?.project?.key || '?';
+    const pn = iss.fields?.project?.name || pk;
+    if (!projMap[pk]) projMap[pk] = { name: pn, key: pk, todo: 0, inprogress: 0, done: 0, total: 0 };
+    const cat = statusCategory(iss.fields?.status?.name || '');
+    projMap[pk][cat]++;
+    projMap[pk].total++;
+  }
+  const projects = Object.values(projMap).sort((a,b)=>b.total-a.total);
+  document.getElementById('projects-subtitle').textContent = `${projects.length}개 프로젝트`;
+  const grid = document.getElementById('projects-grid');
+  if (!projects.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><p>프로젝트가 없습니다</p></div>`;
+    return;
+  }
+  grid.innerHTML = projects.map((p, i) => {
+    const pct = p.total > 0 ? Math.round(p.done/p.total*100) : 0;
+    const color = projectColor(i);
+    const letter = p.key.slice(0,2);
+    return `<div class="project-card" onclick="filterByProject('${escHtml(p.key)}')">
+      <div class="project-card-header">
+        <div class="project-icon" style="background:${color}">${letter}</div>
+        <div class="project-info">
+          <div class="project-name">${escHtml(p.name)}</div>
+          <div class="project-key">${escHtml(p.key)}</div>
+        </div>
+      </div>
+      <div class="project-stats">
+        <div class="project-stat">
+          <div class="project-stat-value">${p.todo.toLocaleString()}</div>
+          <div class="project-stat-label">할 일</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value" style="color:var(--info)">${p.inprogress.toLocaleString()}</div>
+          <div class="project-stat-label">진행 중</div>
+        </div>
+        <div class="project-stat">
+          <div class="project-stat-value" style="color:var(--success)">${p.done.toLocaleString()}</div>
+          <div class="project-stat-label">완료</div>
+        </div>
+      </div>
+      <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
+      <div class="progress-label">
+        <span>완료율 ${pct}%</span>
+        <span>전체 ${p.total.toLocaleString()}개</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterByProject(key) {
+  switchTab('issues');
+  document.getElementById('filter-project').value = key;
+  filterIssues();
+}
+
+// ===== TEAM =====
+function renderTeam(issues) {
+  const teamMap = {};
+  for (const iss of issues) {
+    const a = iss.fields?.assignee;
+    const name = a?.displayName || '미배정';
+    const accountId = a?.accountId || 'unassigned';
+    if (!teamMap[accountId]) teamMap[accountId] = { name, accountId, todo: 0, inprogress: 0, done: 0, total: 0 };
+    const cat = statusCategory(iss.fields?.status?.name || '');
+    teamMap[accountId][cat]++;
+    teamMap[accountId].total++;
+  }
+  const members = Object.values(teamMap).sort((a,b)=>(b.inprogress+b.todo)-(a.inprogress+a.todo));
+  const grid = document.getElementById('team-grid');
+  if (!members.length) {
+    grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg><p>팀 데이터가 없습니다</p></div>`;
+    return;
+  }
+  grid.innerHTML = members.map(m => {
+    const color = avatarColor(m.name);
+    const todoW = m.total > 0 ? Math.round(m.todo/m.total*100) : 0;
+    const inpW = m.total > 0 ? Math.round(m.inprogress/m.total*100) : 0;
+    const doneW = m.total > 0 ? Math.round(m.done/m.total*100) : 0;
+    return `<div class="team-card">
+      <div class="team-card-header">
+        <div class="team-avatar" style="background:${color}">${initials(m.name)}</div>
+        <div class="team-info">
+          <div class="team-name">${escHtml(m.name)}</div>
+          <div class="team-role text-muted">전체 ${m.total.toLocaleString()}개 이슈</div>
+        </div>
+      </div>
+      <div class="team-stats">
+        <div class="team-stat">
+          <div class="team-stat-value">${m.todo.toLocaleString()}</div>
+          <div class="team-stat-label">할 일</div>
+        </div>
+        <div class="team-stat">
+          <div class="team-stat-value" style="color:var(--info)">${m.inprogress.toLocaleString()}</div>
+          <div class="team-stat-label">진행 중</div>
+        </div>
+        <div class="team-stat">
+          <div class="team-stat-value" style="color:var(--success)">${m.done.toLocaleString()}</div>
+          <div class="team-stat-label">완료</div>
+        </div>
+      </div>
+      <div class="team-bar">
+        <div class="team-bar-segment" style="width:${todoW}%; background:var(--text4)"></div>
+        <div class="team-bar-segment" style="width:${inpW}%; background:var(--info)"></div>
+        <div class="team-bar-segment" style="width:${doneW}%; background:var(--success)"></div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ===== ISSUES TABLE =====
+function populateFilters(issues) {
+  const projects = [...new Set(issues.map(i => i.fields?.project?.key).filter(Boolean))].sort();
+  const statuses = [...new Set(issues.map(i => i.fields?.status?.name).filter(Boolean))].sort();
+  const assignees = [...new Set(issues.map(i => i.fields?.assignee?.displayName || '미배정').filter(Boolean))].sort();
+  const types = [...new Set(issues.map(i => i.fields?.issuetype?.name).filter(Boolean))].sort();
+
+  const setOpts = (id, values, label) => {
+    const el = document.getElementById(id);
+    const cur = el.value;
+    el.innerHTML = `<option value="">${label}</option>` + values.map(v=>`<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
+    if (cur) el.value = cur;
+  };
+  setOpts('filter-project', projects, '모든 프로젝트');
+  setOpts('filter-status', statuses, '모든 상태');
+  setOpts('filter-assignee', assignees, '모든 담당자');
+  setOpts('filter-type', types, '모든 타입');
+}
+
+function filterIssues() {
+  const search = document.getElementById('issue-search').value.toLowerCase();
+  const project = document.getElementById('filter-project').value;
+  const status = document.getElementById('filter-status').value;
+  const assignee = document.getElementById('filter-assignee').value;
+  const priority = document.getElementById('filter-priority').value;
+  const type = document.getElementById('filter-type').value;
+
+  state.filteredIssues = state.issues.filter(iss => {
+    const f = iss.fields || {};
+    if (search && !iss.key?.toLowerCase().includes(search) && !(f.summary||'').toLowerCase().includes(search)) return false;
+    if (project && f.project?.key !== project) return false;
+    if (status && f.status?.name !== status) return false;
+    const aName = f.assignee?.displayName || '미배정';
+    if (assignee && aName !== assignee) return false;
+    if (priority && f.priority?.name !== priority) return false;
+    if (type && f.issuetype?.name !== type) return false;
+    return true;
+  });
+  state.currentPage = 1;
+  renderIssuesTable();
+}
+
+function clearFilters() {
+  document.getElementById('issue-search').value = '';
+  document.getElementById('filter-project').value = '';
+  document.getElementById('filter-status').value = '';
+  document.getElementById('filter-assignee').value = '';
+  document.getElementById('filter-priority').value = '';
+  document.getElementById('filter-type').value = '';
+  filterIssues();
+}
+
+let sortDir = { col: 'updated', dir: 'desc' };
+function sortIssues(col) {
+  if (sortDir.col === col) sortDir.dir = sortDir.dir === 'asc' ? 'desc' : 'asc';
+  else { sortDir.col = col; sortDir.dir = 'asc'; }
+  // update header icons
+  document.querySelectorAll('.issues-table thead th').forEach(th => {
+    const c = th.dataset.col;
+    th.classList.toggle('sorted', c === col);
+    const icon = th.querySelector('.sort-icon');
+    if (icon) icon.textContent = c !== col ? '↕' : (sortDir.dir === 'asc' ? '↑' : '↓');
+  });
+  const getVal = (iss) => {
+    const f = iss.fields || {};
+    switch(col) {
+      case 'key': return iss.key || '';
+      case 'summary': return (f.summary||'').toLowerCase();
+      case 'type': return f.issuetype?.name || '';
+      case 'status': return f.status?.name || '';
+      case 'priority': {
+        const ord = { Highest:0, High:1, Medium:2, Low:3, Lowest:4 };
+        return ord[f.priority?.name] ?? 2;
+      }
+      case 'assignee': return f.assignee?.displayName || 'zzz';
+      case 'project': return f.project?.key || '';
+      case 'updated': return f.updated || '';
+      default: return '';
+    }
+  };
+  state.filteredIssues.sort((a,b) => {
+    const va = getVal(a), vb = getVal(b);
+    let cmp = 0;
+    if (typeof va === 'number') cmp = va - vb;
+    else cmp = String(va).localeCompare(String(vb), 'ko');
+    return sortDir.dir === 'asc' ? cmp : -cmp;
+  });
+  state.currentPage = 1;
+  renderIssuesTable();
+}
+
+function renderIssuesTable() {
+  const page = state.currentPage;
+  const total = state.filteredIssues.length;
+  const start = (page-1)*PAGE_SIZE;
+  const end = Math.min(start+PAGE_SIZE, total);
+  const pageIssues = state.filteredIssues.slice(start, end);
+  const tbody = document.getElementById('issues-tbody');
+
+  if (!pageIssues.length) {
+    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>검색 결과가 없습니다</p><span>필터 조건을 조정해보세요</span></div></td></tr>`;
+    document.getElementById('pagination').style.display = 'none';
+    return;
+  }
+
+  tbody.innerHTML = pageIssues.map(iss => {
+    const f = iss.fields || {};
+    const key = iss.key || '';
+    const summary = f.summary || '(제목 없음)';
+    const type = f.issuetype?.name || '';
+    const status = f.status?.name || '';
+    const priority = f.priority?.name || '';
+    const assignee = f.assignee?.displayName || '미배정';
+    const project = f.project?.key || '';
+    const updated = f.updated || '';
+    const url = `${JIRA_BROWSE}/browse/${key}`;
+    const aColor = avatarColor(assignee);
+    return `<tr>
+      <td><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>
+      <td><div class="issue-summary" title="${escHtml(summary)}">${escHtml(summary)}</div></td>
+      <td><span class="badge ${typeBadgeClass(type)}">${escHtml(type)}</span></td>
+      <td><span class="badge ${statusBadgeClass(status)}">${escHtml(status)}</span></td>
+      <td><span class="badge ${priorityBadgeClass(priority)}">${priorityIcon(priority)} ${escHtml(priority)}</span></td>
+      <td><div class="assignee-cell"><div class="assignee-avatar-sm" style="background:${aColor}">${initials(assignee)}</div>${escHtml(assignee)}</div></td>
+      <td><span class="chip">${escHtml(project)}</span></td>
+      <td style="color:var(--text3);font-size:12px;">${timeAgo(updated)}</td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const totalPages = Math.ceil(total/PAGE_SIZE);
+  document.getElementById('pagination').style.display = 'flex';
+  document.getElementById('pagination-info').textContent = `${(start+1).toLocaleString()}–${end.toLocaleString()} / ${total.toLocaleString()}개`;
+  const pctrl = document.getElementById('pagination-controls');
+  const pages = [];
+  // prev
+  pages.push(`<button class="page-btn" onclick="goPage(${page-1})" ${page<=1?'disabled':''}>‹</button>`);
+  // page numbers
+  let lo = Math.max(1, page-2), hi = Math.min(totalPages, page+2);
+  if (lo > 1) { pages.push(`<button class="page-btn" onclick="goPage(1)">1</button>`); if (lo > 2) pages.push(`<span style="padding:0 4px;color:var(--text4)">…</span>`); }
+  for (let p = lo; p <= hi; p++) pages.push(`<button class="page-btn ${p===page?'active':''}" onclick="goPage(${p})">${p}</button>`);
+  if (hi < totalPages) { if (hi < totalPages-1) pages.push(`<span style="padding:0 4px;color:var(--text4)">…</span>`); pages.push(`<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`); }
+  // next
+  pages.push(`<button class="page-btn" onclick="goPage(${page+1})" ${page>=totalPages?'disabled':''}>›</button>`);
+  pctrl.innerHTML = pages.join('');
+}
+
+function goPage(p) {
+  const total = Math.ceil(state.filteredIssues.length/PAGE_SIZE);
+  if (p < 1 || p > total) return;
+  state.currentPage = p;
+  renderIssuesTable();
+  document.getElementById('tab-issues').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ===== HELPERS =====
+function escHtml(str) {
+  return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+
+// ===== INIT =====
+(function init() {
+  // Theme
+  const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
+  document.documentElement.setAttribute('data-theme', savedTheme);
+  updateThemeIcon(savedTheme);
+
+  // Check saved creds
+  const saved = localStorage.getItem(STORAGE_KEY);
+  if (saved) {
+    try {
+      state.creds = JSON.parse(saved);
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').classList.add('visible');
+      // Verify creds & load
+      (async () => {
+        try {
+          const me = await jiraFetch('/rest/api/3/myself');
+          state.currentUser = me;
+          showApp();
+          await loadDashboard();
+        } catch(e) {
+          // creds invalid, show login
+          localStorage.removeItem(STORAGE_KEY);
+          state.creds = null;
+          document.getElementById('login-screen').style.display = 'flex';
+          document.getElementById('app').classList.remove('visible');
+          showToast('저장된 자격증명이 만료되었습니다. 다시 로그인하세요.', 'error');
+        }
+      })();
+    } catch(e) {
+      localStorage.removeItem(STORAGE_KEY);
+    }
+  }
+})();
+</script>
+</body>
+</html>
