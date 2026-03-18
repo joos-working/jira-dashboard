@@ -1431,6 +1431,15 @@
       font-size: 13px;
     }
     .exec-velocity-row:last-child { border-bottom: none; }
+    .capacity-item { display:flex; align-items:center; gap:10px; padding:9px 0; border-bottom:1px solid var(--border); }
+    .capacity-item:last-child { border-bottom:none; }
+    .capacity-avatar { width:28px; height:28px; border-radius:50%; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; color:#fff; flex-shrink:0; }
+    .capacity-name { flex:1; font-size:13px; font-weight:500; color:var(--text); }
+    .capacity-bar-wrap { width:120px; flex-shrink:0; }
+    .capacity-bar-track { height:6px; background:var(--surface3); border-radius:var(--radius-full); overflow:hidden; }
+    .capacity-bar-fill { height:100%; border-radius:var(--radius-full); transition:width 0.4s ease; }
+    .capacity-count { font-size:12px; font-weight:700; flex-shrink:0; min-width:24px; text-align:right; }
+    .capacity-badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:var(--radius-full); flex-shrink:0; }
   </style>
 </head>
 <body>
@@ -1981,6 +1990,43 @@
           </div>
         </div>
       </div>
+
+      <!-- Workload Analysis -->
+      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
+        <!-- Overload / Capacity card -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="team_capacity">🔥 워크로드 상태</span>
+            <span class="chip text-muted" id="overload-subtitle"></span>
+          </div>
+          <div class="card-body" style="padding:8px 20px;" id="team-capacity-list">
+            <div class="empty-state" style="padding:20px 0;"><p>데이터 없음</p></div>
+          </div>
+        </div>
+        <!-- Issue type breakdown per assignee -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="team_type_dist">📊 담당자별 이슈 타입 분포</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container" style="min-height:180px;">
+              <canvas id="chart-assignee-types" style="max-height:220px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Inflow vs Completion per assignee -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <span class="card-title" data-i18n="team_inflow">📈 담당자별 유입 vs 완료 (최근 30일)</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="min-height:160px;">
+            <canvas id="chart-assignee-inflow" style="max-height:180px;"></canvas>
+          </div>
+        </div>
+      </div>
     </div>
 
 
@@ -2157,6 +2203,22 @@
           </div>
         </div>
       </div>
+
+      <!-- Workload Summary for Executive -->
+      <div class="exec-row-2" style="margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="exec_workload">👥 팀 워크로드 요약</span>
+          </div>
+          <div class="card-body" style="padding:8px 20px;" id="exec-workload-list"></div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="exec_health">🏥 팀 건강 지표</span>
+          </div>
+          <div class="card-body" style="padding:20px;" id="exec-health-list"></div>
+        </div>
+      </div>
     </div>
 
   </main>
@@ -2326,6 +2388,12 @@ const LANGS = {
     exec_proj_progress: '프로젝트별 완료율',
     exec_risk: '⚠️ 주요 위험 이슈',
     exec_velocity: '📅 주간 처리 현황 (최근 6주)',
+    exec_workload: '👥 팀 워크로드 요약',
+    exec_health: '🏥 팀 건강 지표',
+    // Team workload analysis
+    team_capacity: '🔥 워크로드 상태',
+    team_type_dist: '📊 담당자별 이슈 타입 분포',
+    team_inflow: '📈 담당자별 유입 vs 완료 (최근 30일)',
   },
   en: {
     // Nav
@@ -2438,6 +2506,12 @@ const LANGS = {
     exec_proj_progress: 'Project Completion',
     exec_risk: '⚠️ Key Risk Issues',
     exec_velocity: '📅 Weekly Velocity (Last 6 weeks)',
+    exec_workload: '👥 Team Workload',
+    exec_health: '🏥 Team Health',
+    // Team workload analysis
+    team_capacity: '🔥 Workload Status',
+    team_type_dist: '📊 Issue Type by Assignee',
+    team_inflow: '📈 Inflow vs Done by Assignee (Last 30d)',
   }
 };
 
@@ -3182,6 +3256,115 @@ function renderTeam(issues) {
       </div>
     </div>`;
   }).join('');
+  renderWorkloadAnalysis(issues);
+}
+
+function renderWorkloadAnalysis(issues) {
+  const now = new Date();
+  const thirtyAgo = new Date(now.getTime() - 30 * 86400000);
+
+  // Build per-assignee data
+  const assigneeMap = {};
+  for (const iss of issues) {
+    const a = iss.fields?.assignee;
+    const name = a?.displayName || t('iss_unassigned');
+    if (!assigneeMap[name]) assigneeMap[name] = { name, inprogress:0, todo:0, done:0, types:{}, inflowMonth:0, doneMonth:0 };
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    assigneeMap[name][cat]++;
+    const typeName = iss.fields?.issuetype?.name || 'Other';
+    assigneeMap[name].types[typeName] = (assigneeMap[name].types[typeName]||0)+1;
+    const cr = iss.fields?.created;
+    if (cr && new Date(cr) >= thirtyAgo) assigneeMap[name].inflowMonth++;
+    const rd = iss.fields?.resolutiondate;
+    if (rd && new Date(rd) >= thirtyAgo) assigneeMap[name].doneMonth++;
+  }
+  const assignees = Object.values(assigneeMap).filter(a => a.name !== t('iss_unassigned')).sort((a,b) => (b.inprogress+b.todo) - (a.inprogress+a.todo));
+
+  // --- Capacity list ---
+  const maxInprogress = Math.max(...assignees.map(a => a.inprogress), 1);
+  const overloaded = assignees.filter(a => a.inprogress >= 5).length;
+  const subtitleEl = document.getElementById('overload-subtitle');
+  if (subtitleEl) subtitleEl.textContent = overloaded > 0 ? (currentLang==='ko'?`과부하 ${overloaded}명`:`${overloaded} overloaded`) : (currentLang==='ko'?'정상':'OK');
+
+  const capList = document.getElementById('team-capacity-list');
+  if (capList && assignees.length) {
+    capList.innerHTML = assignees.slice(0,10).map((a,i) => {
+      const barPct = Math.round(a.inprogress / maxInprogress * 100);
+      const isOverload = a.inprogress >= 5;
+      const isIdle = a.inprogress === 0 && a.todo > 0;
+      const barColor = isOverload ? 'var(--danger)' : isIdle ? 'var(--text4)' : a.inprogress >= 3 ? 'var(--warning)' : 'var(--success)';
+      const badgeLabel = isOverload ? (currentLang==='ko'?'과부하':'Overload') : isIdle ? (currentLang==='ko'?'대기':'Idle') : (currentLang==='ko'?'정상':'OK');
+      const badgeBg = isOverload ? 'var(--danger-light)' : isIdle ? 'var(--surface3)' : 'var(--success-light)';
+      const badgeColor = isOverload ? 'var(--danger)' : isIdle ? 'var(--text3)' : 'var(--success)';
+      const colors = ['#0052CC','#36b37e','#ff991f','#de350b','#6554c0','#00b8d9','#ff5630','#57d9a3','#4c9aff','#998dd9'];
+      return `<div class="capacity-item">
+        <div class="capacity-avatar" style="background:${colors[i%colors.length]}">${a.name.slice(0,2)}</div>
+        <div class="capacity-name">${escHtml(a.name)}</div>
+        <div class="capacity-bar-wrap">
+          <div class="capacity-bar-track"><div class="capacity-bar-fill" style="width:${barPct}%;background:${barColor};"></div></div>
+        </div>
+        <div class="capacity-count" style="color:${barColor}">${a.inprogress}</div>
+        <div class="capacity-badge" style="background:${badgeBg};color:${badgeColor};">${badgeLabel}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // --- Issue type breakdown per assignee stacked bar ---
+  const top6 = assignees.slice(0,6);
+  const allTypes = [...new Set(issues.map(i => i.fields?.issuetype?.name || 'Other'))];
+  const typeColors = { 'Story':'#0065ff','Task':'#36b37e','Bug':'#de350b','Epic':'#6554c0','Subtask':'#ff991f','Sub-task':'#ff991f','Other':'#a0aec0' };
+  const { gridColor, tickColor } = getChartColors();
+  if (state.charts.assigneeTypes) state.charts.assigneeTypes.destroy();
+  const canvas1 = document.getElementById('chart-assignee-types');
+  if (canvas1 && top6.length) {
+    state.charts.assigneeTypes = new Chart(canvas1, {
+      type: 'bar',
+      data: {
+        labels: top6.map(a => a.name.split(' ')[0]),
+        datasets: allTypes.map(type => ({
+          label: type,
+          data: top6.map(a => a.types[type]||0),
+          backgroundColor: typeColors[type] || '#' + Math.floor(Math.random()*0xFFFFFF).toString(16).padStart(6,'0'),
+          borderRadius: 3,
+        }))
+      },
+      options: {
+        responsive:true, maintainAspectRatio:true,
+        animation:{duration:600},
+        scales: {
+          x:{stacked:true, grid:{display:false}, ticks:{color:tickColor,font:{size:11}}},
+          y:{stacked:true, grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}}}
+        },
+        plugins:{legend:{labels:{color:tickColor,font:{size:10},boxWidth:10}}}
+      }
+    });
+  }
+
+  // --- Inflow vs Done per assignee (last 30 days) ---
+  if (state.charts.assigneeInflow) state.charts.assigneeInflow.destroy();
+  const canvas2 = document.getElementById('chart-assignee-inflow');
+  const inflowData = assignees.slice(0,8);
+  if (canvas2 && inflowData.length) {
+    state.charts.assigneeInflow = new Chart(canvas2, {
+      type:'bar',
+      data:{
+        labels: inflowData.map(a => a.name.split(' ')[0]),
+        datasets:[
+          {label: currentLang==='ko'?'유입':'Inflow', data:inflowData.map(a=>a.inflowMonth), backgroundColor:'rgba(100,149,255,0.7)', borderRadius:4},
+          {label: currentLang==='ko'?'완료':'Done', data:inflowData.map(a=>a.doneMonth), backgroundColor:'rgba(54,179,126,0.7)', borderRadius:4},
+        ]
+      },
+      options:{
+        responsive:true, maintainAspectRatio:true,
+        animation:{duration:600},
+        scales:{
+          x:{grid:{display:false}, ticks:{color:tickColor,font:{size:11}}},
+          y:{grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}}, beginAtZero:true}
+        },
+        plugins:{legend:{labels:{color:tickColor,font:{size:11},boxWidth:12}}}
+      }
+    });
+  }
 }
 
 // ===== ISSUES TABLE =====
@@ -3903,6 +4086,63 @@ function renderExecutive(issues) {
         plugins: { legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 12 } } }
       }
     });
+  }
+
+  // --- Workload summary for executive ---
+  const assigneeMapExec = {};
+  for (const iss of issues) {
+    const name = iss.fields?.assignee?.displayName || t('iss_unassigned');
+    if (!assigneeMapExec[name]) assigneeMapExec[name] = { inprogress:0, todo:0, done:0 };
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    assigneeMapExec[name][cat]++;
+  }
+  const execAssignees = Object.entries(assigneeMapExec)
+    .filter(([n]) => n !== t('iss_unassigned'))
+    .map(([name,v]) => ({ name, ...v, active: v.inprogress + v.todo }))
+    .sort((a,b) => b.active - a.active)
+    .slice(0,6);
+
+  const execWorkloadEl = document.getElementById('exec-workload-list');
+  if (execWorkloadEl && execAssignees.length) {
+    const maxActive = Math.max(...execAssignees.map(a => a.active), 1);
+    const colors = ['#0052CC','#36b37e','#ff991f','#de350b','#6554c0','#00b8d9'];
+    execWorkloadEl.innerHTML = execAssignees.map((a,i) => {
+      const pct = Math.round(a.active / maxActive * 100);
+      const isOverload = a.inprogress >= 5;
+      const barColor = isOverload ? 'var(--danger)' : a.inprogress >= 3 ? 'var(--warning)' : 'var(--success)';
+      return `<div class="capacity-item">
+        <div class="capacity-avatar" style="background:${colors[i%colors.length]}">${a.name.slice(0,2)}</div>
+        <div class="capacity-name">${escHtml(a.name)}</div>
+        <div class="capacity-bar-wrap">
+          <div class="capacity-bar-track"><div class="capacity-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+        </div>
+        <div class="capacity-count" style="color:${barColor}">${a.inprogress} ${currentLang==='ko'?'진행':'active'}</div>
+      </div>`;
+    }).join('');
+  }
+
+  // --- Health metrics ---
+  const execHealthEl = document.getElementById('exec-health-list');
+  if (execHealthEl) {
+    const avgResolution = (() => {
+      const resolved = issues.filter(i => i.fields?.resolutiondate && i.fields?.created);
+      if (!resolved.length) return null;
+      const avg = resolved.reduce((s,i) => s + (new Date(i.fields.resolutiondate) - new Date(i.fields.created)) / 86400000, 0) / resolved.length;
+      return Math.round(avg);
+    })();
+    const unassigned = issues.filter(i => !i.fields?.assignee && statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done').length;
+    const overdueRate = total > 0 ? Math.round(overdue / total * 100) : 0;
+    const metrics = [
+      { label: currentLang==='ko'?'평균 처리 시간':'Avg Resolution', value: avgResolution !== null ? `${avgResolution}${currentLang==='ko'?'일':'d'}` : 'N/A', color: avgResolution === null ? 'var(--text3)' : avgResolution <= 7 ? 'var(--success)' : avgResolution <= 14 ? 'var(--warning)' : 'var(--danger)' },
+      { label: currentLang==='ko'?'미배정 이슈':'Unassigned', value: String(unassigned), color: unassigned === 0 ? 'var(--success)' : unassigned <= 5 ? 'var(--warning)' : 'var(--danger)' },
+      { label: currentLang==='ko'?'기한초과율':'Overdue Rate', value: `${overdueRate}%`, color: overdueRate === 0 ? 'var(--success)' : overdueRate <= 10 ? 'var(--warning)' : 'var(--danger)' },
+      { label: currentLang==='ko'?'묵은 이슈':'Stale Issues', value: String(staleIssues.length), color: staleIssues.length === 0 ? 'var(--success)' : staleIssues.length <= 5 ? 'var(--warning)' : 'var(--danger)' },
+    ];
+    execHealthEl.innerHTML = metrics.map(m => `
+      <div class="exec-velocity-row">
+        <span style="color:var(--text2);font-size:13px;">${m.label}</span>
+        <span style="font-size:18px;font-weight:800;color:${m.color};">${m.value}</span>
+      </div>`).join('');
   }
 }
 
