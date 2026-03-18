@@ -2455,7 +2455,7 @@ function switchTab(tab, fromPopstate) {
     renderMyIssues(state.issues, true);
   }
   // Push to browser history (skip when called from popstate to avoid loop)
-  if (!fromPopstate) {
+  if (!fromPopstate && history.state?.tab !== tab) {
     const url = new URL(window.location.href);
     url.searchParams.set('tab', tab);
     history.pushState({ tab }, '', url.toString());
@@ -4218,7 +4218,7 @@ function applyUrlParams() {
   if (params.get('priority')) { const el = document.getElementById('filter-priority'); if (el) el.value = params.get('priority'); }
   if (params.get('stale')) { const el = document.getElementById('filter-stale'); if (el) el.value = params.get('stale'); }
   if (params.get('user')) { state.globalUserFilter = params.get('user'); const el = document.getElementById('global-user-filter'); if (el) el.value = params.get('user'); }
-  if (params.get('tab')) switchTab(params.get('tab'));
+  if (params.get('tab')) switchTab(params.get('tab'), true);
   if (params.get('dr')) {
     const drVal = params.get('dr');
     state.dateRange = drVal === 'custom' ? 'custom' : (parseInt(drVal) || 90);
