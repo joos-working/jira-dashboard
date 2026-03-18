@@ -2331,15 +2331,8 @@
         <h2 style="font-size:18px; font-weight:700; color:var(--text);" data-i18n="nav_weekly">주간 계획</h2>
         <span style="font-size:12px; color:var(--text3);" id="weekly-range-label"></span>
       </div>
-      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;" id="weekly-cols">
-        <div>
-          <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); margin-bottom:12px;" data-i18n="weekly_last">지난 주</div>
-          <div id="weekly-last-col"><div class="empty-state" style="padding:30px 0;"><p>데이터 없음</p></div></div>
-        </div>
-        <div>
-          <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--primary); margin-bottom:12px;" data-i18n="weekly_this">이번 주</div>
-          <div id="weekly-this-col"><div class="empty-state" style="padding:30px 0;"><p>데이터 없음</p></div></div>
-        </div>
+      <div id="weekly-user-cards">
+        <div class="empty-state" style="padding:40px 0;"><p>데이터를 불러오는 중...</p></div>
       </div>
     </div>
 
@@ -4369,75 +4362,85 @@ function renderWeeklyPlan(issues) {
     return null;
   };
 
-  const thisWeekIssues = wpIssues.filter(i => classify(i) === 'this');
-  const lastWeekIssues = wpIssues.filter(i => classify(i) === 'last');
+  // Group by assignee
+  const userMap = {};
+  wpIssues.forEach(iss => {
+    const name = iss.fields?.assignee?.displayName || t('iss_unassigned');
+    if (!userMap[name]) userMap[name] = { this: null, last: null };
+    const week = classify(iss);
+    if (week === 'this') userMap[name].this = iss;
+    else if (week === 'last') userMap[name].last = iss;
+  });
 
-  // Fallback: most recent 2 by created date
-  const allSorted = [...wpIssues].sort((a,b) => new Date(b.fields?.created) - new Date(a.fields?.created));
-  const thisFinal = thisWeekIssues.length ? thisWeekIssues : (allSorted[0] ? [allSorted[0]] : []);
-  const lastFinal = lastWeekIssues.length ? lastWeekIssues : (allSorted[1] ? [allSorted[1]] : []);
-
-  renderWeeklyCol('weekly-this-col', thisFinal);
-  renderWeeklyCol('weekly-last-col', lastFinal);
-}
-
-function renderWeeklyCol(elId, issues) {
-  const el = document.getElementById(elId);
-  if (!el) return;
-  if (!issues.length) {
-    el.innerHTML = `<div class="empty-state" style="padding:30px 0;"><p>${t('no_data')}</p></div>`;
+  const wrap = document.getElementById('weekly-user-cards');
+  if (!wrap) return;
+  const users = Object.entries(userMap);
+  if (!users.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:40px 0;"><p>${t('no_data')}</p></div>`;
     return;
   }
-  el.innerHTML = issues.map(iss => {
-    const f = iss.fields || {};
-    const assignee = f.assignee?.displayName || t('iss_unassigned');
-    const created = f.created ? new Date(f.created).toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US', { month:'short', day:'numeric' }) : '';
 
-    // Checkboxes from description
-    const checkboxes = parseAdfCheckboxes(f.description);
-    const checklistHtml = checkboxes.length ? `
-      <div class="weekly-section-title">${currentLang === 'ko' ? '할 일' : 'Tasks'}</div>
-      <div class="weekly-checklist">
-        ${checkboxes.map(item => `
-          <div class="weekly-check-item${item.done ? ' done' : ''}">
-            <span class="weekly-check-icon">
-              ${item.done
-                ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
-                : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`
-              }
-            </span>
-            <span>${escHtml(item.text)}</span>
-          </div>`).join('')}
-      </div>` : '';
-
-    // Linked issues
-    const links = (f.issuelinks || []).filter(l => l.outwardIssue || l.inwardIssue);
-    const linkedHtml = links.length ? `
-      <div class="weekly-section-title">${currentLang === 'ko' ? '연결된 이슈' : 'Linked Issues'}</div>
-      ${links.map(l => {
-        const linked = l.outwardIssue || l.inwardIssue;
-        const lKey = linked.key || '';
-        const lSummary = linked.fields?.summary || '';
-        const lStatus = linked.fields?.status?.name || '';
-        const lCat = statusCategory(lStatus, linked.fields?.status?.statusCategory?.key);
-        const statusColor = lCat === 'done' ? 'var(--success)' : lCat === 'indeterminate' ? 'var(--info)' : 'var(--text3)';
-        return `<div class="weekly-linked-item" onclick="showIssueModal('${escHtml(lKey)}')">
-          <span class="weekly-linked-key">${escHtml(lKey)}</span>
-          <span class="weekly-linked-summary" title="${escHtml(lSummary)}">${escHtml(lSummary)}</span>
-          <span class="status-badge" style="background:${statusColor}1a;color:${statusColor};font-size:10px;padding:2px 6px;border-radius:var(--radius-full);flex-shrink:0;">${escHtml(lStatus)}</span>
-        </div>`;
-      }).join('')}` : '';
-
+  wrap.innerHTML = users.map(([name, weeks]) => {
+    const avatarColors = ['#0052CC','#36b37e','#ff991f','#de350b','#6554c0','#00b8d9'];
+    const color = avatarColors[Math.abs(name.split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % avatarColors.length];
     return `<div class="weekly-card">
-      <div class="weekly-card-title">
-        <span class="weekly-card-key">${escHtml(iss.key)}</span>
-        <span>${escHtml(f.summary || '')}</span>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+        <div style="width:32px;height:32px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${escHtml(name.slice(0,2))}</div>
+        <span style="font-size:15px;font-weight:700;color:var(--text);">${escHtml(name)}</span>
       </div>
-      <div class="weekly-card-meta">👤 ${escHtml(assignee)}${created ? ` · ${created}` : ''}</div>
-      ${checklistHtml}
-      ${linkedHtml}
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px;" data-i18n="weekly_last">${t('weekly_last')}</div>
+          ${weeklyIssueHtml(weeks.last)}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:10px;" data-i18n="weekly_this">${t('weekly_this')}</div>
+          ${weeklyIssueHtml(weeks.this)}
+        </div>
+      </div>
     </div>`;
   }).join('');
+}
+
+function weeklyIssueHtml(iss) {
+  if (!iss) return `<div style="font-size:12px;color:var(--text4);">—</div>`;
+  const f = iss.fields || {};
+
+  const checkboxes = parseAdfCheckboxes(f.description);
+  const checklistHtml = checkboxes.length ? `
+    <div class="weekly-section-title">${currentLang === 'ko' ? '할 일' : 'Tasks'}</div>
+    <div class="weekly-checklist">
+      ${checkboxes.map(item => `
+        <div class="weekly-check-item${item.done ? ' done' : ''}">
+          <span class="weekly-check-icon">
+            ${item.done
+              ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+              : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`
+            }
+          </span>
+          <span>${escHtml(item.text)}</span>
+        </div>`).join('')}
+    </div>` : '';
+
+  const links = (f.issuelinks || []).filter(l => l.outwardIssue || l.inwardIssue);
+  const linkedHtml = links.length ? `
+    <div class="weekly-section-title">${currentLang === 'ko' ? '연결된 이슈' : 'Linked Issues'}</div>
+    ${links.map(l => {
+      const linked = l.outwardIssue || l.inwardIssue;
+      const lKey = linked.key || '';
+      const lSummary = linked.fields?.summary || '';
+      const lStatus = linked.fields?.status?.name || '';
+      const lCat = statusCategory(lStatus, linked.fields?.status?.statusCategory?.key);
+      const statusColor = lCat === 'done' ? 'var(--success)' : lCat === 'indeterminate' ? 'var(--info)' : 'var(--text3)';
+      return `<div class="weekly-linked-item" onclick="showIssueModal('${escHtml(lKey)}')">
+        <span class="weekly-linked-key">${escHtml(lKey)}</span>
+        <span class="weekly-linked-summary" title="${escHtml(lSummary)}">${escHtml(lSummary)}</span>
+        <span style="background:${statusColor}1a;color:${statusColor};font-size:10px;padding:2px 6px;border-radius:var(--radius-full);flex-shrink:0;white-space:nowrap;">${escHtml(lStatus)}</span>
+      </div>`;
+    }).join('')}` : '';
+
+  return `<div style="font-size:11px;color:var(--primary);font-weight:600;margin-bottom:8px;">${escHtml(iss.key)}</div>
+    ${checklistHtml}${linkedHtml}`;
 }
 
 function renderAll() {
