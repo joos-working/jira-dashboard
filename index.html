@@ -1202,6 +1202,51 @@
 
     /* ===== KEYBOARD SHORTCUT HINT ===== */
     .kbd { display:inline-block; padding:1px 5px; border-radius:4px; font-size:10px; font-weight:600; background:var(--surface3); border:1px solid var(--border2); color:var(--text3); font-family:monospace; }
+
+    /* ===== HEATMAP ===== */
+    .heatmap-wrap { overflow-x:auto; padding:4px 0; }
+    .heatmap-grid { display:flex; gap:2px; }
+    .heatmap-col { display:flex; flex-direction:column; gap:2px; }
+    .heatmap-cell { width:11px; height:11px; border-radius:2px; background:var(--surface3); cursor:default; flex-shrink:0; transition:transform 0.1s; }
+    .heatmap-cell:hover { transform:scale(1.3); }
+    .heatmap-cell.l1 { background:#c6efce; }
+    .heatmap-cell.l2 { background:#70c888; }
+    .heatmap-cell.l3 { background:#36b37e; }
+    .heatmap-cell.l4 { background:#00875a; }
+    [data-theme="dark"] .heatmap-cell.l1 { background:#0d2e1e; }
+    [data-theme="dark"] .heatmap-cell.l2 { background:#1a5c3a; }
+    [data-theme="dark"] .heatmap-cell.l3 { background:#2d8a5a; }
+    [data-theme="dark"] .heatmap-cell.l4 { background:#57d9a3; }
+    .heatmap-days { display:flex; flex-direction:column; gap:2px; margin-right:4px; font-size:9px; color:var(--text4); flex-shrink:0; }
+    .heatmap-day-label { height:11px; line-height:11px; }
+
+    /* ===== SEARCH HISTORY ===== */
+    .search-wrap { position:relative; }
+    .search-history-drop { position:absolute; top:calc(100% + 4px); left:0; right:0; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-md); z-index:200; overflow:hidden; display:none; }
+    .search-history-drop.show { display:block; }
+    .sh-item { padding:8px 12px; font-size:12px; color:var(--text2); cursor:pointer; display:flex; align-items:center; gap:8px; transition:background var(--transition); }
+    .sh-item:hover { background:var(--surface2); color:var(--text); }
+    .sh-item svg { opacity:0.4; flex-shrink:0; }
+
+    /* ===== CONTEXT MENU ===== */
+    .ctx-menu { position:fixed; z-index:1100; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius-sm); box-shadow:var(--shadow-md); padding:4px 0; min-width:190px; display:none; animation:fadeIn 0.12s ease; }
+    .ctx-item { padding:8px 14px; font-size:12px; color:var(--text2); cursor:pointer; display:flex; align-items:center; gap:9px; transition:background var(--transition); user-select:none; }
+    .ctx-item:hover { background:var(--surface2); color:var(--text); }
+    .ctx-divider { height:1px; background:var(--border); margin:3px 0; }
+
+    /* ===== PROJECT COLOR PICKER ===== */
+    .project-color-dot { width:10px; height:10px; border-radius:50%; border:2px solid rgba(255,255,255,0.5); cursor:pointer; flex-shrink:0; transition:transform var(--transition); }
+    .project-color-dot:hover { transform:scale(1.4); }
+
+    /* ===== FULLSCREEN ===== */
+    :fullscreen .header { position:fixed; width:100%; }
+    :fullscreen .main-content { margin-top:var(--nav-h); }
+    :-webkit-full-screen .header { position:fixed; width:100%; }
+    :-webkit-full-screen .main-content { margin-top:var(--nav-h); }
+
+    /* ===== BACKLOG TREND ===== */
+    .backlog-trend-val { font-size:28px; font-weight:800; line-height:1; }
+    .backlog-trend-label { font-size:11px; color:var(--text3); margin-top:4px; }
   </style>
 </head>
 <body>
@@ -1336,6 +1381,9 @@
         <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       </button>
 
+      <button class="btn btn-ghost btn-icon" onclick="toggleFullscreen()" title="풀스크린 (F)" id="fullscreen-btn">
+        <svg id="fullscreen-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/></svg>
+      </button>
       <span class="last-update" id="last-update-time" style="display:none;">
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <span id="last-update-text">—</span>
@@ -1551,6 +1599,39 @@
         </div>
       </div>
 
+      <!-- Backlog Trend + Heatmap -->
+      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">📈 백로그 추세 (최근 30일)</span>
+          </div>
+          <div class="card-body" style="display:flex; gap:20px; align-items:center;">
+            <div style="text-align:center; flex:1;">
+              <div class="backlog-trend-val" id="backlog-created">—</div>
+              <div class="backlog-trend-label">생성</div>
+            </div>
+            <div style="font-size:24px; color:var(--text4);">vs</div>
+            <div style="text-align:center; flex:1;">
+              <div class="backlog-trend-val" id="backlog-done">—</div>
+              <div class="backlog-trend-label">완료</div>
+            </div>
+            <div style="flex:2; text-align:center;">
+              <div id="backlog-net" style="font-size:20px; font-weight:800;">—</div>
+              <div id="backlog-net-label" class="backlog-trend-label">순변화</div>
+              <div id="backlog-verdict" style="font-size:11px; margin-top:4px; font-weight:600;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🌿 활동 히트맵 (최근 1년)</span>
+          </div>
+          <div class="card-body" style="padding:16px 20px;">
+            <div id="heatmap-grid-wrap"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Activity -->
       <div class="card">
         <div class="card-header">
@@ -1628,6 +1709,19 @@
       <div style="margin-top:20px;">
         <div class="card">
           <div class="card-header">
+            <span class="card-title">🏃 담당자별 평균 처리 속도</span>
+            <span class="chip text-muted">완료 이슈 기준</span>
+          </div>
+          <div class="card-body">
+            <div class="trend-chart-wrap">
+              <canvas id="chart-assignee-speed" style="max-height:220px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:16px;">
+        <div class="card">
+          <div class="card-header">
             <span class="card-title">사용자별 이슈 할당 현황</span>
           </div>
           <div class="card-body">
@@ -1639,13 +1733,15 @@
       </div>
     </div>
 
+
     <!-- ===== 이슈 탭 ===== -->
     <div class="tab-panel" id="tab-issues">
       <!-- Filter Bar -->
       <div class="filter-bar">
         <div class="search-wrap">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-          <input type="text" class="search-input" id="issue-search" placeholder="이슈 검색..." oninput="filterIssues()" />
+          <input type="text" class="search-input" id="issue-search" placeholder="이슈 검색... (/ 단축키)" oninput="filterIssues();onSearchInput()" onfocus="showSearchHistory()" onblur="setTimeout(hideSearchHistory,200)" onkeydown="searchKeydown(event)" autocomplete="off" />
+          <div class="search-history-drop" id="search-history-drop"></div>
         </div>
         <select id="filter-project" onchange="filterIssues()"><option value="">모든 프로젝트</option></select>
         <select id="filter-status" onchange="filterIssues()"><option value="">모든 상태</option></select>
@@ -1764,6 +1860,9 @@
 
   </main>
 </div>
+
+<!-- ===== CONTEXT MENU ===== -->
+<div class="ctx-menu" id="ctx-menu"></div>
 
 <!-- ===== MOBILE MENU ===== -->
 <div class="mobile-menu" id="mobile-menu" onclick="closeMobileMenu(event)">
@@ -2356,9 +2455,10 @@ function renderProjects(issues) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg><p>프로젝트가 없습니다</p></div>`;
     return;
   }
+  const savedColors = getProjectColors();
   grid.innerHTML = projects.map((p, i) => {
     const pct = p.total > 0 ? Math.round(p.done/p.total*100) : 0;
-    const color = projectColor(i);
+    const color = savedColors[p.key] || projectColor(i);
     const letter = p.key.slice(0,2);
     // Gauge: circle circumference for r=32 is ~201
     const r = 32, circ = 2 * Math.PI * r;
@@ -2366,7 +2466,7 @@ function renderProjects(issues) {
     const gaugeColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--info)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
     return `<div class="project-card" onclick="filterByProject('${escHtml(p.key)}')">
       <div class="project-card-header">
-        <div class="project-icon" style="background:${color}">${letter}</div>
+        <div class="project-icon" style="background:${color}" title="색상 변경" onclick="event.stopPropagation();document.getElementById('cpicker-${escHtml(p.key)}').click()">${letter}<input type="color" id="cpicker-${escHtml(p.key)}" value="${color.startsWith('#')?color:'#0052CC'}" style="position:absolute;opacity:0;width:0;height:0;pointer-events:none;" onchange="setProjectColor('${escHtml(p.key)}',this.value)"></div>
         <div class="project-info">
           <div class="project-name">${escHtml(p.name)}</div>
           <div class="project-key">${escHtml(p.key)}</div>
@@ -2600,7 +2700,7 @@ function renderIssuesTable() {
     const cat = statusCategory(status, f.status?.statusCategory?.key);
     const staleDays = changeDate && cat !== 'done' ? Math.floor((now - new Date(changeDate)) / 86400000) : 0;
     const isStale = staleDays >= 3;
-    return `<tr style="cursor:pointer;" onclick="showIssueModal('${escHtml(key)}')" ${isStale ? 'class="stale-row"' : ''}>
+    return `<tr style="cursor:pointer;" data-key="${escHtml(key)}" onclick="showIssueModal('${escHtml(key)}')" oncontextmenu="showContextMenu(event,'${escHtml(key)}')" ${isStale ? 'class="stale-row"' : ''}>
       <td onclick="event.stopPropagation()"><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>
       <td><div class="issue-summary" title="${escHtml(summary)}">${escHtml(summary)}${isStale ? ` <span style="font-size:10px;color:var(--warning);font-weight:700;">🕐${staleDays}일</span>` : ''}</div></td>
       <td><span class="badge ${typeBadgeClass(type)}">${escHtml(type)}</span></td>
@@ -3001,6 +3101,9 @@ function renderAll() {
   renderLabelCloud(issues);
   renderStaleIssues(issues);
   renderAssigneePieChart(issues);
+  renderBacklogTrend(issues);
+  renderHeatmap(issues);
+  renderAssigneeSpeed(issues);
   renderMyIssues(state.issues);
   populateFilters(issues);
   updateTabBadges(issues);
@@ -3316,6 +3419,223 @@ function renderBookmarks() {
       <span class="bm-del" onclick="event.stopPropagation();deleteBookmark(${i})" title="삭제">×</span>
     </span>`).join('');
 }
+
+// ===== BACKLOG TREND =====
+function renderBacklogTrend(issues) {
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 86400000);
+  let created = 0, done = 0;
+  for (const iss of issues) {
+    const cr = iss.fields?.created;
+    if (cr && new Date(cr) >= thirtyDaysAgo) created++;
+    const rd = iss.fields?.resolutiondate;
+    if (rd && new Date(rd) >= thirtyDaysAgo) done++;
+  }
+  const net = created - done;
+  const createdEl = document.getElementById('backlog-created');
+  const doneEl = document.getElementById('backlog-done');
+  const netEl = document.getElementById('backlog-net');
+  const verdictEl = document.getElementById('backlog-verdict');
+  if (createdEl) animateCount(createdEl, created);
+  if (doneEl) { doneEl.style.color = 'var(--success)'; animateCount(doneEl, done); }
+  if (netEl) {
+    netEl.textContent = (net > 0 ? '+' : '') + net.toLocaleString();
+    netEl.style.color = net > 0 ? 'var(--danger)' : net < 0 ? 'var(--success)' : 'var(--text3)';
+  }
+  if (verdictEl) {
+    verdictEl.textContent = net > 5 ? '📈 백로그 증가 중' : net < -5 ? '📉 백로그 감소 중' : '➡️ 균형 유지';
+    verdictEl.style.color = net > 5 ? 'var(--danger)' : net < -5 ? 'var(--success)' : 'var(--text3)';
+  }
+}
+
+// ===== HEATMAP =====
+function renderHeatmap(issues) {
+  const wrap = document.getElementById('heatmap-grid-wrap');
+  if (!wrap) return;
+  const now = new Date();
+  const dayMap = {};
+  for (const iss of issues) {
+    [iss.fields?.created, iss.fields?.updated, iss.fields?.resolutiondate].filter(Boolean).forEach(d => {
+      const key = d.slice(0, 10);
+      dayMap[key] = (dayMap[key] || 0) + 1;
+    });
+  }
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() - 364);
+  startDate.setDate(startDate.getDate() - startDate.getDay());
+  const weeks = [];
+  const cur = new Date(startDate);
+  while (cur <= now) {
+    const week = [];
+    for (let d = 0; d < 7; d++) {
+      const key = cur.toISOString().slice(0, 10);
+      week.push({ date: key, count: dayMap[key] || 0, future: cur > now });
+      cur.setDate(cur.getDate() + 1);
+    }
+    weeks.push(week);
+  }
+  const days = ['일','월','화','수','목','금','토'];
+  wrap.innerHTML = `
+    <div style="display:flex; gap:3px; align-items:flex-start;">
+      <div class="heatmap-days">${days.map(d => `<div class="heatmap-day-label">${d}</div>`).join('')}</div>
+      <div class="heatmap-wrap"><div class="heatmap-grid">
+        ${weeks.map(week => `<div class="heatmap-col">${week.map(day => {
+          const lv = day.future || day.count===0 ? 0 : day.count<=2?1:day.count<=5?2:day.count<=10?3:4;
+          return `<div class="heatmap-cell${lv>0?' l'+lv:''}" title="${day.date}: ${day.count}건"></div>`;
+        }).join('')}</div>`).join('')}
+      </div></div>
+    </div>
+    <div style="display:flex; align-items:center; gap:3px; margin-top:8px; font-size:10px; color:var(--text4);">
+      적음 <div class="heatmap-cell"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l4"></div> 많음
+    </div>`;
+}
+
+// ===== ASSIGNEE SPEED CHART =====
+function renderAssigneeSpeed(issues) {
+  const speedMap = {};
+  for (const iss of issues) {
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    if (cat !== 'done') continue;
+    const cr = iss.fields?.created, rd = iss.fields?.resolutiondate;
+    if (!cr || !rd) continue;
+    const name = iss.fields?.assignee?.displayName || '미배정';
+    const days = (new Date(rd) - new Date(cr)) / 86400000;
+    if (!speedMap[name]) speedMap[name] = { sum: 0, count: 0 };
+    speedMap[name].sum += days;
+    speedMap[name].count++;
+  }
+  const entries = Object.entries(speedMap)
+    .filter(([,v]) => v.count >= 1)
+    .map(([name, v]) => ({ name, avg: Math.round(v.sum / v.count), count: v.count }))
+    .sort((a, b) => a.avg - b.avg)
+    .slice(0, 10);
+  if (!entries.length) return;
+  const { gridColor, tickColor } = getChartColors();
+  const colors = entries.map(e => e.avg <= 7 ? '#36b37e' : e.avg <= 14 ? '#0065ff' : e.avg <= 30 ? '#ff991f' : '#de350b');
+  if (state.charts.assigneeSpeed) state.charts.assigneeSpeed.destroy();
+  state.charts.assigneeSpeed = new Chart(document.getElementById('chart-assignee-speed'), {
+    type: 'bar',
+    data: {
+      labels: entries.map(e => `${e.name} (${e.count}건)`),
+      datasets: [{ data: entries.map(e => e.avg), backgroundColor: colors, borderRadius: 5, borderSkipped: false }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, indexAxis: 'y',
+      animation: { duration: 600 },
+      scales: {
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } }, title: { display: true, text: '평균 처리일', color: tickColor, font: { size: 11 } } },
+        y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } }
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` 평균 ${ctx.raw}일` } } }
+    }
+  });
+}
+
+// ===== PROJECT CUSTOM COLORS =====
+const PROJ_COLOR_KEY = 'jira_project_colors';
+function getProjectColors() {
+  try { return JSON.parse(localStorage.getItem(PROJ_COLOR_KEY) || '{}'); } catch { return {}; }
+}
+function setProjectColor(key, color) {
+  const colors = getProjectColors();
+  colors[key] = color;
+  localStorage.setItem(PROJ_COLOR_KEY, JSON.stringify(colors));
+  renderProjects(getGlobalFilteredIssues());
+}
+
+// ===== SEARCH HISTORY =====
+const SEARCH_HIST_KEY = 'jira_search_hist';
+function getSearchHist() { try { return JSON.parse(localStorage.getItem(SEARCH_HIST_KEY)||'[]'); } catch { return []; } }
+function addSearchHist(term) {
+  if (!term || term.length < 2) return;
+  let h = getSearchHist().filter(x => x !== term);
+  h.unshift(term);
+  localStorage.setItem(SEARCH_HIST_KEY, JSON.stringify(h.slice(0, 8)));
+}
+function onSearchInput() {
+  const val = document.getElementById('issue-search').value;
+  const drop = document.getElementById('search-history-drop');
+  const hist = getSearchHist().filter(h => !val || h.includes(val));
+  if (!hist.length || !val) { drop.classList.remove('show'); return; }
+  drop.innerHTML = hist.map(h => `<div class="sh-item" onmousedown="applySearchHist('${escHtml(h)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${escHtml(h)}</div>`).join('');
+  drop.classList.add('show');
+}
+function applySearchHist(term) {
+  document.getElementById('issue-search').value = term;
+  filterIssues();
+  hideSearchHistory();
+}
+function showSearchHistory() {
+  const hist = getSearchHist();
+  const drop = document.getElementById('search-history-drop');
+  if (!hist.length) return;
+  drop.innerHTML = `<div style="padding:6px 12px 4px; font-size:10px; color:var(--text4); font-weight:600; text-transform:uppercase;">최근 검색</div>` +
+    hist.map(h => `<div class="sh-item" onmousedown="applySearchHist('${escHtml(h)}')"><svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>${escHtml(h)}</div>`).join('');
+  drop.classList.add('show');
+}
+function hideSearchHistory() { document.getElementById('search-history-drop')?.classList.remove('show'); }
+function searchKeydown(e) {
+  if (e.key === 'Enter') { addSearchHist(e.target.value); hideSearchHistory(); }
+  if (e.key === 'Escape') { e.target.value = ''; filterIssues(); hideSearchHistory(); }
+}
+
+// ===== CONTEXT MENU =====
+function showContextMenu(e, issueKey) {
+  e.preventDefault();
+  e.stopPropagation();
+  const iss = state.issues.find(i => i.key === issueKey);
+  if (!iss) return;
+  const f = iss.fields || {};
+  const assignee = f.assignee?.displayName || '미배정';
+  const projKey = f.project?.key || '';
+  const url = `${JIRA_BROWSE}/browse/${issueKey}`;
+  const menu = document.getElementById('ctx-menu');
+  menu.innerHTML = `
+    <div class="ctx-item" onclick="showIssueModal('${escHtml(issueKey)}');hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> 상세 보기
+    </div>
+    <div class="ctx-item" onclick="window.open('${url}','_blank');hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> JIRA에서 열기
+    </div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" onclick="navigator.clipboard.writeText('${escHtml(issueKey)}');showToast('키 복사됨','success',2000);hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 키 복사 (${escHtml(issueKey)})
+    </div>
+    <div class="ctx-item" onclick="navigator.clipboard.writeText('${url}');showToast('URL 복사됨','success',2000);hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> URL 복사
+    </div>
+    <div class="ctx-divider"></div>
+    <div class="ctx-item" onclick="document.getElementById('filter-assignee').value='${escHtml(assignee)}';filterIssues();switchTab('issues');hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> 담당자 필터: ${escHtml(assignee)}
+    </div>
+    <div class="ctx-item" onclick="document.getElementById('filter-project').value='${escHtml(projKey)}';filterIssues();switchTab('issues');hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 프로젝트 필터: ${escHtml(projKey)}
+    </div>`;
+  menu.style.display = 'block';
+  menu.style.left = `${Math.min(e.clientX, window.innerWidth - 210)}px`;
+  menu.style.top = `${Math.min(e.clientY, window.innerHeight - 260)}px`;
+}
+function hideCtxMenu() { document.getElementById('ctx-menu').style.display = 'none'; }
+document.addEventListener('click', hideCtxMenu);
+document.addEventListener('contextmenu', (e) => { if (!e.target.closest('tr[data-key]')) hideCtxMenu(); });
+
+// ===== FULLSCREEN =====
+function toggleFullscreen() {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen().catch(() => {});
+  } else {
+    document.exitFullscreen().catch(() => {});
+  }
+}
+document.addEventListener('fullscreenchange', () => {
+  const icon = document.getElementById('fullscreen-icon');
+  if (!icon) return;
+  if (document.fullscreenElement) {
+    icon.innerHTML = '<path d="M8 3v3a2 2 0 0 1-2 2H3m18 0h-3a2 2 0 0 1-2-2V3m0 18v-3a2 2 0 0 1 2-2h3M3 16h3a2 2 0 0 1 2 2v3"/>';
+  } else {
+    icon.innerHTML = '<path d="M8 3H5a2 2 0 0 0-2 2v3m18 0V5a2 2 0 0 0-2-2h-3m0 18h3a2 2 0 0 0 2-2v-3M3 16v3a2 2 0 0 0 2 2h3"/>';
+  }
+});
 
 // ===== MOBILE MENU =====
 function openMobileMenu() { document.getElementById('mobile-menu').classList.add('show'); }
