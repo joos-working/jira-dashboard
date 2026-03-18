@@ -1707,8 +1707,8 @@
       <select class="date-range-select" id="auto-refresh-select" onchange="onAutoRefreshChange()" title="자동 새로고침 간격">
         <option value="0">자동갱신 끄기</option>
         <option value="1">1분</option>
-        <option value="5" selected>5분</option>
-        <option value="15">15분</option>
+        <option value="5">5분</option>
+        <option value="15" selected>15분</option>
         <option value="30">30분</option>
         <option value="60">1시간</option>
       </select>
@@ -4650,7 +4650,7 @@ function closeIssueModal(e) {
 // ===== AUTO REFRESH =====
 function startAutoRefresh() {
   if (state.autoRefreshTimer) clearInterval(state.autoRefreshTimer);
-  const minutes = parseInt(localStorage.getItem('jira_refresh_min') ?? '0');
+  const minutes = parseInt(localStorage.getItem('jira_refresh_min') ?? '15');
   const el = document.getElementById('auto-refresh-select');
   if (el) el.value = String(minutes);
   if (minutes === 0) return;
