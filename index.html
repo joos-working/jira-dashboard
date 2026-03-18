@@ -1956,7 +1956,7 @@
             <span class="chip text-muted" id="due-soon-count">0건</span>
           </div>
           <div class="card-body" style="padding-top:12px;">
-            <div id="due-soon-list" class="due-soon-list" style="max-height:280px; overflow-y:auto;">
+            <div id="due-soon-list" class="due-soon-list" style="max-height:440px; overflow-y:auto;">
               <div class="empty-state" style="padding:20px 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>마감 임박 이슈 없음</p></div>
             </div>
           </div>
@@ -1968,7 +1968,7 @@
             <span class="chip text-muted" data-i18n="chart_bottleneck_sub">상위 10건</span>
           </div>
           <div class="card-body" style="padding:0;">
-            <div id="bottleneck-wrap" style="max-height:280px; overflow-y:auto;">
+            <div id="bottleneck-wrap" style="max-height:440px; overflow-y:auto;">
               <div class="empty-state" style="padding:20px 0;"><p>데이터 없음</p></div>
             </div>
           </div>
@@ -1983,7 +1983,7 @@
             <span class="chip text-muted" id="stale-count-chip">0건</span>
           </div>
           <div class="card-body" style="padding:0;">
-            <div id="stale-issues-wrap" style="max-height:280px; overflow-y:auto;">
+            <div id="stale-issues-wrap" style="max-height:440px; overflow-y:auto;">
               <div class="empty-state" style="padding:20px 0;"><p>데이터를 불러오는 중...</p></div>
             </div>
           </div>
@@ -1997,7 +1997,7 @@
           <span class="chip text-muted" data-i18n="chart_recent_sub">최근 10건</span>
         </div>
         <div class="card-body" style="padding-top:4px; padding-bottom:4px;">
-          <div class="activity-list" id="activity-list" style="max-height:320px; overflow-y:auto;">
+          <div class="activity-list" id="activity-list" style="max-height:440px; overflow-y:auto;">
             <div class="empty-state">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
               <p>데이터를 불러오는 중...</p>
@@ -3353,11 +3353,11 @@ function filterByStatCard(type) {
       label = currentLang === 'ko' ? '전체 이슈' : 'All Issues';
       break;
     case 'todo':
-      filtered = base.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'new');
+      filtered = base.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'todo');
       label = currentLang === 'ko' ? '할 일' : 'To Do';
       break;
     case 'inprogress':
-      filtered = base.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'indeterminate');
+      filtered = base.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'inprogress');
       label = currentLang === 'ko' ? '진행 중' : 'In Progress';
       break;
     case 'done':
