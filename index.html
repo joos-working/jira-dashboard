@@ -1868,6 +1868,30 @@
         </div>
       </div>
 
+      <!-- Trend Charts -->
+      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">주간 이슈 생성 vs 완료 (최근 12주)</span>
+          </div>
+          <div class="card-body">
+            <div class="trend-chart-wrap">
+              <canvas id="chart-weekly-trend" style="max-height:260px;"></canvas>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">월별 트렌드</span>
+          </div>
+          <div class="card-body">
+            <div class="trend-chart-wrap">
+              <canvas id="chart-monthly-trend" style="max-height:260px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Charts Row 2 -->
       <div class="charts-row" style="grid-template-columns: 1fr; margin-bottom:16px;">
         <div class="card">
@@ -1878,39 +1902,6 @@
             <div class="chart-container" style="min-height:180px;">
               <canvas id="chart-project-status" style="max-height:200px;"></canvas>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Backlog Trend + Heatmap -->
-      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title" data-i18n="chart_backlog_trend">📈 백로그 추세 (최근 30일)</span>
-          </div>
-          <div class="card-body" style="display:flex; gap:20px; align-items:center;">
-            <div style="text-align:center; flex:1;">
-              <div class="backlog-trend-val" id="backlog-created">—</div>
-              <div class="backlog-trend-label" data-i18n="backlog_created">생성</div>
-            </div>
-            <div style="font-size:24px; color:var(--text4);">vs</div>
-            <div style="text-align:center; flex:1;">
-              <div class="backlog-trend-val" id="backlog-done">—</div>
-              <div class="backlog-trend-label" data-i18n="backlog_done_lbl">완료</div>
-            </div>
-            <div style="flex:2; text-align:center;">
-              <div id="backlog-net" style="font-size:20px; font-weight:800;">—</div>
-              <div id="backlog-net-label" class="backlog-trend-label" data-i18n="backlog_net">순변화</div>
-              <div id="backlog-verdict" style="font-size:11px; margin-top:4px; font-weight:600;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title" id="heatmap-card-title">🌿 활동 히트맵</span>
-          </div>
-          <div class="card-body" style="padding:16px 20px;">
-            <div id="heatmap-grid-wrap"></div>
           </div>
         </div>
       </div>
@@ -1944,26 +1935,35 @@
         </div>
       </div>
 
-      <!-- Trend Charts -->
+      <!-- Backlog Trend + Heatmap -->
       <div class="charts-row charts-row-2" style="margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
-            <span class="card-title">주간 이슈 생성 vs 완료 (최근 12주)</span>
+            <span class="card-title" data-i18n="chart_backlog_trend">📈 백로그 추세 (최근 30일)</span>
           </div>
-          <div class="card-body">
-            <div class="trend-chart-wrap">
-              <canvas id="chart-weekly-trend" style="max-height:260px;"></canvas>
+          <div class="card-body" style="display:flex; gap:16px; align-items:center; padding:12px 16px;">
+            <div style="text-align:center; flex:1;">
+              <div class="backlog-trend-val" id="backlog-created" style="font-size:22px;">—</div>
+              <div class="backlog-trend-label" data-i18n="backlog_created">생성</div>
+            </div>
+            <div style="font-size:18px; color:var(--text4);">vs</div>
+            <div style="text-align:center; flex:1;">
+              <div class="backlog-trend-val" id="backlog-done" style="font-size:22px;">—</div>
+              <div class="backlog-trend-label" data-i18n="backlog_done_lbl">완료</div>
+            </div>
+            <div style="flex:2; text-align:center;">
+              <div id="backlog-net" style="font-size:18px; font-weight:800;">—</div>
+              <div id="backlog-net-label" class="backlog-trend-label" data-i18n="backlog_net">순변화</div>
+              <div id="backlog-verdict" style="font-size:11px; margin-top:2px; font-weight:600;"></div>
             </div>
           </div>
         </div>
         <div class="card">
           <div class="card-header">
-            <span class="card-title">월별 트렌드</span>
+            <span class="card-title" id="heatmap-card-title">🌿 활동 히트맵</span>
           </div>
-          <div class="card-body">
-            <div class="trend-chart-wrap">
-              <canvas id="chart-monthly-trend" style="max-height:260px;"></canvas>
-            </div>
+          <div class="card-body" style="padding:10px 16px;">
+            <div id="heatmap-grid-wrap"></div>
           </div>
         </div>
       </div>
