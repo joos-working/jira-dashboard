@@ -4933,7 +4933,7 @@ function renderHeatmap(issues) {
   const containerW = wrap.clientWidth || 600;
   const dayLabelW = 20;
   const gap = 2;
-  const cellSize = Math.max(10, Math.floor((containerW - dayLabelW - weeks.length * gap) / weeks.length));
+  const cellSize = Math.min(14, Math.max(10, Math.floor((containerW - dayLabelW - weeks.length * gap) / weeks.length)));
   const cs = `${cellSize}px`;
   wrap.innerHTML = `
     <div style="display:flex; gap:${gap}px; align-items:flex-start;">
