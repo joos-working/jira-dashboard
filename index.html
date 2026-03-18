@@ -1786,7 +1786,7 @@
         </div>
         <div class="card">
           <div class="card-header">
-            <span class="card-title" data-i18n="chart_heatmap">🌿 활동 히트맵 (최근 1년)</span>
+            <span class="card-title" id="heatmap-card-title">🌿 활동 히트맵</span>
           </div>
           <div class="card-body" style="padding:16px 20px;">
             <div id="heatmap-grid-wrap"></div>
@@ -4560,8 +4560,13 @@ function renderHeatmap(issues) {
       dayMap[key] = (dayMap[key] || 0) + 1;
     });
   }
+  const rangeDays = (state.dateRange === 'custom' && state.dateFrom)
+    ? Math.ceil((now - new Date(state.dateFrom)) / 86400000)
+    : (parseInt(state.dateRange) || 90);
+  const titleEl = document.getElementById('heatmap-card-title');
+  if (titleEl) titleEl.textContent = currentLang === 'ko' ? `🌿 활동 히트맵 (최근 ${rangeDays}일)` : `🌿 Activity Heatmap (Last ${rangeDays}d)`;
   const startDate = new Date(now);
-  startDate.setDate(startDate.getDate() - 364);
+  startDate.setDate(startDate.getDate() - rangeDays);
   startDate.setDate(startDate.getDate() - startDate.getDay());
   const weeks = [];
   const cur = new Date(startDate);
