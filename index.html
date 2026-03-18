@@ -1271,6 +1271,166 @@
     /* ===== BACKLOG TREND ===== */
     .backlog-trend-val { font-size:28px; font-weight:800; line-height:1; }
     .backlog-trend-label { font-size:11px; color:var(--text3); margin-top:4px; }
+
+    /* ===== EXECUTIVE TAB ===== */
+    .exec-header {
+      text-align: center;
+      padding: 32px 0 24px;
+    }
+    .exec-header h1 {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--text);
+      margin-bottom: 6px;
+    }
+    .exec-header p {
+      font-size: 14px;
+      color: var(--text3);
+    }
+    .exec-kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 900px) { .exec-kpi-grid { grid-template-columns: repeat(2, 1fr); } }
+    @media (max-width: 500px) { .exec-kpi-grid { grid-template-columns: 1fr; } }
+    .exec-kpi-card {
+      background: var(--surface);
+      border-radius: var(--radius-lg);
+      padding: 28px 24px;
+      box-shadow: var(--shadow);
+      border: 1px solid var(--border);
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .exec-kpi-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 4px;
+      background: var(--kpi-color, var(--primary));
+    }
+    .exec-kpi-icon {
+      font-size: 28px;
+      margin-bottom: 12px;
+    }
+    .exec-kpi-value {
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1;
+      color: var(--kpi-color, var(--primary));
+      margin-bottom: 8px;
+      letter-spacing: -2px;
+    }
+    .exec-kpi-label {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text2);
+      margin-bottom: 4px;
+    }
+    .exec-kpi-sub {
+      font-size: 11px;
+      color: var(--text4);
+    }
+    .exec-kpi-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 6px;
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+    }
+    .exec-row-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    @media (max-width: 700px) { .exec-row-2 { grid-template-columns: 1fr; } }
+    .exec-project-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .exec-project-bar:last-child { border-bottom: none; }
+    .exec-project-name {
+      width: 80px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text2);
+      flex-shrink: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .exec-project-track {
+      flex: 1;
+      height: 10px;
+      background: var(--surface3);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    .exec-project-fill {
+      height: 100%;
+      border-radius: var(--radius-full);
+      transition: width 0.6s ease;
+    }
+    .exec-project-pct {
+      font-size: 12px;
+      font-weight: 700;
+      width: 36px;
+      text-align: right;
+      flex-shrink: 0;
+    }
+    .exec-risk-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .exec-risk-item:last-child { border-bottom: none; }
+    .exec-risk-badge {
+      padding: 2px 8px;
+      border-radius: var(--radius-full);
+      font-size: 10px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    .exec-risk-key {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .exec-risk-title {
+      font-size: 12px;
+      color: var(--text2);
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .exec-risk-days {
+      font-size: 11px;
+      color: var(--text4);
+      flex-shrink: 0;
+    }
+    .exec-velocity-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      font-size: 13px;
+    }
+    .exec-velocity-row:last-child { border-bottom: none; }
   </style>
 </head>
 <body>
@@ -1388,6 +1548,10 @@
       <button class="nav-tab" data-tab="myissues" onclick="switchTab('myissues')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         <span data-i18n="nav_myissues">내 이슈</span><span class="nav-badge" id="badge-myissues" style="display:none;background:var(--info);">0</span>
+      </button>
+      <button class="nav-tab" data-tab="executive" onclick="switchTab('executive')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+        <span data-i18n="nav_executive">경영진</span>
       </button>
       <div class="header-divider" style="margin:0 6px;"></div>
       <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터">
@@ -1949,6 +2113,52 @@
       </div>
     </div>
 
+    <!-- ===== 경영진 탭 ===== -->
+    <div class="tab-panel" id="tab-executive">
+      <div class="exec-header">
+        <h1 id="exec-title">프로젝트 현황 요약</h1>
+        <p id="exec-subtitle">—</p>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="exec-kpi-grid" id="exec-kpi-grid">
+        <!-- rendered by JS -->
+      </div>
+
+      <!-- Project Progress + Risk Issues -->
+      <div class="exec-row-2">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="exec_proj_progress">프로젝트별 완료율</span>
+          </div>
+          <div class="card-body" style="padding:8px 20px;">
+            <div id="exec-project-bars"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="exec_risk">⚠️ 주요 위험 이슈</span>
+            <span class="chip text-muted" id="exec-risk-count"></span>
+          </div>
+          <div class="card-body" style="padding:8px 20px;">
+            <div id="exec-risk-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Weekly Velocity -->
+      <div class="card" style="margin-bottom:24px;">
+        <div class="card-header">
+          <span class="card-title" data-i18n="exec_velocity">📅 주간 처리 현황 (최근 6주)</span>
+        </div>
+        <div class="card-body">
+          <div class="chart-container" style="min-height:160px;">
+            <canvas id="chart-exec-velocity" style="max-height:180px;"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -2111,6 +2321,11 @@ const LANGS = {
     hdr_share: '공유 링크 복사',
     col_toggle: '컬럼',
     epic_title: '🚀 Epic 진행률',
+    // Executive tab
+    nav_executive: '경영진',
+    exec_proj_progress: '프로젝트별 완료율',
+    exec_risk: '⚠️ 주요 위험 이슈',
+    exec_velocity: '📅 주간 처리 현황 (최근 6주)',
   },
   en: {
     // Nav
@@ -2218,6 +2433,11 @@ const LANGS = {
     hdr_share: 'Copy share link',
     col_toggle: 'Columns',
     epic_title: '🚀 Epic Progress',
+    // Executive tab
+    nav_executive: 'Executive',
+    exec_proj_progress: 'Project Completion',
+    exec_risk: '⚠️ Key Risk Issues',
+    exec_velocity: '📅 Weekly Velocity (Last 6 weeks)',
   }
 };
 
@@ -2472,6 +2692,7 @@ function switchTab(tab, fromPopstate) {
   if (tab === 'myissues' && state.issues.length) {
     renderMyIssues(state.issues, true);
   }
+  if (tab === 'executive' && state.issues.length) renderExecutive(getGlobalFilteredIssues());
   // Push to browser history (skip when called from popstate to avoid loop)
   if (!fromPopstate && history.state?.tab !== tab) {
     const url = new URL(window.location.href);
@@ -3481,6 +3702,210 @@ function renderMyIssues(issues, fromTab) {
   }).join('');
 }
 
+// ===== EXECUTIVE TAB =====
+function renderExecutive(issues) {
+  const now = new Date();
+
+  // --- KPI calculations ---
+  const total = issues.length;
+  const done = issues.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'done').length;
+  const inprogress = issues.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'indeterminate').length;
+  const completionPct = total > 0 ? Math.round(done / total * 100) : 0;
+
+  const overdue = issues.filter(i => {
+    const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
+    return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now;
+  }).length;
+
+  const staleIssues = issues.filter(i => {
+    const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
+    if (cat === 'done') return false;
+    const changeDate = i.fields?.statuscategorychangedate || i.fields?.updated;
+    return changeDate && (now - new Date(changeDate)) / 86400000 >= 3;
+  });
+
+  const withDue = issues.filter(i => i.fields?.resolutiondate && i.fields?.duedate);
+  const ontime = withDue.filter(i => new Date(i.fields.resolutiondate) <= new Date(i.fields.duedate));
+  const ontimePct = withDue.length > 0 ? Math.round(ontime.length / withDue.length * 100) : null;
+
+  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const doneThisMonth = issues.filter(i => {
+    const rd = i.fields?.resolutiondate;
+    return rd && new Date(rd) >= thisMonth;
+  }).length;
+
+  // --- Subtitle ---
+  const subtitleEl = document.getElementById('exec-subtitle');
+  if (subtitleEl) subtitleEl.textContent = `${now.toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US', { year:'numeric', month:'long', day:'numeric' })} 기준`;
+
+  // --- KPI Cards ---
+  const kpiGrid = document.getElementById('exec-kpi-grid');
+  if (kpiGrid) {
+    const kpis = [
+      {
+        icon: '🎯',
+        value: completionPct + '%',
+        label: currentLang === 'ko' ? '전체 완료율' : 'Completion Rate',
+        sub: `${done} / ${total} ${currentLang === 'ko' ? '이슈' : 'issues'}`,
+        color: completionPct >= 70 ? 'var(--success)' : completionPct >= 40 ? 'var(--warning)' : 'var(--danger)',
+        trend: completionPct >= 70 ? '✅ 양호' : completionPct >= 40 ? '⚡ 진행중' : '🔴 주의',
+        trendColor: completionPct >= 70 ? 'var(--success-light)' : completionPct >= 40 ? 'var(--warning-light)' : 'var(--danger-light)',
+        trendTextColor: completionPct >= 70 ? 'var(--success)' : completionPct >= 40 ? 'var(--warning)' : 'var(--danger)',
+      },
+      {
+        icon: '⚡',
+        value: String(inprogress),
+        label: currentLang === 'ko' ? '진행 중 이슈' : 'In Progress',
+        sub: currentLang === 'ko' ? '현재 작업 중' : 'Currently active',
+        color: 'var(--info)',
+        trend: currentLang === 'ko' ? `이번 달 완료 ${doneThisMonth}건` : `${doneThisMonth} done this month`,
+        trendColor: 'var(--info-light)',
+        trendTextColor: 'var(--info)',
+      },
+      {
+        icon: '⏰',
+        value: String(overdue),
+        label: currentLang === 'ko' ? '기한 초과' : 'Overdue',
+        sub: currentLang === 'ko' ? '즉각 조치 필요' : 'Needs immediate action',
+        color: overdue === 0 ? 'var(--success)' : overdue <= 3 ? 'var(--warning)' : 'var(--danger)',
+        trend: overdue === 0 ? '✅ 없음' : overdue <= 3 ? '⚠️ 주의' : '🚨 위험',
+        trendColor: overdue === 0 ? 'var(--success-light)' : overdue <= 3 ? 'var(--warning-light)' : 'var(--danger-light)',
+        trendTextColor: overdue === 0 ? 'var(--success)' : overdue <= 3 ? 'var(--warning)' : 'var(--danger)',
+      },
+      {
+        icon: '📋',
+        value: ontimePct !== null ? ontimePct + '%' : 'N/A',
+        label: currentLang === 'ko' ? '기한 준수율' : 'On-time Rate',
+        sub: currentLang === 'ko' ? `${ontime.length}/${withDue.length}건 기준` : `${ontime.length}/${withDue.length} issues`,
+        color: ontimePct === null ? 'var(--text3)' : ontimePct >= 80 ? 'var(--success)' : ontimePct >= 60 ? 'var(--warning)' : 'var(--danger)',
+        trend: ontimePct === null ? '—' : ontimePct >= 80 ? '✅ 우수' : ontimePct >= 60 ? '⚡ 보통' : '🔴 미흡',
+        trendColor: ontimePct === null ? 'var(--surface3)' : ontimePct >= 80 ? 'var(--success-light)' : ontimePct >= 60 ? 'var(--warning-light)' : 'var(--danger-light)',
+        trendTextColor: ontimePct === null ? 'var(--text3)' : ontimePct >= 80 ? 'var(--success)' : ontimePct >= 60 ? 'var(--warning)' : 'var(--danger)',
+      },
+    ];
+    kpiGrid.innerHTML = kpis.map(k => `
+      <div class="exec-kpi-card" style="--kpi-color:${k.color}">
+        <div class="exec-kpi-icon">${k.icon}</div>
+        <div class="exec-kpi-value">${k.value}</div>
+        <div class="exec-kpi-label">${k.label}</div>
+        <div class="exec-kpi-sub">${k.sub}</div>
+        <div class="exec-kpi-trend" style="background:${k.trendColor};color:${k.trendTextColor};">${k.trend}</div>
+      </div>`).join('');
+    // animate KPI values
+    kpiGrid.querySelectorAll('.exec-kpi-value').forEach((el, i) => {
+      const raw = kpis[i].value;
+      const num = parseInt(raw);
+      if (!isNaN(num) && !raw.includes('%')) animateCount(el, num);
+    });
+  }
+
+  // --- Project bars ---
+  const projMap = {};
+  for (const iss of issues) {
+    const pk = iss.fields?.project?.key || '?';
+    const pn = iss.fields?.project?.name || pk;
+    if (!projMap[pk]) projMap[pk] = { name: pn, done: 0, total: 0 };
+    projMap[pk].total++;
+    if (statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key) === 'done') projMap[pk].done++;
+  }
+  const projects = Object.values(projMap).sort((a,b) => b.total - a.total);
+  const barsEl = document.getElementById('exec-project-bars');
+  if (barsEl) {
+    barsEl.innerHTML = projects.map(p => {
+      const pct = p.total > 0 ? Math.round(p.done / p.total * 100) : 0;
+      const fillColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--info)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
+      return `<div class="exec-project-bar">
+        <div class="exec-project-name" title="${escHtml(p.name)}">${escHtml(p.name)}</div>
+        <div class="exec-project-track"><div class="exec-project-fill" style="width:${pct}%;background:${fillColor};"></div></div>
+        <div class="exec-project-pct" style="color:${fillColor}">${pct}%</div>
+      </div>`;
+    }).join('');
+  }
+
+  // --- Risk issues (overdue + stale, top 8) ---
+  const riskIssues = [
+    ...issues.filter(i => {
+      const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
+      return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now;
+    }).map(i => ({ ...i, riskType: 'overdue', riskDays: Math.ceil((now - new Date(i.fields.duedate)) / 86400000) })),
+    ...staleIssues.filter(i => !issues.filter(j => {
+      const cat2 = statusCategory(j.fields?.status?.name||'', j.fields?.status?.statusCategory?.key);
+      return cat2 !== 'done' && j.fields?.duedate && new Date(j.fields.duedate) < now;
+    }).find(j => j.key === i.key))
+      .map(i => {
+        const changeDate = i.fields?.statuscategorychangedate || i.fields?.updated;
+        return { ...i, riskType: 'stale', riskDays: Math.floor((now - new Date(changeDate)) / 86400000) };
+      })
+  ].sort((a,b) => b.riskDays - a.riskDays).slice(0, 8);
+
+  const riskCountEl = document.getElementById('exec-risk-count');
+  if (riskCountEl) riskCountEl.textContent = `${riskIssues.length}건`;
+
+  const riskListEl = document.getElementById('exec-risk-list');
+  if (riskListEl) {
+    if (!riskIssues.length) {
+      riskListEl.innerHTML = `<div class="empty-state" style="padding:20px 0;"><p>${currentLang === 'ko' ? '위험 이슈 없음 ✅' : 'No risk issues ✅'}</p></div>`;
+    } else {
+      riskListEl.innerHTML = riskIssues.map(i => {
+        const isOverdue = i.riskType === 'overdue';
+        const badgeColor = isOverdue ? 'var(--danger-light)' : 'var(--warning-light)';
+        const badgeTextColor = isOverdue ? 'var(--danger)' : 'var(--warning)';
+        const badgeLabel = isOverdue ? (currentLang === 'ko' ? '기한초과' : 'Overdue') : (currentLang === 'ko' ? '묵은이슈' : 'Stale');
+        return `<div class="exec-risk-item">
+          <span class="exec-risk-badge" style="background:${badgeColor};color:${badgeTextColor};">${badgeLabel}</span>
+          <span class="exec-risk-key">${escHtml(i.key)}</span>
+          <span class="exec-risk-title" title="${escHtml(i.fields?.summary||'')}">${escHtml(i.fields?.summary||'')}</span>
+          <span class="exec-risk-days">${i.riskDays}${currentLang === 'ko' ? '일' : 'd'}</span>
+        </div>`;
+      }).join('');
+    }
+  }
+
+  // --- Weekly velocity chart (last 6 weeks) ---
+  const weeklyCreated = new Array(6).fill(0);
+  const weeklyDone = new Array(6).fill(0);
+  const weekLabels = [];
+  for (let w = 5; w >= 0; w--) {
+    const weekStart = new Date(now);
+    weekStart.setDate(weekStart.getDate() - weekStart.getDay() - w * 7);
+    weekStart.setHours(0,0,0,0);
+    const weekEnd = new Date(weekStart);
+    weekEnd.setDate(weekEnd.getDate() + 7);
+    weekLabels.push(`${weekStart.getMonth()+1}/${weekStart.getDate()}`);
+    const idx = 5 - w;
+    for (const iss of issues) {
+      const cr = iss.fields?.created;
+      if (cr && new Date(cr) >= weekStart && new Date(cr) < weekEnd) weeklyCreated[idx]++;
+      const rd = iss.fields?.resolutiondate;
+      if (rd && new Date(rd) >= weekStart && new Date(rd) < weekEnd) weeklyDone[idx]++;
+    }
+  }
+  const { gridColor, tickColor } = getChartColors();
+  if (state.charts.execVelocity) state.charts.execVelocity.destroy();
+  const canvas = document.getElementById('chart-exec-velocity');
+  if (canvas) {
+    state.charts.execVelocity = new Chart(canvas, {
+      type: 'bar',
+      data: {
+        labels: weekLabels,
+        datasets: [
+          { label: currentLang === 'ko' ? '생성' : 'Created', data: weeklyCreated, backgroundColor: 'rgba(100,149,255,0.7)', borderRadius: 4 },
+          { label: currentLang === 'ko' ? '완료' : 'Done', data: weeklyDone, backgroundColor: 'rgba(54,179,126,0.7)', borderRadius: 4 },
+        ]
+      },
+      options: {
+        responsive: true, maintainAspectRatio: true,
+        animation: { duration: 600 },
+        scales: {
+          x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
+          y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 }, stepSize: 1 }, beginAtZero: true }
+        },
+        plugins: { legend: { labels: { color: tickColor, font: { size: 11 }, boxWidth: 12 } } }
+      }
+    });
+  }
+}
+
 // ===== GLOBAL USER FILTER =====
 function getGlobalFilteredIssues() {
   if (!state.globalUserFilter) return state.issues;
@@ -3520,6 +3945,7 @@ function renderAll() {
   renderMyIssues(state.issues);
   renderAgeDist(issues);
   renderEpics(state.issues);
+  renderExecutive(issues);
   populateFilters(issues);
   updateTabBadges(issues);
   state.filteredIssues = [...issues];
