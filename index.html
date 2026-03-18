@@ -1138,6 +1138,70 @@
 
     /* ===== AUTO REFRESH INDICATOR ===== */
     .auto-refresh-indicator { font-size:10px; color:var(--text4); white-space:nowrap; }
+
+    /* ===== NAV BADGE ===== */
+    .nav-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 17px; height: 17px; padding: 0 4px;
+      border-radius: 9px; font-size: 10px; font-weight: 700;
+      background: var(--danger); color: #fff; margin-left: 2px;
+      animation: badgePop 0.3s cubic-bezier(0.34,1.56,0.64,1);
+    }
+    @keyframes badgePop { from { transform: scale(0); } to { transform: scale(1); } }
+
+    /* ===== FILTER BOOKMARKS ===== */
+    .bookmark-bar { display:flex; flex-wrap:wrap; gap:6px; padding:10px 16px 0; }
+    .bookmark-chip {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 4px 10px; border-radius: var(--radius-full);
+      font-size: 11px; font-weight: 600;
+      background: var(--purple-light); color: var(--purple);
+      border: 1px solid var(--purple); cursor: pointer;
+      transition: all var(--transition);
+    }
+    .bookmark-chip:hover { background: var(--purple); color: #fff; }
+    .bookmark-chip .bm-del { opacity: 0.6; font-size: 13px; line-height: 1; }
+    .bookmark-chip .bm-del:hover { opacity: 1; }
+
+    /* ===== LAST UPDATE ===== */
+    .last-update { font-size: 10px; color: var(--text4); white-space: nowrap; display: flex; align-items: center; gap: 4px; }
+    .last-update svg { opacity: 0.5; }
+
+    /* ===== MOBILE NAV ===== */
+    .mobile-nav-btn { display: none; }
+    .mobile-menu {
+      display: none; position: fixed; inset: 0; z-index: 300;
+      background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);
+    }
+    .mobile-menu.show { display: flex; align-items: flex-end; }
+    .mobile-menu-inner {
+      background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+      padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 6px;
+    }
+    .mobile-menu-tab {
+      padding: 12px 16px; border-radius: var(--radius-sm); font-size: 14px;
+      font-weight: 500; color: var(--text2); cursor: pointer;
+      background: none; border: none; font-family: var(--font);
+      text-align: left; display: flex; align-items: center; gap: 10px;
+      transition: all var(--transition);
+    }
+    .mobile-menu-tab:hover, .mobile-menu-tab.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    @media (max-width: 900px) {
+      .mobile-nav-btn { display: flex; }
+      .global-user-select { max-width: 110px; }
+    }
+    @media (max-width: 600px) {
+      .header { padding: 0 12px; gap: 8px; }
+      .header-logo-text { display: none; }
+      .date-range-select { display: none; }
+      .last-update { display: none; }
+      .user-info { display: none; }
+      .modal-box { padding: 20px 16px; border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 92vh; position: fixed; bottom: 0; left: 0; right: 0; width: 100%; max-width: 100%; }
+      .modal-overlay { align-items: flex-end; }
+    }
+
+    /* ===== KEYBOARD SHORTCUT HINT ===== */
+    .kbd { display:inline-block; padding:1px 5px; border-radius:4px; font-size:10px; font-weight:600; background:var(--surface3); border:1px solid var(--border2); color:var(--text3); font-family:monospace; }
   </style>
 </head>
 <body>
@@ -1242,7 +1306,7 @@
       </button>
       <button class="nav-tab" data-tab="issues" onclick="switchTab('issues')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        이슈
+        이슈<span class="nav-badge" id="badge-stale" style="display:none;">0</span>
       </button>
       <button class="nav-tab" data-tab="trend" onclick="switchTab('trend')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
@@ -1250,7 +1314,7 @@
       </button>
       <button class="nav-tab" data-tab="myissues" onclick="switchTab('myissues')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        내 이슈
+        내 이슈<span class="nav-badge" id="badge-myissues" style="display:none;background:var(--info);">0</span>
       </button>
       <div class="header-divider" style="margin:0 6px;"></div>
       <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터">
@@ -1272,8 +1336,15 @@
         <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
       </button>
 
-      <button class="btn btn-ghost btn-icon" onclick="refreshData()" title="새로고침" id="refresh-btn">
+      <span class="last-update" id="last-update-time" style="display:none;">
+        <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        <span id="last-update-text">—</span>
+      </span>
+      <button class="btn btn-ghost btn-icon" onclick="refreshData()" title="새로고침 (R)" id="refresh-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon mobile-nav-btn" onclick="openMobileMenu()" title="메뉴">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
 
       <div class="header-divider"></div>
@@ -1595,7 +1666,13 @@
           <option value="stale14">묵은 이슈 (14일+)</option>
         </select>
         <button class="btn btn-ghost btn-sm" onclick="clearFilters()">초기화</button>
+        <button class="btn btn-ghost btn-sm" onclick="saveBookmark()" title="현재 필터 저장">⭐ 저장</button>
+        <button class="btn btn-outline btn-sm" onclick="exportCSV()" title="CSV 내보내기">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+          CSV
+        </button>
       </div>
+      <div class="bookmark-bar" id="bookmark-bar" style="display:none;"></div>
 
       <div class="table-wrapper">
         <div style="overflow-x:auto;">
@@ -1686,6 +1763,19 @@
     </div>
 
   </main>
+</div>
+
+<!-- ===== MOBILE MENU ===== -->
+<div class="mobile-menu" id="mobile-menu" onclick="closeMobileMenu(event)">
+  <div class="mobile-menu-inner">
+    <div style="font-size:11px; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:.06em; margin-bottom:4px;">탭 이동</div>
+    <button class="mobile-menu-tab" onclick="switchTab('overview');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>개요</button>
+    <button class="mobile-menu-tab" onclick="switchTab('projects');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>프로젝트</button>
+    <button class="mobile-menu-tab" onclick="switchTab('team');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/></svg>팀</button>
+    <button class="mobile-menu-tab" onclick="switchTab('issues');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/></svg>이슈</button>
+    <button class="mobile-menu-tab" onclick="switchTab('trend');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>트렌드</button>
+    <button class="mobile-menu-tab" onclick="switchTab('myissues');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>내 이슈</button>
+  </div>
 </div>
 
 <!-- ===== ISSUE DETAIL MODAL ===== -->
@@ -1997,10 +2087,24 @@ async function loadDashboard() {
 }
 
 // ===== STATS =====
+// ===== COUNT UP ANIMATION =====
+function animateCount(el, target) {
+  const prev = parseInt(el.textContent.replace(/,/g, '')) || 0;
+  if (prev === target) return;
+  const duration = 700;
+  const start = performance.now();
+  const update = (now) => {
+    const t = Math.min((now - start) / duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    el.textContent = Math.round(prev + (target - prev) * eased).toLocaleString();
+    if (t < 1) requestAnimationFrame(update);
+  };
+  requestAnimationFrame(update);
+}
+
 function updateStats(issues) {
   let total = issues.length, todo = 0, inprogress = 0, done = 0, overdue = 0;
   const now = new Date();
-  // Start of this week (Monday)
   const weekStart = new Date(now);
   weekStart.setHours(0,0,0,0);
   weekStart.setDate(now.getDate() - ((now.getDay()+6)%7));
@@ -2012,19 +2116,18 @@ function updateStats(issues) {
     else if (cat === 'done') done++;
     const due = iss.fields?.duedate;
     if (due && cat !== 'done' && new Date(due) < now) overdue++;
-    // weekly stats
     const rd = iss.fields?.resolutiondate;
     if (rd && new Date(rd) >= weekStart) weekDone++;
     const cr = iss.fields?.created;
     if (cr && new Date(cr) >= weekStart) weekCreated++;
   }
-  document.getElementById('stat-total').textContent = total.toLocaleString();
-  document.getElementById('stat-todo').textContent = todo.toLocaleString();
-  document.getElementById('stat-inprogress').textContent = inprogress.toLocaleString();
-  document.getElementById('stat-done').textContent = done.toLocaleString();
-  document.getElementById('stat-overdue').textContent = overdue.toLocaleString();
-  document.getElementById('stat-week-done').textContent = weekDone.toLocaleString();
-  document.getElementById('stat-week-created').textContent = weekCreated.toLocaleString();
+  animateCount(document.getElementById('stat-total'), total);
+  animateCount(document.getElementById('stat-todo'), todo);
+  animateCount(document.getElementById('stat-inprogress'), inprogress);
+  animateCount(document.getElementById('stat-done'), done);
+  animateCount(document.getElementById('stat-overdue'), overdue);
+  animateCount(document.getElementById('stat-week-done'), weekDone);
+  animateCount(document.getElementById('stat-week-created'), weekCreated);
   const pct = total > 0 ? Math.round(done/total*100) : 0;
   document.getElementById('stat-done-pct').textContent = `완료율 ${pct}%`;
 }
@@ -2900,9 +3003,12 @@ function renderAll() {
   renderAssigneePieChart(issues);
   renderMyIssues(state.issues);
   populateFilters(issues);
+  updateTabBadges(issues);
   state.filteredIssues = [...issues];
   state.currentPage = 1;
   renderIssuesTable();
+  renderBookmarks();
+  setLastUpdateTime();
 }
 
 // ===== STALE ISSUES =====
@@ -3076,6 +3182,164 @@ function startAutoRefresh() {
     if (state.creds) loadDashboard();
   }, 5 * 60 * 1000);
 }
+
+// ===== LAST UPDATE TIME =====
+function setLastUpdateTime() {
+  state.lastUpdate = new Date();
+  const el = document.getElementById('last-update-time');
+  const txt = document.getElementById('last-update-text');
+  if (el) el.style.display = 'flex';
+  if (txt) txt.textContent = `방금 업데이트`;
+  // update relative time every minute
+  if (state._lastUpdateTick) clearInterval(state._lastUpdateTick);
+  state._lastUpdateTick = setInterval(() => {
+    if (!state.lastUpdate || !txt) return;
+    const mins = Math.round((new Date() - state.lastUpdate) / 60000);
+    txt.textContent = mins < 1 ? '방금 업데이트' : `${mins}분 전 업데이트`;
+  }, 60000);
+}
+
+// ===== TAB BADGES =====
+function updateTabBadges(issues) {
+  const now = new Date();
+  // Stale badge
+  const staleCount = issues.filter(i => {
+    const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
+    if (cat === 'done') return false;
+    const cd = i.fields?.statuscategorychangedate || i.fields?.updated;
+    return cd && (now - new Date(cd)) / 86400000 >= 3;
+  }).length;
+  const staleBadge = document.getElementById('badge-stale');
+  if (staleBadge) {
+    staleBadge.textContent = staleCount;
+    staleBadge.style.display = staleCount > 0 ? 'inline-flex' : 'none';
+  }
+  // My issues badge (inprogress count)
+  const userId = state.currentUser?.accountId;
+  if (userId) {
+    const myActive = issues.filter(i => {
+      if (i.fields?.assignee?.accountId !== userId) return false;
+      const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
+      return cat === 'inprogress';
+    }).length;
+    const myBadge = document.getElementById('badge-myissues');
+    if (myBadge) {
+      myBadge.textContent = myActive;
+      myBadge.style.display = myActive > 0 ? 'inline-flex' : 'none';
+    }
+  }
+}
+
+// ===== CSV EXPORT =====
+function exportCSV() {
+  if (!state.filteredIssues.length) { showToast('내보낼 이슈가 없습니다.', 'error'); return; }
+  const headers = ['키','요약','타입','상태','우선순위','담당자','프로젝트','생성일','업데이트','마감일'];
+  const rows = state.filteredIssues.map(iss => {
+    const f = iss.fields || {};
+    return [
+      iss.key || '',
+      f.summary || '',
+      f.issuetype?.name || '',
+      f.status?.name || '',
+      f.priority?.name || '',
+      f.assignee?.displayName || '미배정',
+      f.project?.key || '',
+      f.created ? new Date(f.created).toLocaleDateString('ko-KR') : '',
+      f.updated ? new Date(f.updated).toLocaleDateString('ko-KR') : '',
+      f.duedate || '',
+    ].map(v => `"${String(v).replace(/"/g,'""')}"`);
+  });
+  const csv = '\uFEFF' + [headers.map(h=>`"${h}"`).join(','), ...rows.map(r=>r.join(','))].join('\n');
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `jira-issues-${new Date().toISOString().slice(0,10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast(`${state.filteredIssues.length}개 이슈를 CSV로 내보냈습니다.`, 'success');
+}
+
+// ===== BOOKMARK FILTERS =====
+const BM_KEY = 'jira_bookmarks';
+function getBookmarks() {
+  try { return JSON.parse(localStorage.getItem(BM_KEY) || '[]'); } catch { return []; }
+}
+function saveBookmark() {
+  const name = prompt('필터 이름을 입력하세요:');
+  if (!name) return;
+  const filter = {
+    name,
+    search: document.getElementById('issue-search').value,
+    project: document.getElementById('filter-project').value,
+    status: document.getElementById('filter-status').value,
+    assignee: document.getElementById('filter-assignee').value,
+    priority: document.getElementById('filter-priority').value,
+    type: document.getElementById('filter-type').value,
+    stale: document.getElementById('filter-stale').value,
+  };
+  const bms = getBookmarks();
+  bms.push(filter);
+  localStorage.setItem(BM_KEY, JSON.stringify(bms));
+  renderBookmarks();
+  showToast(`"${name}" 필터가 저장되었습니다.`, 'success');
+}
+function loadBookmark(idx) {
+  const bms = getBookmarks();
+  const f = bms[idx];
+  if (!f) return;
+  document.getElementById('issue-search').value = f.search || '';
+  document.getElementById('filter-project').value = f.project || '';
+  document.getElementById('filter-status').value = f.status || '';
+  document.getElementById('filter-assignee').value = f.assignee || '';
+  document.getElementById('filter-priority').value = f.priority || '';
+  document.getElementById('filter-type').value = f.type || '';
+  document.getElementById('filter-stale').value = f.stale || '';
+  filterIssues();
+  switchTab('issues');
+}
+function deleteBookmark(idx) {
+  const bms = getBookmarks();
+  bms.splice(idx, 1);
+  localStorage.setItem(BM_KEY, JSON.stringify(bms));
+  renderBookmarks();
+}
+function renderBookmarks() {
+  const bms = getBookmarks();
+  const bar = document.getElementById('bookmark-bar');
+  if (!bar) return;
+  if (!bms.length) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  bar.innerHTML = bms.map((b, i) => `
+    <span class="bookmark-chip" onclick="loadBookmark(${i})">
+      ⭐ ${escHtml(b.name)}
+      <span class="bm-del" onclick="event.stopPropagation();deleteBookmark(${i})" title="삭제">×</span>
+    </span>`).join('');
+}
+
+// ===== MOBILE MENU =====
+function openMobileMenu() { document.getElementById('mobile-menu').classList.add('show'); }
+function closeMobileMenu(e) {
+  if (e && e.target !== document.getElementById('mobile-menu')) return;
+  document.getElementById('mobile-menu').classList.remove('show');
+}
+
+// ===== KEYBOARD SHORTCUTS =====
+document.addEventListener('keydown', (e) => {
+  const tag = e.target.tagName;
+  const isTyping = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || e.target.isContentEditable;
+  if (e.key === 'Escape') {
+    document.getElementById('issue-modal').classList.remove('show');
+    document.getElementById('mobile-menu').classList.remove('show');
+    if (isTyping) e.target.blur();
+    return;
+  }
+  if (isTyping) return;
+  const tabMap = { '1':'overview', '2':'projects', '3':'team', '4':'issues', '5':'trend', '6':'myissues' };
+  if (tabMap[e.key]) { switchTab(tabMap[e.key]); return; }
+  if (e.key === '/') { e.preventDefault(); switchTab('issues'); setTimeout(() => document.getElementById('issue-search')?.focus(), 100); }
+  if (e.key === 'r' || e.key === 'R') refreshData();
+});
 
 // ===== HELPERS =====
 function escHtml(str) {
