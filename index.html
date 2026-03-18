@@ -1193,25 +1193,42 @@
 
     /* ===== MOBILE NAV ===== */
     .mobile-nav-btn { display: none; }
-    .mobile-menu {
-      display: none; position: fixed; inset: 0; z-index: 300;
-      background: rgba(0,0,0,0.5); backdrop-filter: blur(3px);
+    .mobile-menu { display: none; }
+
+    /* ===== MOBILE BOTTOM NAV ===== */
+    .mobile-bottom-nav {
+      display: none;
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+      background: var(--surface); border-top: 1px solid var(--border);
+      box-shadow: 0 -2px 16px rgba(0,0,0,0.10);
+      overflow-x: auto; -webkit-overflow-scrolling: touch;
+      padding-bottom: env(safe-area-inset-bottom);
+      scrollbar-width: none;
     }
-    .mobile-menu.show { display: flex; align-items: flex-end; }
-    .mobile-menu-inner {
-      background: var(--surface); border-radius: var(--radius-lg) var(--radius-lg) 0 0;
-      padding: 20px; width: 100%; display: flex; flex-direction: column; gap: 6px;
+    .mobile-bottom-nav::-webkit-scrollbar { display: none; }
+    .mobile-bottom-nav-inner { display: flex; min-width: max-content; padding: 0 4px; }
+    .mobile-bottom-tab {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 8px 14px 10px; min-width: 60px; gap: 4px;
+      color: var(--text3); background: none; border: none; cursor: pointer;
+      font-family: var(--font); font-size: 10px; font-weight: 500;
+      white-space: nowrap; position: relative; transition: color var(--transition);
     }
-    .mobile-menu-tab {
-      padding: 12px 16px; border-radius: var(--radius-sm); font-size: 14px;
-      font-weight: 500; color: var(--text2); cursor: pointer;
-      background: none; border: none; font-family: var(--font);
-      text-align: left; display: flex; align-items: center; gap: 10px;
-      transition: all var(--transition);
+    .mobile-bottom-tab svg { flex-shrink: 0; }
+    .mobile-bottom-tab.active { color: var(--primary); }
+    .mobile-bottom-tab.active::after {
+      content: ''; position: absolute; top: 0; left: 25%; right: 25%;
+      height: 2px; background: var(--primary); border-radius: 0 0 2px 2px;
     }
-    .mobile-menu-tab:hover, .mobile-menu-tab.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
+    .mobile-bottom-tab .nav-badge {
+      position: absolute; top: 6px; right: 8px;
+      font-size: 9px; padding: 1px 4px; min-width: 14px;
+    }
+
     @media (max-width: 900px) {
-      .mobile-nav-btn { display: flex; }
+      .header-nav { display: none; }
+      .mobile-bottom-nav { display: block; }
+      .main-content { padding-bottom: calc(62px + env(safe-area-inset-bottom)); }
       .global-user-select { max-width: 110px; }
     }
     @media (max-width: 600px) {
@@ -1440,6 +1457,85 @@
     .capacity-bar-fill { height:100%; border-radius:var(--radius-full); transition:width 0.4s ease; }
     .capacity-count { font-size:12px; font-weight:700; flex-shrink:0; min-width:24px; text-align:right; }
     .capacity-badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:var(--radius-full); flex-shrink:0; }
+
+    /* ===== WEEKLY PLAN ===== */
+    .weekly-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      padding: 16px 18px;
+      margin-bottom: 14px;
+      box-shadow: var(--shadow-sm);
+    }
+    .weekly-card-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .weekly-card-key {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--primary-light);
+      padding: 2px 7px;
+      border-radius: var(--radius-full);
+      flex-shrink: 0;
+    }
+    .weekly-card-meta {
+      font-size: 11px;
+      color: var(--text4);
+      margin-bottom: 14px;
+    }
+    .weekly-section-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .05em;
+      color: var(--text3);
+      margin: 12px 0 6px;
+    }
+    .weekly-checklist { display: flex; flex-direction: column; gap: 5px; }
+    .weekly-check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--text2);
+      line-height: 1.4;
+    }
+    .weekly-check-item.done { color: var(--text4); text-decoration: line-through; }
+    .weekly-check-icon { flex-shrink: 0; margin-top: 1px; }
+    .weekly-linked-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: var(--radius-sm);
+      background: var(--surface2);
+      margin-bottom: 5px;
+      cursor: pointer;
+      transition: background var(--transition);
+    }
+    .weekly-linked-item:hover { background: var(--surface3); }
+    .weekly-linked-key {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--primary);
+      flex-shrink: 0;
+    }
+    .weekly-linked-summary {
+      flex: 1;
+      font-size: 12px;
+      color: var(--text2);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    @media (max-width: 700px) { #weekly-cols { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -1561,6 +1657,10 @@
       <button class="nav-tab" data-tab="executive" onclick="switchTab('executive')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
         <span data-i18n="nav_executive">경영진</span>
+      </button>
+      <button class="nav-tab" data-tab="weekly" onclick="switchTab('weekly')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        <span data-i18n="nav_weekly">주간 계획</span>
       </button>
       <div class="header-divider" style="margin:0 6px;"></div>
       <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터">
@@ -2051,6 +2151,10 @@
           <option value="Lowest">Lowest</option>
         </select>
         <select id="filter-type" onchange="filterIssues()"><option value="">모든 타입</option></select>
+        <label style="display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;white-space:nowrap;">
+          <input type="checkbox" id="filter-exclude-done" onchange="filterIssues()" style="width:14px;height:14px;accent-color:var(--primary);cursor:pointer;">
+          <span data-i18n="filter_exclude_done">완료 제외</span>
+        </label>
         <select id="filter-stale" onchange="filterIssues()">
           <option value="">모든 이슈</option>
           <option value="stale3">묵은 이슈 (3일+)</option>
@@ -2221,6 +2325,24 @@
       </div>
     </div>
 
+    <!-- ===== 주간 계획 탭 ===== -->
+    <div class="tab-panel" id="tab-weekly">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px;">
+        <h2 style="font-size:18px; font-weight:700; color:var(--text);" data-i18n="nav_weekly">주간 계획</h2>
+        <span style="font-size:12px; color:var(--text3);" id="weekly-range-label"></span>
+      </div>
+      <div style="display:grid; grid-template-columns:1fr 1fr; gap:20px;" id="weekly-cols">
+        <div>
+          <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--text3); margin-bottom:12px;" data-i18n="weekly_last">지난 주</div>
+          <div id="weekly-last-col"><div class="empty-state" style="padding:30px 0;"><p>데이터 없음</p></div></div>
+        </div>
+        <div>
+          <div style="font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:.06em; color:var(--primary); margin-bottom:12px;" data-i18n="weekly_this">이번 주</div>
+          <div id="weekly-this-col"><div class="empty-state" style="padding:30px 0;"><p>데이터 없음</p></div></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -2338,6 +2460,7 @@ const LANGS = {
     iss_filter_all_priority: '전체 우선순위',
     iss_filter_all_stale: '묵은 이슈 포함',
     iss_filter_stale_only: '묵은 이슈만',
+    filter_exclude_done: '완료 제외',
     iss_col_key: '키', iss_col_summary: '요약', iss_col_project: '프로젝트',
     iss_col_status: '상태', iss_col_priority: '우선순위', iss_col_type: '타입',
     iss_col_assignee: '담당자', iss_col_created: '생성일', iss_col_updated: '업데이트',
@@ -2385,6 +2508,9 @@ const LANGS = {
     epic_title: '🚀 Epic 진행률',
     // Executive tab
     nav_executive: '경영진',
+    nav_weekly: '주간 계획',
+    weekly_last: '지난 주',
+    weekly_this: '이번 주',
     exec_proj_progress: '프로젝트별 완료율',
     exec_risk: '⚠️ 주요 위험 이슈',
     exec_velocity: '📅 주간 처리 현황 (최근 6주)',
@@ -2456,6 +2582,7 @@ const LANGS = {
     iss_filter_all_priority: 'All Priorities',
     iss_filter_all_stale: 'Include Stale',
     iss_filter_stale_only: 'Stale Only',
+    filter_exclude_done: 'Exclude Done',
     iss_col_key: 'Key', iss_col_summary: 'Summary', iss_col_project: 'Project',
     iss_col_status: 'Status', iss_col_priority: 'Priority', iss_col_type: 'Type',
     iss_col_assignee: 'Assignee', iss_col_created: 'Created', iss_col_updated: 'Updated',
@@ -2503,6 +2630,9 @@ const LANGS = {
     epic_title: '🚀 Epic Progress',
     // Executive tab
     nav_executive: 'Executive',
+    nav_weekly: 'Weekly Plan',
+    weekly_last: 'Last Week',
+    weekly_this: 'This Week',
     exec_proj_progress: 'Project Completion',
     exec_risk: '⚠️ Key Risk Issues',
     exec_velocity: '📅 Weekly Velocity (Last 6 weeks)',
@@ -2767,6 +2897,7 @@ function switchTab(tab, fromPopstate) {
     renderMyIssues(state.issues, true);
   }
   if (tab === 'executive' && state.issues.length) renderExecutive(getGlobalFilteredIssues());
+  if (tab === 'weekly' && state.issues.length) renderWeeklyPlan(state.issues);
   // Push to browser history (skip when called from popstate to avoid loop)
   if (!fromPopstate && history.state?.tab !== tab) {
     const url = new URL(window.location.href);
@@ -2844,7 +2975,7 @@ async function loadDashboard() {
   try {
     const days = state.dateRange;
     const jql = `project in (ALS, ASP, BEG, CAMP, KPD, WP, RHD) AND issuetype != Epic ORDER BY updated DESC`;
-    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate','parent'];
+    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate','parent','description','issuelinks'];
 
     const loadingMsg = days === 'custom' ? '이슈 목록 조회 중...' : `이슈 목록 조회 중 (최근 ${days}일)...`;
     showLoading(loadingMsg);
@@ -3394,11 +3525,13 @@ function filterIssues() {
   const priority = document.getElementById('filter-priority').value;
   const type = document.getElementById('filter-type').value;
   const stale = document.getElementById('filter-stale').value;
+  const excludeDone = document.getElementById('filter-exclude-done')?.checked;
   const now = new Date();
 
   const baseIssues = getGlobalFilteredIssues();
   state.filteredIssues = baseIssues.filter(iss => {
     const f = iss.fields || {};
+    if (excludeDone && statusCategory(f.status?.name||'', f.status?.statusCategory?.key) === 'done') return false;
     if (search && !iss.key?.toLowerCase().includes(search) && !(f.summary||'').toLowerCase().includes(search)) return false;
     if (project && f.project?.key !== project) return false;
     if (status && f.status?.name !== status) return false;
@@ -4165,6 +4298,136 @@ function populateGlobalUserFilter(issues) {
   if (cur) el.value = cur;
 }
 
+// ===== WEEKLY PLAN =====
+function getWeekRange(offsetWeeks) {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offsetWeeks * 7);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { start: monday, end: sunday };
+}
+
+function parseAdfCheckboxes(description) {
+  // Parse Atlassian Document Format for taskList items
+  const items = [];
+  if (!description || typeof description !== 'object') return items;
+  function walk(node) {
+    if (!node) return;
+    if (node.type === 'taskItem') {
+      const done = node.attrs?.state === 'DONE';
+      const text = extractText(node.content || []);
+      if (text) items.push({ done, text });
+    }
+    (node.content || []).forEach(walk);
+  }
+  function extractText(nodes) {
+    return (nodes || []).map(n => {
+      if (n.type === 'text') return n.text || '';
+      return extractText(n.content || '');
+    }).join('');
+  }
+  walk(description);
+  return items;
+}
+
+function renderWeeklyPlan(issues) {
+  const wpIssues = issues.filter(i => i.fields?.project?.key === 'WP');
+
+  const thisWeek = getWeekRange(0);
+  const lastWeek = getWeekRange(-1);
+
+  // Label
+  const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
+  const rangeEl = document.getElementById('weekly-range-label');
+  if (rangeEl) rangeEl.textContent = `${fmt(lastWeek.start)}~${fmt(lastWeek.end)} / ${fmt(thisWeek.start)}~${fmt(thisWeek.end)}`;
+
+  // Classify issues by created date into this/last week
+  const classify = (iss) => {
+    const cr = new Date(iss.fields?.created || iss.fields?.updated);
+    if (cr >= thisWeek.start && cr <= thisWeek.end) return 'this';
+    if (cr >= lastWeek.start && cr <= lastWeek.end) return 'last';
+    // Also check updated
+    const upd = new Date(iss.fields?.updated);
+    if (upd >= thisWeek.start && upd <= thisWeek.end) return 'this';
+    if (upd >= lastWeek.start && upd <= lastWeek.end) return 'last';
+    return null;
+  };
+
+  const thisWeekIssues = wpIssues.filter(i => classify(i) === 'this');
+  const lastWeekIssues = wpIssues.filter(i => classify(i) === 'last');
+
+  // If no issues found by date, just show most recent 2 (fallback)
+  const allSorted = [...wpIssues].sort((a,b) => new Date(b.fields?.created) - new Date(a.fields?.created));
+  const thisFinal = thisWeekIssues.length ? thisWeekIssues : (allSorted[0] ? [allSorted[0]] : []);
+  const lastFinal = lastWeekIssues.length ? lastWeekIssues : (allSorted[1] ? [allSorted[1]] : []);
+
+  renderWeeklyCol('weekly-this-col', thisFinal);
+  renderWeeklyCol('weekly-last-col', lastFinal);
+}
+
+function renderWeeklyCol(elId, issues) {
+  const el = document.getElementById(elId);
+  if (!el) return;
+  if (!issues.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:30px 0;"><p>${t('no_data')}</p></div>`;
+    return;
+  }
+  el.innerHTML = issues.map(iss => {
+    const f = iss.fields || {};
+    const assignee = f.assignee?.displayName || t('iss_unassigned');
+    const created = f.created ? new Date(f.created).toLocaleDateString(currentLang === 'ko' ? 'ko-KR' : 'en-US', { month:'short', day:'numeric' }) : '';
+
+    // Checkboxes from description
+    const checkboxes = parseAdfCheckboxes(f.description);
+    const checklistHtml = checkboxes.length ? `
+      <div class="weekly-section-title">${currentLang === 'ko' ? '할 일' : 'Tasks'}</div>
+      <div class="weekly-checklist">
+        ${checkboxes.map(item => `
+          <div class="weekly-check-item${item.done ? ' done' : ''}">
+            <span class="weekly-check-icon">
+              ${item.done
+                ? `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+                : `<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`
+              }
+            </span>
+            <span>${escHtml(item.text)}</span>
+          </div>`).join('')}
+      </div>` : '';
+
+    // Linked issues
+    const links = (f.issuelinks || []).filter(l => l.outwardIssue || l.inwardIssue);
+    const linkedHtml = links.length ? `
+      <div class="weekly-section-title">${currentLang === 'ko' ? '연결된 이슈' : 'Linked Issues'}</div>
+      ${links.map(l => {
+        const linked = l.outwardIssue || l.inwardIssue;
+        const lKey = linked.key || '';
+        const lSummary = linked.fields?.summary || '';
+        const lStatus = linked.fields?.status?.name || '';
+        const lCat = statusCategory(lStatus, linked.fields?.status?.statusCategory?.key);
+        const statusColor = lCat === 'done' ? 'var(--success)' : lCat === 'indeterminate' ? 'var(--info)' : 'var(--text3)';
+        return `<div class="weekly-linked-item" onclick="showIssueModal('${escHtml(lKey)}')">
+          <span class="weekly-linked-key">${escHtml(lKey)}</span>
+          <span class="weekly-linked-summary" title="${escHtml(lSummary)}">${escHtml(lSummary)}</span>
+          <span class="status-badge" style="background:${statusColor}1a;color:${statusColor};font-size:10px;padding:2px 6px;border-radius:var(--radius-full);flex-shrink:0;">${escHtml(lStatus)}</span>
+        </div>`;
+      }).join('')}` : '';
+
+    return `<div class="weekly-card">
+      <div class="weekly-card-title">
+        <span class="weekly-card-key">${escHtml(iss.key)}</span>
+        <span>${escHtml(f.summary || '')}</span>
+      </div>
+      <div class="weekly-card-meta">👤 ${escHtml(assignee)}${created ? ` · ${created}` : ''}</div>
+      ${checklistHtml}
+      ${linkedHtml}
+    </div>`;
+  }).join('');
+}
+
 function renderAll() {
   const issues = getGlobalFilteredIssues();
   updateStats(issues);
@@ -4186,6 +4449,7 @@ function renderAll() {
   renderAgeDist(issues);
   renderEpics(state.issues);
   renderExecutive(issues);
+  renderWeeklyPlan(state.issues);
   populateFilters(issues);
   updateTabBadges(issues);
   state.filteredIssues = [...issues];
