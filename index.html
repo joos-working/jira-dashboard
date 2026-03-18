@@ -1311,6 +1311,10 @@
 
     <form id="login-form" onsubmit="handleLogin(event)">
       <div class="form-group">
+        <label class="form-label" for="login-url">JIRA URL</label>
+        <input class="input" type="url" id="login-url" placeholder="https://yourcompany.atlassian.net" required autocomplete="url" value="https://gonopticsdev.atlassian.net" />
+      </div>
+      <div class="form-group">
         <label class="form-label" for="login-email">이메일</label>
         <input class="input" type="email" id="login-email" placeholder="you@company.com" required autocomplete="email" />
       </div>
@@ -2320,21 +2324,24 @@ function formatDate(dateStr) {
 }
 
 // ===== API =====
-async function jiraFetch(path, params = {}) {
-  const { email, token } = state.creds;
-  const url = new URL('/.netlify/functions/jira', window.location.origin);
-  url.searchParams.set('path', path);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, v));
+async function jiraFetch(path, params = {}, options = {}) {
+  const { url: baseUrl, email, token } = state.creds;
+  const url = new URL(`${baseUrl}${path}`);
+  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
   const resp = await fetch(url.toString(), {
+    method: options.method || 'GET',
     headers: {
       'Authorization': `Basic ${btoa(`${email}:${token}`)}`,
       'Accept': 'application/json',
-    }
+      ...(options.body ? { 'Content-Type': 'application/json' } : {}),
+    },
+    ...(options.body ? { body: JSON.stringify(options.body) } : {}),
   });
   if (!resp.ok) {
     const err = await resp.text().catch(() => '');
     throw new Error(`HTTP ${resp.status}: ${err.slice(0,200)}`);
   }
+  if (resp.status === 204) return null;
   return resp.json();
 }
 
@@ -2367,11 +2374,12 @@ async function handleLogin(e) {
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> 연결 중...';
 
+  const url = document.getElementById('login-url').value.trim().replace(/\/$/, '');
   try {
-    state.creds = { email, token };
+    state.creds = { url, email, token };
     const me = await jiraFetch('/rest/api/3/myself');
     state.currentUser = me;
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ email, token }));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ url, email, token }));
     showApp();
     await loadDashboard();
   } catch(err) {
@@ -4324,7 +4332,8 @@ function escHtml(str) {
   const saved = localStorage.getItem(STORAGE_KEY);
   if (saved) {
     try {
-      state.creds = JSON.parse(saved);
+      const parsed = JSON.parse(saved);
+      state.creds = { url: 'https://gonopticsdev.atlassian.net', ...parsed };
       document.getElementById('login-screen').style.display = 'none';
       document.getElementById('app').classList.add('visible');
       // Verify creds & load
