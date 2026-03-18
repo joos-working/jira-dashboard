@@ -1527,15 +1527,25 @@
       color: var(--primary);
       flex-shrink: 0;
     }
+    .weekly-cols {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
     .weekly-linked-summary {
       flex: 1;
       font-size: 12px;
       color: var(--text2);
       overflow: hidden;
+      overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
     }
-    @media (max-width: 700px) { #weekly-cols { grid-template-columns: 1fr; } }
+    @media (max-width: 700px) {
+      .weekly-cols { grid-template-columns: 1fr; }
+      .weekly-card { padding: 14px; }
+      .weekly-linked-summary { white-space: normal; word-break: break-word; }
+    }
   </style>
 </head>
 <body>
@@ -1908,34 +1918,6 @@
         </div>
       </div>
 
-      <!-- Due Soon + Bottleneck row -->
-      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
-        <!-- 마감 임박 -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title" data-i18n="chart_due_soon">⚠️ 마감 임박 (7일 이내)</span>
-            <span class="chip text-muted" id="due-soon-count">0건</span>
-          </div>
-          <div class="card-body" style="padding-top:12px;">
-            <div id="due-soon-list" class="due-soon-list">
-              <div class="empty-state" style="padding:20px 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>마감 임박 이슈 없음</p></div>
-            </div>
-          </div>
-        </div>
-        <!-- 병목 분석 -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title" data-i18n="chart_bottleneck">🔴 병목 분석 (오래된 미완료 이슈)</span>
-            <span class="chip text-muted" data-i18n="chart_bottleneck_sub">상위 10건</span>
-          </div>
-          <div class="card-body" style="padding:0;">
-            <div id="bottleneck-wrap">
-              <div class="empty-state" style="padding:20px 0;"><p>데이터 없음</p></div>
-            </div>
-          </div>
-        </div>
-      </div>
-
       <!-- Avg Resolution Time -->
       <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
         <div class="card">
@@ -1960,6 +1942,34 @@
           <div class="card-body">
             <div class="chart-container" style="min-height:160px;">
               <canvas id="chart-age-dist" style="max-height:180px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Due Soon + Bottleneck row -->
+      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
+        <!-- 마감 임박 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="chart_due_soon">⚠️ 마감 임박 (7일 이내)</span>
+            <span class="chip text-muted" id="due-soon-count">0건</span>
+          </div>
+          <div class="card-body" style="padding-top:12px;">
+            <div id="due-soon-list" class="due-soon-list">
+              <div class="empty-state" style="padding:20px 0;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="32" height="32"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg><p>마감 임박 이슈 없음</p></div>
+            </div>
+          </div>
+        </div>
+        <!-- 병목 분석 -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="chart_bottleneck">🔴 병목 분석 (오래된 미완료 이슈)</span>
+            <span class="chip text-muted" data-i18n="chart_bottleneck_sub">상위 10건</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="bottleneck-wrap">
+              <div class="empty-state" style="padding:20px 0;"><p>데이터 없음</p></div>
             </div>
           </div>
         </div>
@@ -4392,7 +4402,7 @@ function renderWeeklyPlan(issues) {
         <div style="width:32px;height:32px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${escHtml(name.slice(0,2))}</div>
         <span style="font-size:15px;font-weight:700;color:var(--text);">${escHtml(name)}</span>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+      <div class="weekly-cols">
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px;" data-i18n="weekly_last">${t('weekly_last')}</div>
           ${weeklyIssueHtml(weeks.last)}
