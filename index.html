@@ -4580,13 +4580,19 @@ function renderHeatmap(issues) {
     weeks.push(week);
   }
   const days = currentLang === 'ko' ? ['일','월','화','수','목','금','토'] : ['S','M','T','W','T','F','S'];
+  // Calculate cell size to fill container width
+  const containerW = wrap.clientWidth || 600;
+  const dayLabelW = 20;
+  const gap = 2;
+  const cellSize = Math.max(10, Math.floor((containerW - dayLabelW - weeks.length * gap) / weeks.length));
+  const cs = `${cellSize}px`;
   wrap.innerHTML = `
-    <div style="display:flex; gap:3px; align-items:flex-start;">
-      <div class="heatmap-days">${days.map(d => `<div class="heatmap-day-label">${d}</div>`).join('')}</div>
-      <div class="heatmap-wrap"><div class="heatmap-grid">
-        ${weeks.map(week => `<div class="heatmap-col">${week.map(day => {
+    <div style="display:flex; gap:${gap}px; align-items:flex-start;">
+      <div class="heatmap-days" style="width:${dayLabelW}px;">${days.map(d => `<div class="heatmap-day-label" style="height:${cs};line-height:${cs};">${d}</div>`).join('')}</div>
+      <div class="heatmap-wrap" style="flex:1;overflow:hidden;"><div class="heatmap-grid" style="display:flex;gap:${gap}px;">
+        ${weeks.map(week => `<div class="heatmap-col" style="display:flex;flex-direction:column;gap:${gap}px;flex:1;">${week.map(day => {
           const lv = day.future || day.count===0 ? 0 : day.count<=2?1:day.count<=5?2:day.count<=10?3:4;
-          return `<div class="heatmap-cell${lv>0?' l'+lv:''}" title="${day.date}: ${day.count}"></div>`;
+          return `<div class="heatmap-cell${lv>0?' l'+lv:''}" style="width:100%;height:${cs};border-radius:3px;" title="${day.date}: ${day.count}"></div>`;
         }).join('')}</div>`).join('')}
       </div></div>
     </div>
