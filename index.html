@@ -1431,6 +1431,14 @@
         <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
         <span id="last-update-text">—</span>
       </span>
+      <select class="date-range-select" id="auto-refresh-select" onchange="onAutoRefreshChange()" title="자동 새로고침 간격">
+        <option value="0">자동갱신 끄기</option>
+        <option value="1">1분</option>
+        <option value="5" selected>5분</option>
+        <option value="15">15분</option>
+        <option value="30">30분</option>
+        <option value="60">1시간</option>
+      </select>
       <button class="btn btn-ghost btn-icon" onclick="refreshData()" title="새로고침 (R)" id="refresh-btn">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
       </button>
@@ -3693,12 +3701,23 @@ function closeIssueModal(e) {
 // ===== AUTO REFRESH =====
 function startAutoRefresh() {
   if (state.autoRefreshTimer) clearInterval(state.autoRefreshTimer);
+  const minutes = parseInt(localStorage.getItem('jira_refresh_min') ?? '5');
+  const el = document.getElementById('auto-refresh-select');
+  if (el) el.value = String(minutes);
+  if (minutes === 0) return;
   state.autoRefreshTimer = setInterval(async () => {
     if (state.creds) {
       await loadDashboard();
       checkAndNotify(getGlobalFilteredIssues());
     }
-  }, 5 * 60 * 1000);
+  }, minutes * 60 * 1000);
+}
+
+function onAutoRefreshChange() {
+  const minutes = parseInt(document.getElementById('auto-refresh-select').value);
+  localStorage.setItem('jira_refresh_min', String(minutes));
+  startAutoRefresh();
+  showToast(minutes === 0 ? (currentLang === 'ko' ? '자동 갱신 꺼짐' : 'Auto-refresh off') : (currentLang === 'ko' ? `${minutes}분마다 자동 갱신` : `Auto-refresh every ${minutes}min`));
 }
 
 // ===== LAST UPDATE TIME =====
