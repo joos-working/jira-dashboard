@@ -1122,6 +1122,22 @@
     .stats-grid-7 { grid-template-columns: repeat(7, 1fr); }
     @media (max-width:1400px) { .stats-grid-7 { grid-template-columns:repeat(4,1fr); } }
     @media (max-width:900px) { .stats-grid-7 { grid-template-columns:repeat(2,1fr); } }
+
+    /* ===== ISSUE MODAL ===== */
+    .modal-overlay { display:none; position:fixed; inset:0; z-index:900; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(3px); }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:var(--surface); border-radius:var(--radius-lg); padding:28px; max-width:620px; width:90%; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); position:relative; animation:slideUp 0.25s ease; }
+    .modal-field { background:var(--surface2); padding:12px; border-radius:var(--radius-sm); }
+    .modal-field-label { font-size:10px; color:var(--text3); font-weight:600; text-transform:uppercase; letter-spacing:.05em; margin-bottom:5px; }
+    .modal-field-value { font-size:13px; color:var(--text); font-weight:500; }
+
+    /* ===== GLOBAL USER FILTER ===== */
+    .global-user-select { padding:6px 28px 6px 10px; border:1.5px solid var(--primary-mid); border-radius:var(--radius-sm); font-family:var(--font); font-size:12px; font-weight:600; color:var(--primary); background:var(--primary-light); cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%230052CC' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; outline:none; transition:all var(--transition); white-space:nowrap; }
+    .global-user-select:hover { border-color:var(--primary); }
+    [data-theme="dark"] .global-user-select { color:var(--primary); background:var(--primary-light); border-color:var(--primary-mid); background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%234c9aff' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 8px center; }
+
+    /* ===== AUTO REFRESH INDICATOR ===== */
+    .auto-refresh-indicator { font-size:10px; color:var(--text4); white-space:nowrap; }
   </style>
 </head>
 <body>
@@ -1236,6 +1252,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         내 이슈
       </button>
+      <div class="header-divider" style="margin:0 6px;"></div>
+      <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터">
+        <option value="">전체 사용자</option>
+      </select>
     </nav>
 
     <div style="flex:1"></div>
@@ -1445,6 +1465,21 @@
         </div>
       </div>
 
+      <!-- Stale Issues -->
+      <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">🕐 묵은 이슈 (3일 이상 상태 미변경)</span>
+            <span class="chip text-muted" id="stale-count-chip">0건</span>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="stale-issues-wrap">
+              <div class="empty-state" style="padding:20px 0;"><p>데이터를 불러오는 중...</p></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Recent Activity -->
       <div class="card">
         <div class="card-header">
@@ -1476,7 +1511,6 @@
           <p>데이터를 불러오는 중...</p>
         </div>
       </div>
-    </div>
 
       <!-- Label/Component Distribution -->
       <div style="margin-top:20px;">
@@ -1520,6 +1554,18 @@
           <p>데이터를 불러오는 중...</p>
         </div>
       </div>
+      <div style="margin-top:20px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">사용자별 이슈 할당 현황</span>
+          </div>
+          <div class="card-body">
+            <div style="max-width:520px; margin:0 auto;">
+              <canvas id="chart-assignee-pie" style="max-height:320px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== 이슈 탭 ===== -->
@@ -1542,6 +1588,12 @@
           <option value="Lowest">Lowest</option>
         </select>
         <select id="filter-type" onchange="filterIssues()"><option value="">모든 타입</option></select>
+        <select id="filter-stale" onchange="filterIssues()">
+          <option value="">모든 이슈</option>
+          <option value="stale3">묵은 이슈 (3일+)</option>
+          <option value="stale7">묵은 이슈 (7일+)</option>
+          <option value="stale14">묵은 이슈 (14일+)</option>
+        </select>
         <button class="btn btn-ghost btn-sm" onclick="clearFilters()">초기화</button>
       </div>
 
@@ -1636,6 +1688,13 @@
   </main>
 </div>
 
+<!-- ===== ISSUE DETAIL MODAL ===== -->
+<div class="modal-overlay" id="issue-modal" onclick="closeIssueModal(event)">
+  <div class="modal-box" id="issue-modal-box">
+    <div id="issue-modal-body"></div>
+  </div>
+</div>
+
 <script>
 // ===== CONSTANTS =====
 const JIRA_BASE = '/jira-api';
@@ -1655,6 +1714,8 @@ let state = {
   dateRange: 90,
   charts: {},
   currentUser: null,
+  globalUserFilter: '',
+  autoRefreshTimer: null,
 };
 
 // ===== COLOR HELPERS =====
@@ -1828,10 +1889,11 @@ function toggleTheme() {
   updateThemeIcon(newTheme);
   // redraw charts with new colors
   if (state.issues.length) {
-    renderCharts();
-    renderAvgResolution(state.issues);
-    renderTrendCharts(state.issues);
-    renderLabelCloud(state.issues);
+    const fi = getGlobalFilteredIssues();
+    renderCharts(fi);
+    renderAvgResolution(fi);
+    renderTrendCharts(fi);
+    renderLabelCloud(fi);
   }
 }
 function updateThemeIcon(theme) {
@@ -1865,7 +1927,7 @@ function switchTab(tab) {
     renderTrendCharts(state.issues);
   }
   if (tab === 'myissues' && state.issues.length) {
-    renderMyIssues(state.issues);
+    renderMyIssues(state.issues, true);
   }
 }
 
@@ -1917,28 +1979,14 @@ async function loadDashboard() {
   try {
     const days = state.dateRange;
     const jql = `project in (ALS, ASP, BEG, CAMP, KPD, WP, RHD) AND issuetype != Epic ORDER BY updated DESC`;
-    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components'];
+    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate'];
 
     showLoading(`이슈 목록 조회 중 (최근 ${days}일)...`);
     const issues = await fetchAllIssues(jql, fields);
     state.issues = issues;
-
-    updateStats(issues);
-    renderCharts();
-    renderActivityList(issues);
-    renderProjects(issues);
-    renderTeam(issues);
-    renderBottleneck(issues);
-    renderDueSoon(issues);
-    renderAvgResolution(issues);
-    renderTrendCharts(issues);
-    renderLabelCloud(issues);
-    renderMyIssues(issues);
-    populateFilters(issues);
-    state.filteredIssues = [...issues];
-    state.currentPage = 1;
-    renderIssuesTable();
-
+    populateGlobalUserFilter(issues);
+    renderAll();
+    startAutoRefresh();
     showToast(`${issues.length.toLocaleString()}개 이슈 로드 완료`, 'success', 3000);
   } catch(err) {
     console.error(err);
@@ -1998,8 +2046,8 @@ function getStatusColors(opacity=1) {
   };
 }
 
-function renderCharts() {
-  const issues = state.issues;
+function renderCharts(issues) {
+  issues = issues || state.issues;
   const { gridColor, tickColor, legendColor } = getChartColors();
   const baseOpts = {
     responsive: true, maintainAspectRatio: true,
@@ -2340,8 +2388,11 @@ function filterIssues() {
   const assignee = document.getElementById('filter-assignee').value;
   const priority = document.getElementById('filter-priority').value;
   const type = document.getElementById('filter-type').value;
+  const stale = document.getElementById('filter-stale').value;
+  const now = new Date();
 
-  state.filteredIssues = state.issues.filter(iss => {
+  const baseIssues = getGlobalFilteredIssues();
+  state.filteredIssues = baseIssues.filter(iss => {
     const f = iss.fields || {};
     if (search && !iss.key?.toLowerCase().includes(search) && !(f.summary||'').toLowerCase().includes(search)) return false;
     if (project && f.project?.key !== project) return false;
@@ -2350,6 +2401,15 @@ function filterIssues() {
     if (assignee && aName !== assignee) return false;
     if (priority && f.priority?.name !== priority) return false;
     if (type && f.issuetype?.name !== type) return false;
+    if (stale) {
+      const cat = statusCategory(f.status?.name||'', f.status?.statusCategory?.key);
+      if (cat === 'done') return false;
+      const changeDate = f.statuscategorychangedate || f.updated;
+      if (!changeDate) return false;
+      const days = (now - new Date(changeDate)) / 86400000;
+      const minDays = stale === 'stale3' ? 3 : stale === 'stale7' ? 7 : 14;
+      if (days < minDays) return false;
+    }
     return true;
   });
   state.currentPage = 1;
@@ -2363,6 +2423,7 @@ function clearFilters() {
   document.getElementById('filter-assignee').value = '';
   document.getElementById('filter-priority').value = '';
   document.getElementById('filter-type').value = '';
+  document.getElementById('filter-stale').value = '';
   filterIssues();
 }
 
@@ -2431,9 +2492,14 @@ function renderIssuesTable() {
     const updated = f.updated || '';
     const url = `${JIRA_BROWSE}/browse/${key}`;
     const aColor = avatarColor(assignee);
-    return `<tr>
-      <td><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>
-      <td><div class="issue-summary" title="${escHtml(summary)}">${escHtml(summary)}</div></td>
+    const now = new Date();
+    const changeDate = f.statuscategorychangedate || f.updated;
+    const cat = statusCategory(status, f.status?.statusCategory?.key);
+    const staleDays = changeDate && cat !== 'done' ? Math.floor((now - new Date(changeDate)) / 86400000) : 0;
+    const isStale = staleDays >= 3;
+    return `<tr style="cursor:pointer;" onclick="showIssueModal('${escHtml(key)}')" ${isStale ? 'class="stale-row"' : ''}>
+      <td onclick="event.stopPropagation()"><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>
+      <td><div class="issue-summary" title="${escHtml(summary)}">${escHtml(summary)}${isStale ? ` <span style="font-size:10px;color:var(--warning);font-weight:700;">🕐${staleDays}일</span>` : ''}</div></td>
       <td><span class="badge ${typeBadgeClass(type)}">${escHtml(type)}</span></td>
       <td><span class="badge ${statusBadgeClass(status)}">${escHtml(status)}</span></td>
       <td><span class="badge ${priorityBadgeClass(priority)}">${priorityIcon(priority)} ${escHtml(priority)}</span></td>
@@ -2731,17 +2797,24 @@ function filterByLabel(label) {
 }
 
 // ===== MY ISSUES =====
-function renderMyIssues(issues) {
-  const userId = state.currentUser?.accountId;
+function renderMyIssues(issues, fromTab) {
   const subtitle = document.getElementById('my-issues-subtitle');
-  if (!userId) {
-    document.getElementById('my-issues-groups').innerHTML = `<div class="empty-state"><p>사용자 정보를 불러올 수 없습니다</p></div>`;
-    return;
-  }
-
   const now = new Date();
-  const mine = issues.filter(i => i.fields?.assignee?.accountId === userId);
-  subtitle.textContent = `내 담당 이슈: 총 ${mine.length}개`;
+  let mine, subtitleText;
+
+  if (state.globalUserFilter) {
+    mine = issues.filter(i => (i.fields?.assignee?.displayName || '미배정') === state.globalUserFilter);
+    subtitleText = `${state.globalUserFilter}의 담당 이슈: 총 ${mine.length}개`;
+  } else {
+    const userId = state.currentUser?.accountId;
+    if (!userId) {
+      document.getElementById('my-issues-groups').innerHTML = `<div class="empty-state"><p>사용자 정보를 불러올 수 없습니다</p></div>`;
+      return;
+    }
+    mine = issues.filter(i => i.fields?.assignee?.accountId === userId);
+    subtitleText = `내 담당 이슈: 총 ${mine.length}개`;
+  }
+  subtitle.textContent = subtitleText;
 
   let myTodo=0, myInProgress=0, myDone=0;
   const groups = { todo:[], inprogress:[], done:[] };
@@ -2790,6 +2863,218 @@ function renderMyIssues(issues) {
       }).join('')}
     </div>`;
   }).join('');
+}
+
+// ===== GLOBAL USER FILTER =====
+function getGlobalFilteredIssues() {
+  if (!state.globalUserFilter) return state.issues;
+  return state.issues.filter(i => (i.fields?.assignee?.displayName || '미배정') === state.globalUserFilter);
+}
+
+function onGlobalUserFilter() {
+  state.globalUserFilter = document.getElementById('global-user-filter').value;
+  renderAll();
+}
+
+function populateGlobalUserFilter(issues) {
+  const assignees = [...new Set(issues.map(i => i.fields?.assignee?.displayName || '미배정').filter(Boolean))].sort();
+  const el = document.getElementById('global-user-filter');
+  const cur = el.value;
+  el.innerHTML = `<option value="">전체 사용자</option>` + assignees.map(a => `<option value="${escHtml(a)}">${escHtml(a)}</option>`).join('');
+  if (cur) el.value = cur;
+}
+
+function renderAll() {
+  const issues = getGlobalFilteredIssues();
+  updateStats(issues);
+  renderCharts(issues);
+  renderActivityList(issues);
+  renderProjects(issues);
+  renderTeam(issues);
+  renderBottleneck(issues);
+  renderDueSoon(issues);
+  renderAvgResolution(issues);
+  renderTrendCharts(issues);
+  renderLabelCloud(issues);
+  renderStaleIssues(issues);
+  renderAssigneePieChart(issues);
+  renderMyIssues(state.issues);
+  populateFilters(issues);
+  state.filteredIssues = [...issues];
+  state.currentPage = 1;
+  renderIssuesTable();
+}
+
+// ===== STALE ISSUES =====
+function renderStaleIssues(issues) {
+  const now = new Date();
+  const isStaleIssue = (iss) => {
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    if (cat === 'done') return false;
+    const changeDate = iss.fields?.statuscategorychangedate || iss.fields?.updated;
+    if (!changeDate) return false;
+    return (now - new Date(changeDate)) / 86400000 >= 3;
+  };
+  const stale = issues
+    .filter(isStaleIssue)
+    .map(i => {
+      const changeDate = i.fields?.statuscategorychangedate || i.fields?.updated;
+      return { ...i, staleDays: Math.floor((now - new Date(changeDate)) / 86400000) };
+    })
+    .sort((a, b) => b.staleDays - a.staleDays)
+    .slice(0, 10);
+
+  const totalStale = issues.filter(isStaleIssue).length;
+  document.getElementById('stale-count-chip').textContent = `${totalStale}건`;
+  const wrap = document.getElementById('stale-issues-wrap');
+  if (!stale.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:20px 0;"><p>묵은 이슈 없음</p></div>`;
+    return;
+  }
+  wrap.innerHTML = `<div style="overflow-x:auto;"><table class="bottleneck-table">
+    <thead><tr><th>키</th><th>요약</th><th>상태</th><th>미변경</th><th>담당자</th></tr></thead>
+    <tbody>${stale.map(i => {
+      const f = i.fields||{};
+      const key = i.key||'';
+      const summary = f.summary||'(제목 없음)';
+      const status = f.status?.name||'';
+      const assignee = f.assignee?.displayName||'미배정';
+      const d = i.staleDays;
+      const cls = d >= 14 ? 'crit' : d >= 7 ? 'warn' : 'ok';
+      const url = `${JIRA_BROWSE}/browse/${key}`;
+      return `<tr style="cursor:pointer;" onclick="showIssueModal('${escHtml(key)}')">
+        <td onclick="event.stopPropagation()"><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>
+        <td><div class="issue-summary" style="max-width:220px;" title="${escHtml(summary)}">${escHtml(summary)}</div></td>
+        <td><span class="badge ${statusBadgeClass(status)}">${escHtml(status)}</span></td>
+        <td><span class="days-badge ${cls}">${d}일</span></td>
+        <td style="font-size:12px;">${escHtml(assignee)}</td>
+      </tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+
+// ===== ASSIGNEE PIE CHART =====
+function renderAssigneePieChart(issues) {
+  const assigneeMap = {};
+  for (const iss of issues) {
+    const name = iss.fields?.assignee?.displayName || '미배정';
+    assigneeMap[name] = (assigneeMap[name]||0)+1;
+  }
+  const entries = Object.entries(assigneeMap).sort((a,b)=>b[1]-a[1]).slice(0,12);
+  if (!entries.length) return;
+  const { legendColor } = getChartColors();
+  if (state.charts.assigneePie) state.charts.assigneePie.destroy();
+  state.charts.assigneePie = new Chart(document.getElementById('chart-assignee-pie'), {
+    type: 'doughnut',
+    data: {
+      labels: entries.map(e=>e[0]),
+      datasets: [{
+        data: entries.map(e=>e[1]),
+        backgroundColor: entries.map((_,i) => AVATAR_COLORS[i % AVATAR_COLORS.length]),
+        borderWidth: 2,
+        hoverOffset: 8,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      cutout: '55%',
+      animation: { duration: 600 },
+      plugins: {
+        legend: { display: true, position: 'right', labels: { color: legendColor, font: { size: 11 }, boxWidth: 12, padding: 10 } },
+        tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}개 (${Math.round(ctx.raw/(issues.length||1)*100)}%)` } }
+      },
+      onClick: (evt, els) => {
+        if (!els.length) return;
+        const name = entries[els[0].index][0];
+        switchTab('issues');
+        document.getElementById('filter-assignee').value = name;
+        filterIssues();
+      }
+    }
+  });
+}
+
+// ===== ISSUE MODAL =====
+function showIssueModal(issueKey) {
+  const iss = state.issues.find(i => i.key === issueKey);
+  if (!iss) return;
+  const f = iss.fields || {};
+  const status = f.status?.name || '';
+  const priority = f.priority?.name || '';
+  const type = f.issuetype?.name || '';
+  const assignee = f.assignee?.displayName || '미배정';
+  const project = f.project?.name || f.project?.key || '';
+  const url = `${JIRA_BROWSE}/browse/${issueKey}`;
+  const aColor = avatarColor(assignee);
+  const changeDate = f.statuscategorychangedate || f.updated;
+  const cat = statusCategory(status, f.status?.statusCategory?.key);
+  const staleDays = changeDate && cat !== 'done' ? Math.floor((new Date() - new Date(changeDate)) / 86400000) : 0;
+  const isStale = staleDays >= 3;
+
+  document.getElementById('issue-modal-body').innerHTML = `
+    <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:18px;">
+      <div style="flex:1; min-width:0;">
+        <div style="font-size:12px; font-weight:700; color:var(--primary); margin-bottom:6px;">${escHtml(issueKey)}</div>
+        <div style="font-size:15px; font-weight:700; color:var(--text); line-height:1.4;">${escHtml(f.summary||'(제목 없음)')}</div>
+      </div>
+      <button onclick="closeIssueModal()" style="background:none; border:none; cursor:pointer; color:var(--text3); padding:4px; flex-shrink:0; border-radius:var(--radius-sm);">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="display:flex; flex-wrap:wrap; gap:8px; margin-bottom:20px;">
+      <span class="badge ${statusBadgeClass(status)}">${escHtml(status)}</span>
+      <span class="badge ${typeBadgeClass(type)}">${escHtml(type)}</span>
+      <span class="badge ${priorityBadgeClass(priority)}">${priorityIcon(priority)} ${escHtml(priority)}</span>
+      ${isStale ? `<span class="badge" style="background:var(--warning-light);color:var(--warning);">🕐 ${staleDays}일 미변경</span>` : ''}
+    </div>
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
+      <div class="modal-field">
+        <div class="modal-field-label">담당자</div>
+        <div style="display:flex; align-items:center; gap:8px;">
+          <div style="width:26px;height:26px;border-radius:50%;background:${aColor};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;">${initials(assignee)}</div>
+          <span class="modal-field-value">${escHtml(assignee)}</span>
+        </div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">프로젝트</div>
+        <div class="modal-field-value">${escHtml(project)}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">생성일</div>
+        <div class="modal-field-value">${formatDate(f.created)}</div>
+      </div>
+      <div class="modal-field">
+        <div class="modal-field-label">마지막 업데이트</div>
+        <div class="modal-field-value">${timeAgo(f.updated)}</div>
+      </div>
+      ${f.duedate ? `<div class="modal-field">
+        <div class="modal-field-label">마감일</div>
+        <div class="modal-field-value" style="color:${new Date(f.duedate)<new Date()?'var(--danger)':'var(--text)'}">${formatDate(f.duedate)}</div>
+      </div>` : ''}
+      ${changeDate ? `<div class="modal-field">
+        <div class="modal-field-label">상태 변경일</div>
+        <div class="modal-field-value">${timeAgo(changeDate)}</div>
+      </div>` : ''}
+    </div>
+    <a href="${url}" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%; justify-content:center; text-decoration:none;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+      JIRA에서 열기
+    </a>
+  `;
+  document.getElementById('issue-modal').classList.add('show');
+}
+
+function closeIssueModal(e) {
+  if (e && e.target !== document.getElementById('issue-modal')) return;
+  document.getElementById('issue-modal').classList.remove('show');
+}
+
+// ===== AUTO REFRESH =====
+function startAutoRefresh() {
+  if (state.autoRefreshTimer) clearInterval(state.autoRefreshTimer);
+  state.autoRefreshTimer = setInterval(() => {
+    if (state.creds) loadDashboard();
+  }, 5 * 60 * 1000);
 }
 
 // ===== HELPERS =====
