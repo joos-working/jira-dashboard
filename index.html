@@ -4345,22 +4345,34 @@ function renderWeeklyPlan(issues) {
   const rangeEl = document.getElementById('weekly-range-label');
   if (rangeEl) rangeEl.textContent = `${fmt(lastWeek.start)}~${fmt(lastWeek.end)} / ${fmt(thisWeek.start)}~${fmt(thisWeek.end)}`;
 
-  // Classify issues by created date into this/last week
+  // Get current week-of-month and month
+  const now = new Date();
+  const thisMonth = now.getMonth() + 1;
+  const thisWeekOfMonth = Math.ceil(now.getDate() / 7);
+  const lastDate = new Date(now); lastDate.setDate(now.getDate() - 7);
+  const lastMonth = lastDate.getMonth() + 1;
+  const lastWeekOfMonth = Math.ceil(lastDate.getDate() / 7);
+
+  // Classify by parsing title: "N월 M주" pattern
   const classify = (iss) => {
-    const cr = new Date(iss.fields?.created || iss.fields?.updated);
+    const title = iss.fields?.summary || '';
+    const m = title.match(/(\d+)월\s*(\d+)주/);
+    if (m) {
+      const mon = parseInt(m[1]), wk = parseInt(m[2]);
+      if (mon === thisMonth && wk === thisWeekOfMonth) return 'this';
+      if (mon === lastMonth && wk === lastWeekOfMonth) return 'last';
+    }
+    // Fallback: created date
+    const cr = new Date(iss.fields?.created);
     if (cr >= thisWeek.start && cr <= thisWeek.end) return 'this';
     if (cr >= lastWeek.start && cr <= lastWeek.end) return 'last';
-    // Also check updated
-    const upd = new Date(iss.fields?.updated);
-    if (upd >= thisWeek.start && upd <= thisWeek.end) return 'this';
-    if (upd >= lastWeek.start && upd <= lastWeek.end) return 'last';
     return null;
   };
 
   const thisWeekIssues = wpIssues.filter(i => classify(i) === 'this');
   const lastWeekIssues = wpIssues.filter(i => classify(i) === 'last');
 
-  // If no issues found by date, just show most recent 2 (fallback)
+  // Fallback: most recent 2 by created date
   const allSorted = [...wpIssues].sort((a,b) => new Date(b.fields?.created) - new Date(a.fields?.created));
   const thisFinal = thisWeekIssues.length ? thisWeekIssues : (allSorted[0] ? [allSorted[0]] : []);
   const lastFinal = lastWeekIssues.length ? lastWeekIssues : (allSorted[1] ? [allSorted[1]] : []);
