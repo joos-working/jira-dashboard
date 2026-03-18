@@ -1122,6 +1122,30 @@
     .stats-grid-7 { grid-template-columns: repeat(7, 1fr); }
     @media (max-width:1400px) { .stats-grid-7 { grid-template-columns:repeat(4,1fr); } }
     @media (max-width:900px) { .stats-grid-7 { grid-template-columns:repeat(2,1fr); } }
+    .stats-grid-8 { grid-template-columns: repeat(8, 1fr); }
+    @media (max-width:1400px) { .stats-grid-8 { grid-template-columns:repeat(4,1fr); } }
+    @media (max-width:900px) { .stats-grid-8 { grid-template-columns:repeat(2,1fr); } }
+
+    /* ===== CUSTOM DATE RANGE INPUTS ===== */
+    #custom-date-range { display:none; align-items:center; gap:6px; }
+    #custom-date-range.show { display:flex; }
+    #custom-date-range input[type="date"] { padding:5px 8px; border:1.5px solid var(--border); border-radius:var(--radius-sm); font-family:var(--font); font-size:12px; color:var(--text2); background:var(--surface); outline:none; transition:border-color var(--transition); cursor:pointer; }
+    #custom-date-range input[type="date"]:focus { border-color:var(--primary); }
+
+    /* ===== EPIC PROGRESS ===== */
+    .epic-item { display:flex; align-items:center; gap:12px; padding:12px 20px; border-bottom:1px solid var(--border); }
+    .epic-item:last-child { border-bottom:none; }
+    .epic-key { font-size:11px; font-weight:600; color:var(--purple); background:var(--purple-light); padding:2px 8px; border-radius:var(--radius-full); flex-shrink:0; cursor:pointer; }
+    .epic-name { flex:1; font-size:13px; font-weight:500; color:var(--text); }
+    .epic-bar-wrap { width:200px; flex-shrink:0; }
+    .epic-bar { height:8px; background:var(--surface3); border-radius:var(--radius-full); overflow:hidden; }
+    .epic-bar-fill { height:100%; background:var(--purple); border-radius:var(--radius-full); transition:width 0.4s ease; }
+    .epic-pct { font-size:11px; color:var(--text3); margin-top:3px; text-align:right; }
+    .epic-counts { font-size:11px; color:var(--text3); flex-shrink:0; min-width:70px; text-align:right; }
+
+    /* ===== COLUMN TOGGLE MENU ===== */
+    #col-menu label { display:flex; align-items:center; gap:8px; padding:5px 8px; cursor:pointer; border-radius:var(--radius-sm); font-size:13px; }
+    #col-menu label:hover { background:var(--surface2); }
 
     /* ===== ISSUE MODAL ===== */
     .modal-overlay { display:none; position:fixed; inset:0; z-index:900; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; backdrop-filter:blur(3px); }
@@ -1371,12 +1395,25 @@
 
     <div class="header-actions">
       <select class="date-range-select" id="date-range-select" onchange="onDateRangeChange()">
+        <option value="7">최근 7일</option>
         <option value="30">최근 30일</option>
-        <option value="60">최근 60일</option>
         <option value="90" selected>최근 90일</option>
         <option value="180">최근 180일</option>
+        <option value="365">최근 365일</option>
+        <option value="custom">직접 선택</option>
       </select>
+      <div id="custom-date-range">
+        <input type="date" id="date-from" onchange="onCustomDateChange()" />
+        <span style="font-size:11px;color:var(--text3);">~</span>
+        <input type="date" id="date-to" onchange="onCustomDateChange()" />
+      </div>
 
+      <button class="btn btn-ghost btn-icon" onclick="copyShareLink()" title="공유 링크 복사" data-i18n-attr="title" data-i18n="hdr_share">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+      </button>
+      <button class="btn btn-ghost btn-icon" id="notif-toggle" onclick="toggleNotifications()" title="알림 설정">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
       <button class="btn btn-ghost btn-icon" id="lang-toggle" onclick="toggleLang()" title="Language / 언어">KO</button>
 
       <button class="btn btn-ghost btn-icon" onclick="toggleTheme()" title="다크/라이트 모드">
@@ -1417,7 +1454,7 @@
     <!-- ===== 개요 탭 ===== -->
     <div class="tab-panel active" id="tab-overview">
       <!-- Stat Cards -->
-      <div class="stats-grid stats-grid-7">
+      <div class="stats-grid stats-grid-8">
         <div class="stat-card total">
           <div class="stat-card-header">
             <span class="stat-card-label" data-i18n="stat_total">전체 이슈</span>
@@ -1487,6 +1524,16 @@
           </div>
           <div class="stat-card-value" id="stat-week-created" style="color:var(--purple);">—</div>
           <div class="stat-card-change text-muted" data-i18n="stat_week_created_sub">이번 주 생성된 이슈</div>
+        </div>
+        <div class="stat-card" style="--card-color:var(--teal);">
+          <div class="stat-card-header">
+            <span class="stat-card-label" data-i18n="stat_ontime">기한 준수율</span>
+            <div class="stat-card-icon" style="background:var(--teal-light);color:var(--teal);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            </div>
+          </div>
+          <div class="stat-card-value" id="stat-ontime" style="color:var(--teal);">—</div>
+          <div class="stat-card-change text-muted" id="stat-ontime-sub">마감일 있는 완료 이슈</div>
         </div>
       </div>
 
@@ -1619,6 +1666,20 @@
         </div>
       </div>
 
+      <!-- Issue Age Distribution -->
+      <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="chart_age_dist">📦 미해결 이슈 연령 분포</span>
+          </div>
+          <div class="card-body">
+            <div class="chart-container" style="min-height:160px;">
+              <canvas id="chart-age-dist" style="max-height:180px;"></canvas>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Stale Issues -->
       <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
         <div class="card">
@@ -1663,6 +1724,17 @@
         <div class="empty-state" style="grid-column:1/-1;">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
           <p>데이터를 불러오는 중...</p>
+        </div>
+      </div>
+
+      <!-- Epic Progress -->
+      <div class="card" style="margin-bottom:16px; margin-top:20px;">
+        <div class="card-header">
+          <span class="card-title" data-i18n="epic_title">🚀 Epic 진행률</span>
+          <span class="chip text-muted" id="epic-subtitle"></span>
+        </div>
+        <div class="card-body" style="padding:0;" id="epic-list">
+          <div class="empty-state" style="padding:20px 0;"><p data-i18n="no_data">데이터 없음</p></div>
         </div>
       </div>
 
@@ -1769,6 +1841,11 @@
           <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
           CSV
         </button>
+        <button class="btn btn-outline btn-sm" onclick="toggleColMenu()" id="col-toggle-btn" style="position:relative;">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+          <span data-i18n="col_toggle">컬럼</span>
+        </button>
+        <div id="col-menu" style="display:none;position:fixed;z-index:200;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow-md);padding:8px;min-width:160px;"></div>
       </div>
       <div class="bookmark-bar" id="bookmark-bar" style="display:none;"></div>
 
@@ -1903,10 +1980,15 @@ let state = {
   sortCol: 'updated',
   sortDir: 'desc',
   dateRange: 90,
+  dateFrom: null,
+  dateTo: null,
   charts: {},
   currentUser: null,
   globalUserFilter: '',
   autoRefreshTimer: null,
+  activeTab: 'overview',
+  urlParamsApplied: false,
+  visibleCols: null,
 };
 
 // ===== I18N =====
@@ -1937,6 +2019,7 @@ const LANGS = {
     stat_overdue: '기한 초과', stat_overdue_sub: '기한 초과 이슈',
     stat_week_done: '이번 주 완료', stat_week_done_sub: '이번 주 해결된 이슈',
     stat_week_created: '이번 주 생성', stat_week_created_sub: '이번 주 생성된 이슈',
+    stat_ontime: '기한 준수율',
     // Chart titles
     chart_status_dist: '상태별 분포', chart_type: '이슈 타입별', chart_priority: '우선순위별',
     chart_project_status: '프로젝트별 상태 분포',
@@ -1947,6 +2030,7 @@ const LANGS = {
     chart_avg_resolution: '📊 프로젝트별 평균 처리 시간 (완료 이슈)',
     chart_stale: '🕐 묵은 이슈 (3일 이상 상태 미변경)',
     chart_recent_activity: '최근 업데이트된 이슈', chart_recent_sub: '최근 10건',
+    chart_age_dist: '📦 미해결 이슈 연령 분포',
     // Backlog trend
     backlog_created: '생성', backlog_done_lbl: '완료', backlog_net: '순변화',
     backlog_growing: '📈 백로그 증가 중', backlog_shrinking: '📉 백로그 감소 중', backlog_balanced: '➡️ 균형 유지',
@@ -2011,6 +2095,10 @@ const LANGS = {
     ctx_view: '상세 보기', ctx_open_jira: 'JIRA에서 열기',
     ctx_copy_key: '키 복사', ctx_copy_url: 'URL 복사',
     ctx_filter_assignee: '이 담당자로 필터', ctx_filter_project: '이 프로젝트로 필터',
+    // New features
+    hdr_share: '공유 링크 복사',
+    col_toggle: '컬럼',
+    epic_title: '🚀 Epic 진행률',
   },
   en: {
     // Nav
@@ -2038,6 +2126,7 @@ const LANGS = {
     stat_overdue: 'Overdue', stat_overdue_sub: 'Overdue issues',
     stat_week_done: 'Done This Week', stat_week_done_sub: 'Resolved this week',
     stat_week_created: 'Created This Week', stat_week_created_sub: 'Created this week',
+    stat_ontime: 'On-time Rate',
     // Chart titles
     chart_status_dist: 'Status Distribution', chart_type: 'By Issue Type', chart_priority: 'By Priority',
     chart_project_status: 'Project Status Distribution',
@@ -2048,6 +2137,7 @@ const LANGS = {
     chart_avg_resolution: '📊 Avg Resolution Time by Project (Resolved)',
     chart_stale: '🕐 Stale Issues (No status change ≥3 days)',
     chart_recent_activity: 'Recently Updated Issues', chart_recent_sub: 'Last 10',
+    chart_age_dist: '📦 Open Issue Age Distribution',
     // Backlog trend
     backlog_created: 'Created', backlog_done_lbl: 'Done', backlog_net: 'Net',
     backlog_growing: '📈 Backlog Growing', backlog_shrinking: '📉 Backlog Shrinking', backlog_balanced: '➡️ Balanced',
@@ -2112,6 +2202,10 @@ const LANGS = {
     ctx_view: 'View Details', ctx_open_jira: 'Open in JIRA',
     ctx_copy_key: 'Copy Key', ctx_copy_url: 'Copy URL',
     ctx_filter_assignee: 'Filter by Assignee', ctx_filter_project: 'Filter by Project',
+    // New features
+    hdr_share: 'Copy share link',
+    col_toggle: 'Columns',
+    epic_title: '🚀 Epic Progress',
   }
 };
 
@@ -2350,6 +2444,7 @@ function showApp() {
 
 // ===== TABS =====
 function switchTab(tab) {
+  state.activeTab = tab;
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
   document.querySelectorAll('.tab-panel').forEach(p => p.classList.toggle('active', p.id === `tab-${tab}`));
   // lazy render trend charts on first visit
@@ -2363,8 +2458,24 @@ function switchTab(tab) {
 
 // ===== DATE RANGE =====
 function onDateRangeChange() {
-  state.dateRange = parseInt(document.getElementById('date-range-select').value);
-  loadDashboard();
+  const val = document.getElementById('date-range-select').value;
+  const customEl = document.getElementById('custom-date-range');
+  if (val === 'custom') {
+    state.dateRange = 'custom';
+    if (customEl) customEl.classList.add('show');
+  } else {
+    state.dateRange = parseInt(val);
+    state.dateFrom = null;
+    state.dateTo = null;
+    if (customEl) customEl.classList.remove('show');
+    loadDashboard();
+  }
+}
+
+function onCustomDateChange() {
+  state.dateFrom = document.getElementById('date-from').value;
+  state.dateTo = document.getElementById('date-to').value;
+  if (state.dateFrom && state.dateTo) loadDashboard();
 }
 
 // ===== LOADING =====
@@ -2409,9 +2520,10 @@ async function loadDashboard() {
   try {
     const days = state.dateRange;
     const jql = `project in (ALS, ASP, BEG, CAMP, KPD, WP, RHD) AND issuetype != Epic ORDER BY updated DESC`;
-    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate'];
+    const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate','parent'];
 
-    showLoading(`이슈 목록 조회 중 (최근 ${days}일)...`);
+    const loadingMsg = days === 'custom' ? '이슈 목록 조회 중...' : `이슈 목록 조회 중 (최근 ${days}일)...`;
+    showLoading(loadingMsg);
     const issues = await fetchAllIssues(jql, fields);
     state.issues = issues;
     populateGlobalUserFilter(issues);
@@ -2470,6 +2582,22 @@ function updateStats(issues) {
   animateCount(document.getElementById('stat-week-created'), weekCreated);
   const pct = total > 0 ? Math.round(done/total*100) : 0;
   document.getElementById('stat-done-pct').textContent = `완료율 ${pct}%`;
+
+  // On-time delivery rate
+  const withDue = issues.filter(i => i.fields?.resolutiondate && i.fields?.duedate);
+  const ontime = withDue.filter(i => new Date(i.fields.resolutiondate) <= new Date(i.fields.duedate));
+  const ontimePct = withDue.length > 0 ? Math.round(ontime.length / withDue.length * 100) : null;
+  const ontimeEl = document.getElementById('stat-ontime');
+  if (ontimeEl) {
+    if (ontimePct !== null) {
+      ontimeEl.textContent = ontimePct + '%';
+      ontimeEl.style.color = ontimePct >= 80 ? 'var(--success)' : ontimePct >= 60 ? 'var(--warning)' : 'var(--danger)';
+    } else {
+      ontimeEl.textContent = 'N/A';
+    }
+  }
+  const ontimeSubEl = document.getElementById('stat-ontime-sub');
+  if (ontimeSubEl) ontimeSubEl.textContent = `${ontime.length}/${withDue.length}건`;
 }
 
 // ===== CHARTS =====
@@ -2917,9 +3045,20 @@ function renderIssuesTable() {
   const end = Math.min(start+PAGE_SIZE, total);
   const pageIssues = state.filteredIssues.slice(start, end);
   const tbody = document.getElementById('issues-tbody');
+  const visCol = getVisibleCols();
+
+  // Rebuild thead dynamically
+  const theadRow = document.querySelector('.issues-table thead tr');
+  if (theadRow) {
+    const COL_LABELS = currentLang === 'en' ? COL_LABELS_EN : COL_LABELS_KO;
+    const colSortMap = { key:'key', summary:'summary', project:'project', status:'status', priority:'priority', type:'type', assignee:'assignee', created:'created', updated:'updated', due:'due' };
+    theadRow.innerHTML = ALL_COLS.filter(c => visCol.includes(c)).map(c =>
+      `<th onclick="sortIssues('${c}')" data-col="${c}"><span>${COL_LABELS[c]}</span> <span class="sort-icon">↕</span></th>`
+    ).join('');
+  }
 
   if (!pageIssues.length) {
-    tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>검색 결과가 없습니다</p><span>필터 조건을 조정해보세요</span></div></td></tr>`;
+    tbody.innerHTML = `<tr><td colspan="${visCol.length}"><div class="empty-state"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><p>검색 결과가 없습니다</p><span>필터 조건을 조정해보세요</span></div></td></tr>`;
     document.getElementById('pagination').style.display = 'none';
     return;
   }
@@ -2934,6 +3073,8 @@ function renderIssuesTable() {
     const assignee = f.assignee?.displayName || t('iss_unassigned');
     const project = f.project?.key || '';
     const updated = f.updated || '';
+    const created = f.created || '';
+    const due = f.duedate || '';
     const url = `${JIRA_BROWSE}/browse/${key}`;
     const aColor = avatarColor(assignee);
     const now = new Date();
@@ -2941,15 +3082,20 @@ function renderIssuesTable() {
     const cat = statusCategory(status, f.status?.statusCategory?.key);
     const staleDays = changeDate && cat !== 'done' ? Math.floor((now - new Date(changeDate)) / 86400000) : 0;
     const isStale = staleDays >= 3;
+    const cellMap = {
+      key: `<td onclick="event.stopPropagation()"><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>`,
+      summary: `<td><div class="issue-summary" title="${escHtml(summary)}">${escHtml(summary)}${isStale ? ` <span style="font-size:10px;color:var(--warning);font-weight:700;">🕐${staleDays}일</span>` : ''}</div></td>`,
+      type: `<td><span class="badge ${typeBadgeClass(type)}">${escHtml(type)}</span></td>`,
+      status: `<td><span class="badge ${statusBadgeClass(status)}">${escHtml(status)}</span></td>`,
+      priority: `<td><span class="badge ${priorityBadgeClass(priority)}">${priorityIcon(priority)} ${escHtml(priority)}</span></td>`,
+      assignee: `<td><div class="assignee-cell"><div class="assignee-avatar-sm" style="background:${aColor}">${initials(assignee)}</div>${escHtml(assignee)}</div></td>`,
+      project: `<td><span class="chip">${escHtml(project)}</span></td>`,
+      updated: `<td style="color:var(--text3);font-size:12px;">${timeAgo(updated)}</td>`,
+      created: `<td style="color:var(--text3);font-size:12px;">${timeAgo(created)}</td>`,
+      due: `<td style="color:${due && new Date(due)<now?'var(--danger)':'var(--text3)'};font-size:12px;">${due ? formatDate(due) : '—'}</td>`,
+    };
     return `<tr style="cursor:pointer;" data-key="${escHtml(key)}" onclick="showIssueModal('${escHtml(key)}')" oncontextmenu="showContextMenu(event,'${escHtml(key)}')" ${isStale ? 'class="stale-row"' : ''}>
-      <td onclick="event.stopPropagation()"><a class="issue-key-link" href="${url}" target="_blank" rel="noopener">${escHtml(key)}</a></td>
-      <td><div class="issue-summary" title="${escHtml(summary)}">${escHtml(summary)}${isStale ? ` <span style="font-size:10px;color:var(--warning);font-weight:700;">🕐${staleDays}일</span>` : ''}</div></td>
-      <td><span class="badge ${typeBadgeClass(type)}">${escHtml(type)}</span></td>
-      <td><span class="badge ${statusBadgeClass(status)}">${escHtml(status)}</span></td>
-      <td><span class="badge ${priorityBadgeClass(priority)}">${priorityIcon(priority)} ${escHtml(priority)}</span></td>
-      <td><div class="assignee-cell"><div class="assignee-avatar-sm" style="background:${aColor}">${initials(assignee)}</div>${escHtml(assignee)}</div></td>
-      <td><span class="chip">${escHtml(project)}</span></td>
-      <td style="color:var(--text3);font-size:12px;">${timeAgo(updated)}</td>
+      ${ALL_COLS.filter(c => visCol.includes(c)).map(c => cellMap[c] || '<td></td>').join('')}
     </tr>`;
   }).join('');
 
@@ -2959,14 +3105,11 @@ function renderIssuesTable() {
   document.getElementById('pagination-info').textContent = `${(start+1).toLocaleString()}–${end.toLocaleString()} / ${total.toLocaleString()}개`;
   const pctrl = document.getElementById('pagination-controls');
   const pages = [];
-  // prev
   pages.push(`<button class="page-btn" onclick="goPage(${page-1})" ${page<=1?'disabled':''}>‹</button>`);
-  // page numbers
   let lo = Math.max(1, page-2), hi = Math.min(totalPages, page+2);
   if (lo > 1) { pages.push(`<button class="page-btn" onclick="goPage(1)">1</button>`); if (lo > 2) pages.push(`<span style="padding:0 4px;color:var(--text4)">…</span>`); }
   for (let p = lo; p <= hi; p++) pages.push(`<button class="page-btn ${p===page?'active':''}" onclick="goPage(${p})">${p}</button>`);
   if (hi < totalPages) { if (hi < totalPages-1) pages.push(`<span style="padding:0 4px;color:var(--text4)">…</span>`); pages.push(`<button class="page-btn" onclick="goPage(${totalPages})">${totalPages}</button>`); }
-  // next
   pages.push(`<button class="page-btn" onclick="goPage(${page+1})" ${page>=totalPages?'disabled':''}>›</button>`);
   pctrl.innerHTML = pages.join('');
 }
@@ -3346,6 +3489,8 @@ function renderAll() {
   renderHeatmap(issues);
   renderAssigneeSpeed(issues);
   renderMyIssues(state.issues);
+  renderAgeDist(issues);
+  renderEpics(state.issues);
   populateFilters(issues);
   updateTabBadges(issues);
   state.filteredIssues = [...issues];
@@ -3353,6 +3498,11 @@ function renderAll() {
   renderIssuesTable();
   renderBookmarks();
   setLastUpdateTime();
+  checkAndNotify(issues);
+  if (!state.urlParamsApplied) {
+    state.urlParamsApplied = true;
+    applyUrlParams();
+  }
 }
 
 // ===== STALE ISSUES =====
@@ -3522,8 +3672,11 @@ function closeIssueModal(e) {
 // ===== AUTO REFRESH =====
 function startAutoRefresh() {
   if (state.autoRefreshTimer) clearInterval(state.autoRefreshTimer);
-  state.autoRefreshTimer = setInterval(() => {
-    if (state.creds) loadDashboard();
+  state.autoRefreshTimer = setInterval(async () => {
+    if (state.creds) {
+      await loadDashboard();
+      checkAndNotify(getGlobalFilteredIssues());
+    }
   }, 5 * 60 * 1000);
 }
 
@@ -3902,6 +4055,243 @@ document.addEventListener('keydown', (e) => {
   if (e.key === 'r' || e.key === 'R') refreshData();
 });
 
+// ===== ISSUE AGE DISTRIBUTION =====
+function renderAgeDist(issues) {
+  const now = new Date();
+  const buckets = [0,0,0,0,0];
+  const labels = currentLang === 'en'
+    ? ['0-7d','8-30d','31-90d','91-180d','180d+']
+    : ['0-7일','8-30일','31-90일','91-180일','180일+'];
+  for (const iss of issues) {
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    if (cat === 'done') continue;
+    const age = (now - new Date(iss.fields?.created)) / 86400000;
+    if (age <= 7) buckets[0]++;
+    else if (age <= 30) buckets[1]++;
+    else if (age <= 90) buckets[2]++;
+    else if (age <= 180) buckets[3]++;
+    else buckets[4]++;
+  }
+  const { gridColor, tickColor } = getChartColors();
+  const colors = ['#36b37e','#0065ff','#ff991f','#de350b','#6554c0'];
+  if (state.charts.ageDist) state.charts.ageDist.destroy();
+  const canvas = document.getElementById('chart-age-dist');
+  if (!canvas) return;
+  state.charts.ageDist = new Chart(canvas, {
+    type: 'bar',
+    data: { labels, datasets: [{ data: buckets, backgroundColor: colors, borderRadius: 6, borderSkipped: false }] },
+    options: {
+      responsive: true, maintainAspectRatio: true,
+      animation: { duration: 600 },
+      scales: {
+        x: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } },
+        y: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 }, stepSize: 1 }, beginAtZero: true }
+      },
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.raw}건` } } }
+    }
+  });
+}
+
+// ===== EPIC PROGRESS =====
+function renderEpics(issues) {
+  const epics = {};
+  for (const iss of issues) {
+    if (iss.fields?.issuetype?.name === 'Epic') {
+      if (!epics[iss.key]) epics[iss.key] = { key: iss.key, name: iss.fields.summary, todo:0, inprogress:0, done:0, total:0 };
+    }
+  }
+  for (const iss of issues) {
+    const parentKey = iss.fields?.parent?.key || iss.fields?.customfield_10014;
+    if (parentKey && epics[parentKey] && iss.fields?.issuetype?.name !== 'Epic') {
+      const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+      epics[parentKey][cat]++;
+      epics[parentKey].total++;
+    }
+  }
+  const epicList = Object.values(epics).filter(e => e.total > 0).sort((a,b) => b.total - a.total);
+  const subtitleEl = document.getElementById('epic-subtitle');
+  if (subtitleEl) subtitleEl.textContent = `${epicList.length}개`;
+  const wrap = document.getElementById('epic-list');
+  if (!wrap) return;
+  if (!epicList.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:20px 0;"><p>${t('no_data')}</p></div>`;
+    return;
+  }
+  wrap.innerHTML = epicList.map(e => {
+    const pct = e.total > 0 ? Math.round(e.done/e.total*100) : 0;
+    const barColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--purple)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
+    return `<div class="epic-item">
+      <div class="epic-key" onclick="filterByProject('');document.getElementById('filter-project').value='';filterIssues();setTimeout(()=>{document.getElementById('issue-search').value='${escHtml(e.key)}';filterIssues();},50)">${escHtml(e.key)}</div>
+      <div class="epic-name" title="${escHtml(e.name)}">${escHtml(e.name.length>60?e.name.slice(0,60)+'…':e.name)}</div>
+      <div class="epic-bar-wrap">
+        <div class="epic-bar"><div class="epic-bar-fill" style="width:${pct}%;background:${barColor};"></div></div>
+        <div class="epic-pct">${pct}% ${t('proj_done_lbl')}</div>
+      </div>
+      <div class="epic-counts">${e.done}/${e.total}</div>
+    </div>`;
+  }).join('');
+}
+
+// ===== COLUMN CUSTOMIZATION =====
+const ALL_COLS = ['key','summary','project','status','priority','type','assignee','created','updated','due'];
+const COL_LABELS_KO = { key:'키', summary:'요약', project:'프로젝트', status:'상태', priority:'우선순위', type:'타입', assignee:'담당자', created:'생성일', updated:'업데이트', due:'마감일' };
+const COL_LABELS_EN = { key:'Key', summary:'Summary', project:'Project', status:'Status', priority:'Priority', type:'Type', assignee:'Assignee', created:'Created', updated:'Updated', due:'Due' };
+
+function getVisibleCols() {
+  try { const s = localStorage.getItem('jira_cols'); return s ? JSON.parse(s) : ALL_COLS; } catch { return ALL_COLS; }
+}
+function saveVisibleCols(cols) { localStorage.setItem('jira_cols', JSON.stringify(cols)); }
+
+function toggleColMenu() {
+  const menu = document.getElementById('col-menu');
+  if (!menu) return;
+  if (menu.style.display === 'none') {
+    const cols = getVisibleCols();
+    const labels = currentLang === 'en' ? COL_LABELS_EN : COL_LABELS_KO;
+    menu.innerHTML = ALL_COLS.map(c => `<label><input type="checkbox" ${cols.includes(c)?'checked':''} onchange="toggleCol('${c}',this.checked)"> ${labels[c]}</label>`).join('');
+    menu.style.display = 'block';
+    const btn = document.getElementById('col-toggle-btn');
+    if (btn) {
+      const rect = btn.getBoundingClientRect();
+      menu.style.top = (rect.bottom + window.scrollY + 4) + 'px';
+      menu.style.left = rect.left + 'px';
+    }
+    setTimeout(() => document.addEventListener('click', closeColMenu, {once:true, capture:true}), 50);
+  } else {
+    menu.style.display = 'none';
+  }
+}
+function closeColMenu(e) {
+  const menu = document.getElementById('col-menu');
+  if (menu && !menu.contains(e.target)) menu.style.display = 'none';
+}
+function toggleCol(col, checked) {
+  let cols = getVisibleCols();
+  if (checked && !cols.includes(col)) cols.push(col);
+  if (!checked) cols = cols.filter(c => c !== col);
+  if (cols.length === 0) cols = ['key','summary'];
+  saveVisibleCols(cols);
+  renderIssuesTable();
+}
+
+// ===== SHARE LINK =====
+function copyShareLink() {
+  const params = new URLSearchParams();
+  const search = document.getElementById('issue-search')?.value;
+  const proj = document.getElementById('filter-project')?.value;
+  const status = document.getElementById('filter-status')?.value;
+  const type = document.getElementById('filter-type')?.value;
+  const priority = document.getElementById('filter-priority')?.value;
+  const stale = document.getElementById('filter-stale')?.value;
+  if (search) params.set('q', search);
+  if (proj) params.set('proj', proj);
+  if (status) params.set('status', status);
+  if (type) params.set('type', type);
+  if (priority) params.set('priority', priority);
+  if (stale) params.set('stale', stale);
+  if (state.globalUserFilter) params.set('user', state.globalUserFilter);
+  if (state.activeTab) params.set('tab', state.activeTab);
+  if (state.dateRange) params.set('dr', state.dateRange);
+  const url = window.location.origin + window.location.pathname + (params.toString() ? '?' + params.toString() : '');
+  navigator.clipboard.writeText(url).then(() => {
+    showToast(currentLang === 'ko' ? '링크가 복사되었습니다!' : 'Link copied!');
+  });
+}
+
+function applyUrlParams() {
+  const params = new URLSearchParams(window.location.search);
+  if (params.get('q')) { const el = document.getElementById('issue-search') || document.getElementById('filter-search'); if (el) el.value = params.get('q'); }
+  if (params.get('proj')) { const el = document.getElementById('filter-project'); if (el) el.value = params.get('proj'); }
+  if (params.get('status')) { const el = document.getElementById('filter-status'); if (el) el.value = params.get('status'); }
+  if (params.get('type')) { const el = document.getElementById('filter-type'); if (el) el.value = params.get('type'); }
+  if (params.get('priority')) { const el = document.getElementById('filter-priority'); if (el) el.value = params.get('priority'); }
+  if (params.get('stale')) { const el = document.getElementById('filter-stale'); if (el) el.value = params.get('stale'); }
+  if (params.get('user')) { state.globalUserFilter = params.get('user'); const el = document.getElementById('global-user-filter'); if (el) el.value = params.get('user'); }
+  if (params.get('tab')) switchTab(params.get('tab'));
+  if (params.get('dr')) {
+    const drVal = params.get('dr');
+    state.dateRange = drVal === 'custom' ? 'custom' : (parseInt(drVal) || 90);
+    const el = document.getElementById('date-range-select');
+    if (el) el.value = drVal;
+  }
+  filterIssues();
+}
+
+// ===== BROWSER NOTIFICATIONS =====
+let notifEnabled = localStorage.getItem('jira_notif') === '1';
+let prevStaleKeys = new Set();
+let prevOverdueKeys = new Set();
+
+function toggleNotifications() {
+  if (!('Notification' in window)) {
+    showToast(currentLang === 'ko' ? '이 브라우저는 알림을 지원하지 않습니다.' : 'Notifications not supported.');
+    return;
+  }
+  if (Notification.permission === 'denied') {
+    showToast(currentLang === 'ko' ? '알림 권한이 차단되어 있습니다. 브라우저 설정에서 허용해주세요.' : 'Notifications are blocked. Allow them in browser settings.');
+    return;
+  }
+  if (!notifEnabled) {
+    Notification.requestPermission().then(perm => {
+      if (perm === 'granted') {
+        notifEnabled = true;
+        localStorage.setItem('jira_notif', '1');
+        updateNotifBtn();
+        showToast(currentLang === 'ko' ? '알림이 활성화되었습니다.' : 'Notifications enabled.');
+      }
+    });
+  } else {
+    notifEnabled = false;
+    localStorage.setItem('jira_notif', '0');
+    updateNotifBtn();
+    showToast(currentLang === 'ko' ? '알림이 비활성화되었습니다.' : 'Notifications disabled.');
+  }
+}
+
+function updateNotifBtn() {
+  const btn = document.getElementById('notif-toggle');
+  if (!btn) return;
+  btn.style.color = notifEnabled ? 'var(--warning)' : '';
+  btn.title = notifEnabled
+    ? (currentLang === 'ko' ? '알림 켜짐 (클릭해서 끄기)' : 'Notifications ON (click to disable)')
+    : (currentLang === 'ko' ? '알림 끄기' : 'Enable notifications');
+}
+
+function checkAndNotify(issues) {
+  if (!notifEnabled || Notification.permission !== 'granted') return;
+  const now = new Date();
+  // Stale issues
+  const newStale = issues.filter(iss => {
+    const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+    if (cat === 'done') return false;
+    const changeDate = iss.fields?.statuscategorychangedate || iss.fields?.updated;
+    return changeDate && (now - new Date(changeDate)) / 86400000 >= 3;
+  });
+  const newStaleKeys = new Set(newStale.map(i => i.key));
+  const addedStale = [...newStaleKeys].filter(k => !prevStaleKeys.has(k));
+  if (addedStale.length > 0 && prevStaleKeys.size > 0) {
+    new Notification(currentLang === 'ko' ? `새 묵은 이슈 ${addedStale.length}건` : `${addedStale.length} new stale issue(s)`, {
+      body: addedStale.slice(0,3).join(', ') + (addedStale.length > 3 ? '...' : ''),
+      icon: '/favicon.ico'
+    });
+  }
+  prevStaleKeys = newStaleKeys;
+  // Overdue issues
+  const newOverdue = issues.filter(i => {
+    const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
+    return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now;
+  });
+  const newOverdueKeys = new Set(newOverdue.map(i => i.key));
+  const addedOverdue = [...newOverdueKeys].filter(k => !prevOverdueKeys.has(k));
+  if (addedOverdue.length > 0 && prevOverdueKeys.size > 0) {
+    new Notification(currentLang === 'ko' ? `기한 초과 이슈 ${addedOverdue.length}건 추가` : `${addedOverdue.length} new overdue issue(s)`, {
+      body: addedOverdue.slice(0,3).join(', ') + (addedOverdue.length > 3 ? '...' : ''),
+      icon: '/favicon.ico'
+    });
+  }
+  prevOverdueKeys = newOverdueKeys;
+}
+
 // ===== HELPERS =====
 function escHtml(str) {
   return String(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
@@ -3914,6 +4304,7 @@ function escHtml(str) {
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
   applyLang();
+  updateNotifBtn();
 
   // Check saved creds
   const saved = localStorage.getItem(STORAGE_KEY);
