@@ -1996,8 +1996,8 @@
         </div>
       </div>
 
-      <!-- Stale Issues -->
-      <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
+      <!-- Stale Issues + Recent Activity -->
+      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
             <span class="card-title" data-i18n="chart_stale">🕐 묵은 이슈 (3일 이상 상태 미변경)</span>
@@ -2009,19 +2009,17 @@
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title" data-i18n="chart_recent_activity">최근 업데이트된 이슈</span>
-          <span class="chip text-muted" data-i18n="chart_recent_sub">최근 10건</span>
-        </div>
-        <div class="card-body" style="padding-top:4px; padding-bottom:4px;">
-          <div class="activity-list" id="activity-list" style="max-height:440px; overflow-y:auto;">
-            <div class="empty-state">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
-              <p>데이터를 불러오는 중...</p>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="chart_recent_activity">최근 업데이트된 이슈</span>
+            <span class="chip text-muted" data-i18n="chart_recent_sub">최근 10건</span>
+          </div>
+          <div class="card-body" style="padding-top:4px; padding-bottom:4px;">
+            <div class="activity-list" id="activity-list" style="max-height:440px; overflow-y:auto;">
+              <div class="empty-state">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2"/><rect x="9" y="3" width="6" height="4" rx="2"/></svg>
+                <p>데이터를 불러오는 중...</p>
+              </div>
             </div>
           </div>
         </div>
