@@ -1339,27 +1339,27 @@
     <nav class="header-nav">
       <button class="nav-tab active" data-tab="overview" onclick="switchTab('overview')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-        개요
+        <span data-i18n="nav_overview">개요</span>
       </button>
       <button class="nav-tab" data-tab="projects" onclick="switchTab('projects')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        프로젝트
+        <span data-i18n="nav_projects">프로젝트</span>
       </button>
       <button class="nav-tab" data-tab="team" onclick="switchTab('team')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-        팀
+        <span data-i18n="nav_team">팀</span>
       </button>
       <button class="nav-tab" data-tab="issues" onclick="switchTab('issues')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
-        이슈<span class="nav-badge" id="badge-stale" style="display:none;">0</span>
+        <span data-i18n="nav_issues">이슈</span><span class="nav-badge" id="badge-stale" style="display:none;">0</span>
       </button>
       <button class="nav-tab" data-tab="trend" onclick="switchTab('trend')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-        트렌드
+        <span data-i18n="nav_trend">트렌드</span>
       </button>
       <button class="nav-tab" data-tab="myissues" onclick="switchTab('myissues')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        내 이슈<span class="nav-badge" id="badge-myissues" style="display:none;background:var(--info);">0</span>
+        <span data-i18n="nav_myissues">내 이슈</span><span class="nav-badge" id="badge-myissues" style="display:none;background:var(--info);">0</span>
       </button>
       <div class="header-divider" style="margin:0 6px;"></div>
       <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터">
@@ -1376,6 +1376,8 @@
         <option value="90" selected>최근 90일</option>
         <option value="180">최근 180일</option>
       </select>
+
+      <button class="btn btn-ghost btn-icon" id="lang-toggle" onclick="toggleLang()" title="Language / 언어">KO</button>
 
       <button class="btn btn-ghost btn-icon" onclick="toggleTheme()" title="다크/라이트 모드">
         <svg id="theme-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
@@ -1418,37 +1420,37 @@
       <div class="stats-grid stats-grid-7">
         <div class="stat-card total">
           <div class="stat-card-header">
-            <span class="stat-card-label">전체 이슈</span>
+            <span class="stat-card-label" data-i18n="stat_total">전체 이슈</span>
             <div class="stat-card-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
             </div>
           </div>
           <div class="stat-card-value" id="stat-total">—</div>
-          <div class="stat-card-change text-muted">기간 내 전체 이슈</div>
+          <div class="stat-card-change text-muted" data-i18n="stat_total_sub">기간 내 전체 이슈</div>
         </div>
         <div class="stat-card todo">
           <div class="stat-card-header">
-            <span class="stat-card-label">할 일</span>
+            <span class="stat-card-label" data-i18n="stat_todo">할 일</span>
             <div class="stat-card-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
             </div>
           </div>
           <div class="stat-card-value" id="stat-todo">—</div>
-          <div class="stat-card-change text-muted">대기 중인 이슈</div>
+          <div class="stat-card-change text-muted" data-i18n="stat_todo_sub">대기 중인 이슈</div>
         </div>
         <div class="stat-card inprogress">
           <div class="stat-card-header">
-            <span class="stat-card-label">진행 중</span>
+            <span class="stat-card-label" data-i18n="stat_inprogress">진행 중</span>
             <div class="stat-card-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
             </div>
           </div>
           <div class="stat-card-value" id="stat-inprogress">—</div>
-          <div class="stat-card-change text-muted">작업 중인 이슈</div>
+          <div class="stat-card-change text-muted" data-i18n="stat_inprogress_sub">작업 중인 이슈</div>
         </div>
         <div class="stat-card done">
           <div class="stat-card-header">
-            <span class="stat-card-label">완료</span>
+            <span class="stat-card-label" data-i18n="stat_done">완료</span>
             <div class="stat-card-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
             </div>
@@ -1458,33 +1460,33 @@
         </div>
         <div class="stat-card overdue">
           <div class="stat-card-header">
-            <span class="stat-card-label">기한 초과</span>
+            <span class="stat-card-label" data-i18n="stat_overdue">기한 초과</span>
             <div class="stat-card-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             </div>
           </div>
           <div class="stat-card-value" id="stat-overdue">—</div>
-          <div class="stat-card-change text-danger">기한 초과 이슈</div>
+          <div class="stat-card-change text-danger" data-i18n="stat_overdue_sub">기한 초과 이슈</div>
         </div>
         <div class="stat-card" style="--card-color:var(--success);">
           <div class="stat-card-header">
-            <span class="stat-card-label">이번 주 완료</span>
+            <span class="stat-card-label" data-i18n="stat_week_done">이번 주 완료</span>
             <div class="stat-card-icon" style="background:var(--success-light);color:var(--success);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
             </div>
           </div>
           <div class="stat-card-value" id="stat-week-done" style="color:var(--success);">—</div>
-          <div class="stat-card-change text-muted">이번 주 해결된 이슈</div>
+          <div class="stat-card-change text-muted" data-i18n="stat_week_done_sub">이번 주 해결된 이슈</div>
         </div>
         <div class="stat-card" style="--card-color:var(--purple);">
           <div class="stat-card-header">
-            <span class="stat-card-label">이번 주 생성</span>
+            <span class="stat-card-label" data-i18n="stat_week_created">이번 주 생성</span>
             <div class="stat-card-icon" style="background:var(--purple-light);color:var(--purple);">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
             </div>
           </div>
           <div class="stat-card-value" id="stat-week-created" style="color:var(--purple);">—</div>
-          <div class="stat-card-change text-muted">이번 주 생성된 이슈</div>
+          <div class="stat-card-change text-muted" data-i18n="stat_week_created_sub">이번 주 생성된 이슈</div>
         </div>
       </div>
 
@@ -1492,7 +1494,7 @@
       <div class="charts-row charts-row-3" style="margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
-            <span class="card-title">상태별 분포</span>
+            <span class="card-title" data-i18n="chart_status_dist">상태별 분포</span>
           </div>
           <div class="card-body">
             <div class="donut-wrapper">
@@ -1506,7 +1508,7 @@
 
         <div class="card">
           <div class="card-header">
-            <span class="card-title">이슈 타입별</span>
+            <span class="card-title" data-i18n="chart_type">이슈 타입별</span>
           </div>
           <div class="card-body">
             <div class="chart-container">
@@ -1517,7 +1519,7 @@
 
         <div class="card">
           <div class="card-header">
-            <span class="card-title">우선순위별</span>
+            <span class="card-title" data-i18n="chart_priority">우선순위별</span>
           </div>
           <div class="card-body">
             <div class="chart-container">
@@ -1527,11 +1529,44 @@
         </div>
       </div>
 
+      <!-- Backlog Trend + Heatmap -->
+      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="chart_backlog_trend">📈 백로그 추세 (최근 30일)</span>
+          </div>
+          <div class="card-body" style="display:flex; gap:20px; align-items:center;">
+            <div style="text-align:center; flex:1;">
+              <div class="backlog-trend-val" id="backlog-created">—</div>
+              <div class="backlog-trend-label" data-i18n="backlog_created">생성</div>
+            </div>
+            <div style="font-size:24px; color:var(--text4);">vs</div>
+            <div style="text-align:center; flex:1;">
+              <div class="backlog-trend-val" id="backlog-done">—</div>
+              <div class="backlog-trend-label" data-i18n="backlog_done_lbl">완료</div>
+            </div>
+            <div style="flex:2; text-align:center;">
+              <div id="backlog-net" style="font-size:20px; font-weight:800;">—</div>
+              <div id="backlog-net-label" class="backlog-trend-label" data-i18n="backlog_net">순변화</div>
+              <div id="backlog-verdict" style="font-size:11px; margin-top:4px; font-weight:600;"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title" data-i18n="chart_heatmap">🌿 활동 히트맵 (최근 1년)</span>
+          </div>
+          <div class="card-body" style="padding:16px 20px;">
+            <div id="heatmap-grid-wrap"></div>
+          </div>
+        </div>
+      </div>
+
       <!-- Charts Row 2 -->
       <div class="charts-row" style="grid-template-columns: 1fr; margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
-            <span class="card-title">프로젝트별 상태 분포</span>
+            <span class="card-title" data-i18n="chart_project_status">프로젝트별 상태 분포</span>
           </div>
           <div class="card-body" style="padding-bottom:12px;">
             <div class="chart-container" style="min-height:180px;">
@@ -1546,7 +1581,7 @@
         <!-- 마감 임박 -->
         <div class="card">
           <div class="card-header">
-            <span class="card-title">⚠️ 마감 임박 (7일 이내)</span>
+            <span class="card-title" data-i18n="chart_due_soon">⚠️ 마감 임박 (7일 이내)</span>
             <span class="chip text-muted" id="due-soon-count">0건</span>
           </div>
           <div class="card-body" style="padding-top:12px;">
@@ -1558,8 +1593,8 @@
         <!-- 병목 분석 -->
         <div class="card">
           <div class="card-header">
-            <span class="card-title">🔴 병목 분석 (오래된 미완료 이슈)</span>
-            <span class="chip text-muted">상위 10건</span>
+            <span class="card-title" data-i18n="chart_bottleneck">🔴 병목 분석 (오래된 미완료 이슈)</span>
+            <span class="chip text-muted" data-i18n="chart_bottleneck_sub">상위 10건</span>
           </div>
           <div class="card-body" style="padding:0;">
             <div id="bottleneck-wrap">
@@ -1573,7 +1608,7 @@
       <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
-            <span class="card-title">📊 프로젝트별 평균 처리 시간 (완료 이슈)</span>
+            <span class="card-title" data-i18n="chart_avg_resolution">📊 프로젝트별 평균 처리 시간 (완료 이슈)</span>
             <span class="chip text-muted" id="avg-resolution-subtitle"></span>
           </div>
           <div class="card-body">
@@ -1588,7 +1623,7 @@
       <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
         <div class="card">
           <div class="card-header">
-            <span class="card-title">🕐 묵은 이슈 (3일 이상 상태 미변경)</span>
+            <span class="card-title" data-i18n="chart_stale">🕐 묵은 이슈 (3일 이상 상태 미변경)</span>
             <span class="chip text-muted" id="stale-count-chip">0건</span>
           </div>
           <div class="card-body" style="padding:0;">
@@ -1599,44 +1634,11 @@
         </div>
       </div>
 
-      <!-- Backlog Trend + Heatmap -->
-      <div class="charts-row charts-row-2" style="margin-bottom:16px;">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">📈 백로그 추세 (최근 30일)</span>
-          </div>
-          <div class="card-body" style="display:flex; gap:20px; align-items:center;">
-            <div style="text-align:center; flex:1;">
-              <div class="backlog-trend-val" id="backlog-created">—</div>
-              <div class="backlog-trend-label">생성</div>
-            </div>
-            <div style="font-size:24px; color:var(--text4);">vs</div>
-            <div style="text-align:center; flex:1;">
-              <div class="backlog-trend-val" id="backlog-done">—</div>
-              <div class="backlog-trend-label">완료</div>
-            </div>
-            <div style="flex:2; text-align:center;">
-              <div id="backlog-net" style="font-size:20px; font-weight:800;">—</div>
-              <div id="backlog-net-label" class="backlog-trend-label">순변화</div>
-              <div id="backlog-verdict" style="font-size:11px; margin-top:4px; font-weight:600;"></div>
-            </div>
-          </div>
-        </div>
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">🌿 활동 히트맵 (최근 1년)</span>
-          </div>
-          <div class="card-body" style="padding:16px 20px;">
-            <div id="heatmap-grid-wrap"></div>
-          </div>
-        </div>
-      </div>
-
       <!-- Recent Activity -->
       <div class="card">
         <div class="card-header">
-          <span class="card-title">최근 업데이트된 이슈</span>
-          <span class="chip text-muted">최근 10건</span>
+          <span class="card-title" data-i18n="chart_recent_activity">최근 업데이트된 이슈</span>
+          <span class="chip text-muted" data-i18n="chart_recent_sub">최근 10건</span>
         </div>
         <div class="card-body" style="padding-top:4px; padding-bottom:4px;">
           <div class="activity-list" id="activity-list">
@@ -1775,14 +1777,14 @@
           <table class="issues-table" id="issues-table">
             <thead>
               <tr>
-                <th onclick="sortIssues('key')" data-col="key">키 <span class="sort-icon">↕</span></th>
-                <th onclick="sortIssues('summary')" data-col="summary">요약 <span class="sort-icon">↕</span></th>
-                <th onclick="sortIssues('type')" data-col="type">타입 <span class="sort-icon">↕</span></th>
-                <th onclick="sortIssues('status')" data-col="status">상태 <span class="sort-icon">↕</span></th>
-                <th onclick="sortIssues('priority')" data-col="priority">우선순위 <span class="sort-icon">↕</span></th>
-                <th onclick="sortIssues('assignee')" data-col="assignee">담당자 <span class="sort-icon">↕</span></th>
-                <th onclick="sortIssues('project')" data-col="project">프로젝트 <span class="sort-icon">↕</span></th>
-                <th onclick="sortIssues('updated')" data-col="updated">업데이트 <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('key')" data-col="key"><span data-i18n="iss_col_key">키</span> <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('summary')" data-col="summary"><span data-i18n="iss_col_summary">요약</span> <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('type')" data-col="type"><span data-i18n="iss_col_type">타입</span> <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('status')" data-col="status"><span data-i18n="iss_col_status">상태</span> <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('priority')" data-col="priority"><span data-i18n="iss_col_priority">우선순위</span> <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('assignee')" data-col="assignee"><span data-i18n="iss_col_assignee">담당자</span> <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('project')" data-col="project"><span data-i18n="iss_col_project">프로젝트</span> <span class="sort-icon">↕</span></th>
+                <th onclick="sortIssues('updated')" data-col="updated"><span data-i18n="iss_col_updated">업데이트</span> <span class="sort-icon">↕</span></th>
               </tr>
             </thead>
             <tbody id="issues-tbody">
@@ -1907,6 +1909,245 @@ let state = {
   autoRefreshTimer: null,
 };
 
+// ===== I18N =====
+const LANGS = {
+  ko: {
+    // Nav
+    nav_overview: '개요', nav_projects: '프로젝트', nav_team: '팀',
+    nav_issues: '이슈', nav_trend: '트렌드', nav_myissues: '내 이슈',
+    nav_all_users: '전체 사용자',
+    // Header
+    hdr_refresh: '새로고침', hdr_fullscreen: '전체화면', hdr_theme_light: '라이트 모드로', hdr_theme_dark: '다크 모드로',
+    hdr_loading: '연결 중...',
+    hdr_last_updated: '마지막 업데이트',
+    // Login
+    login_title: 'JIRA 대시보드 로그인',
+    login_url_label: 'JIRA URL', login_url_ph: 'https://yourcompany.atlassian.net',
+    login_email_label: '이메일', login_email_ph: 'you@example.com',
+    login_token_label: 'API 토큰', login_token_ph: 'API 토큰 입력',
+    login_btn: '로그인', login_loading: '연결 중...',
+    login_error_fill: '모든 필드를 입력해주세요.',
+    login_error_fail: '연결 실패. 자격 증명을 확인해주세요.',
+    login_token_link: 'API 토큰 발급',
+    // Stats
+    stat_total: '전체 이슈', stat_total_sub: '기간 내 전체 이슈',
+    stat_todo: '할 일', stat_todo_sub: '대기 중인 이슈',
+    stat_inprogress: '진행 중', stat_inprogress_sub: '작업 중인 이슈',
+    stat_done: '완료',
+    stat_overdue: '기한 초과', stat_overdue_sub: '기한 초과 이슈',
+    stat_week_done: '이번 주 완료', stat_week_done_sub: '이번 주 해결된 이슈',
+    stat_week_created: '이번 주 생성', stat_week_created_sub: '이번 주 생성된 이슈',
+    // Chart titles
+    chart_status_dist: '상태별 분포', chart_type: '이슈 타입별', chart_priority: '우선순위별',
+    chart_project_status: '프로젝트별 상태 분포',
+    chart_backlog_trend: '📈 백로그 추세 (최근 30일)',
+    chart_heatmap: '🌿 활동 히트맵 (최근 1년)',
+    chart_due_soon: '⚠️ 마감 임박 (7일 이내)',
+    chart_bottleneck: '🔴 병목 분석 (오래된 미완료 이슈)', chart_bottleneck_sub: '상위 10건',
+    chart_avg_resolution: '📊 프로젝트별 평균 처리 시간 (완료 이슈)',
+    chart_stale: '🕐 묵은 이슈 (3일 이상 상태 미변경)',
+    chart_recent_activity: '최근 업데이트된 이슈', chart_recent_sub: '최근 10건',
+    // Backlog trend
+    backlog_created: '생성', backlog_done_lbl: '완료', backlog_net: '순변화',
+    backlog_growing: '📈 백로그 증가 중', backlog_shrinking: '📉 백로그 감소 중', backlog_balanced: '➡️ 균형 유지',
+    // Heatmap
+    heatmap_less: '적음', heatmap_more: '많음',
+    // Team tab
+    team_title: '팀 현황', team_workload: '담당자별 워크로드',
+    team_assignee_pie: '담당자별 이슈 분포', team_speed: '담당자별 평균 처리 속도 (완료 이슈)',
+    team_avg_days: '평균 처리일',
+    // Projects tab
+    proj_title: '프로젝트 현황',
+    proj_todo: '할 일', proj_inprogress: '진행 중', proj_done_lbl: '완료',
+    proj_completion: '완료율', proj_total: '전체',
+    proj_labels_title: '레이블 분포',
+    // Issues tab
+    iss_title: '전체 이슈',
+    iss_search_ph: '이슈 검색...',
+    iss_filter_all_proj: '전체 프로젝트',
+    iss_filter_all_status: '전체 상태',
+    iss_filter_all_type: '전체 타입',
+    iss_filter_all_priority: '전체 우선순위',
+    iss_filter_all_stale: '묵은 이슈 포함',
+    iss_filter_stale_only: '묵은 이슈만',
+    iss_col_key: '키', iss_col_summary: '요약', iss_col_project: '프로젝트',
+    iss_col_status: '상태', iss_col_priority: '우선순위', iss_col_type: '타입',
+    iss_col_assignee: '담당자', iss_col_created: '생성일', iss_col_updated: '업데이트',
+    iss_col_due: '마감일',
+    iss_unassigned: '미배정',
+    iss_export_csv: 'CSV 내보내기',
+    iss_save_bookmark: '즐겨찾기 저장',
+    iss_bookmark_ph: '즐겨찾기 이름...',
+    iss_bookmarks_title: '저장된 필터',
+    // Trend tab
+    trend_title: '트렌드',
+    trend_weekly: '주별 생성/완료', trend_monthly: '월별 생성/완료',
+    // My issues tab
+    myiss_title: '내 이슈',
+    // Status labels
+    status_todo: '할 일', status_inprogress: '진행 중', status_done: '완료',
+    // Priority labels
+    priority_highest: '매우 높음', priority_high: '높음', priority_medium: '중간',
+    priority_low: '낮음', priority_lowest: '매우 낮음',
+    // General
+    no_data: '데이터 없음', loading: '데이터를 불러오는 중...',
+    no_issues: '이슈가 없습니다',
+    btn_load_more: '더 보기',
+    days_ago: (n) => `${n}일 전`,
+    n_issues: (n) => `${n}건`,
+    completion_pct: (n) => `완료율 ${n}%`,
+    total_n: (n) => `전체 ${n}개`,
+    avg_days_unit: '일',
+    stale_chip: (n) => `${n}건`,
+    // Shortcuts hint
+    shortcuts_hint: '단축키: 1-6 탭이동 · / 검색 · R 새로고침 · Esc 닫기',
+    // Modal
+    modal_open_jira: 'JIRA에서 열기', modal_close: '닫기',
+    modal_status: '상태', modal_priority: '우선순위', modal_type: '타입',
+    modal_assignee: '담당자', modal_project: '프로젝트',
+    modal_created: '생성일', modal_updated: '업데이트', modal_due: '마감일',
+    modal_labels: '레이블', modal_components: '컴포넌트',
+    // Context menu
+    ctx_view: '상세 보기', ctx_open_jira: 'JIRA에서 열기',
+    ctx_copy_key: '키 복사', ctx_copy_url: 'URL 복사',
+    ctx_filter_assignee: '이 담당자로 필터', ctx_filter_project: '이 프로젝트로 필터',
+  },
+  en: {
+    // Nav
+    nav_overview: 'Overview', nav_projects: 'Projects', nav_team: 'Team',
+    nav_issues: 'Issues', nav_trend: 'Trend', nav_myissues: 'My Issues',
+    nav_all_users: 'All Users',
+    // Header
+    hdr_refresh: 'Refresh', hdr_fullscreen: 'Fullscreen', hdr_theme_light: 'Light mode', hdr_theme_dark: 'Dark mode',
+    hdr_loading: 'Connecting...',
+    hdr_last_updated: 'Last updated',
+    // Login
+    login_title: 'JIRA Dashboard Login',
+    login_url_label: 'JIRA URL', login_url_ph: 'https://yourcompany.atlassian.net',
+    login_email_label: 'Email', login_email_ph: 'you@example.com',
+    login_token_label: 'API Token', login_token_ph: 'Enter API token',
+    login_btn: 'Login', login_loading: 'Connecting...',
+    login_error_fill: 'Please fill in all fields.',
+    login_error_fail: 'Connection failed. Please check your credentials.',
+    login_token_link: 'Get API Token',
+    // Stats
+    stat_total: 'Total Issues', stat_total_sub: 'All issues in period',
+    stat_todo: 'To Do', stat_todo_sub: 'Pending issues',
+    stat_inprogress: 'In Progress', stat_inprogress_sub: 'Active issues',
+    stat_done: 'Done',
+    stat_overdue: 'Overdue', stat_overdue_sub: 'Overdue issues',
+    stat_week_done: 'Done This Week', stat_week_done_sub: 'Resolved this week',
+    stat_week_created: 'Created This Week', stat_week_created_sub: 'Created this week',
+    // Chart titles
+    chart_status_dist: 'Status Distribution', chart_type: 'By Issue Type', chart_priority: 'By Priority',
+    chart_project_status: 'Project Status Distribution',
+    chart_backlog_trend: '📈 Backlog Trend (Last 30 days)',
+    chart_heatmap: '🌿 Activity Heatmap (Last 1 Year)',
+    chart_due_soon: '⚠️ Due Soon (Within 7 days)',
+    chart_bottleneck: '🔴 Bottleneck (Oldest Unresolved)', chart_bottleneck_sub: 'Top 10',
+    chart_avg_resolution: '📊 Avg Resolution Time by Project (Resolved)',
+    chart_stale: '🕐 Stale Issues (No status change ≥3 days)',
+    chart_recent_activity: 'Recently Updated Issues', chart_recent_sub: 'Last 10',
+    // Backlog trend
+    backlog_created: 'Created', backlog_done_lbl: 'Done', backlog_net: 'Net',
+    backlog_growing: '📈 Backlog Growing', backlog_shrinking: '📉 Backlog Shrinking', backlog_balanced: '➡️ Balanced',
+    // Heatmap
+    heatmap_less: 'Less', heatmap_more: 'More',
+    // Team tab
+    team_title: 'Team Status', team_workload: 'Workload by Assignee',
+    team_assignee_pie: 'Issue Distribution by Assignee', team_speed: 'Avg Resolution Speed by Assignee',
+    team_avg_days: 'Avg Days',
+    // Projects tab
+    proj_title: 'Project Status',
+    proj_todo: 'To Do', proj_inprogress: 'In Progress', proj_done_lbl: 'Done',
+    proj_completion: 'Completion', proj_total: 'Total',
+    proj_labels_title: 'Label Distribution',
+    // Issues tab
+    iss_title: 'All Issues',
+    iss_search_ph: 'Search issues...',
+    iss_filter_all_proj: 'All Projects',
+    iss_filter_all_status: 'All Statuses',
+    iss_filter_all_type: 'All Types',
+    iss_filter_all_priority: 'All Priorities',
+    iss_filter_all_stale: 'Include Stale',
+    iss_filter_stale_only: 'Stale Only',
+    iss_col_key: 'Key', iss_col_summary: 'Summary', iss_col_project: 'Project',
+    iss_col_status: 'Status', iss_col_priority: 'Priority', iss_col_type: 'Type',
+    iss_col_assignee: 'Assignee', iss_col_created: 'Created', iss_col_updated: 'Updated',
+    iss_col_due: 'Due',
+    iss_unassigned: 'Unassigned',
+    iss_export_csv: 'Export CSV',
+    iss_save_bookmark: 'Save Bookmark',
+    iss_bookmark_ph: 'Bookmark name...',
+    iss_bookmarks_title: 'Saved Filters',
+    // Trend tab
+    trend_title: 'Trend',
+    trend_weekly: 'Weekly Created/Done', trend_monthly: 'Monthly Created/Done',
+    // My issues tab
+    myiss_title: 'My Issues',
+    // Status labels
+    status_todo: 'To Do', status_inprogress: 'In Progress', status_done: 'Done',
+    // Priority labels
+    priority_highest: 'Highest', priority_high: 'High', priority_medium: 'Medium',
+    priority_low: 'Low', priority_lowest: 'Lowest',
+    // General
+    no_data: 'No data', loading: 'Loading...',
+    no_issues: 'No issues found',
+    btn_load_more: 'Load more',
+    days_ago: (n) => `${n}d ago`,
+    n_issues: (n) => `${n} issues`,
+    completion_pct: (n) => `${n}% done`,
+    total_n: (n) => `Total ${n}`,
+    avg_days_unit: 'd',
+    stale_chip: (n) => `${n}`,
+    // Shortcuts hint
+    shortcuts_hint: 'Shortcuts: 1-6 tabs · / search · R refresh · Esc close',
+    // Modal
+    modal_open_jira: 'Open in JIRA', modal_close: 'Close',
+    modal_status: 'Status', modal_priority: 'Priority', modal_type: 'Type',
+    modal_assignee: 'Assignee', modal_project: 'Project',
+    modal_created: 'Created', modal_updated: 'Updated', modal_due: 'Due',
+    modal_labels: 'Labels', modal_components: 'Components',
+    // Context menu
+    ctx_view: 'View Details', ctx_open_jira: 'Open in JIRA',
+    ctx_copy_key: 'Copy Key', ctx_copy_url: 'Copy URL',
+    ctx_filter_assignee: 'Filter by Assignee', ctx_filter_project: 'Filter by Project',
+  }
+};
+
+let currentLang = localStorage.getItem('jira_lang') || 'ko';
+
+function t(key) {
+  const val = (LANGS[currentLang] || LANGS.ko)[key];
+  if (val === undefined) return (LANGS.ko)[key] || key;
+  return val;
+}
+
+function toggleLang() {
+  currentLang = currentLang === 'ko' ? 'en' : 'ko';
+  localStorage.setItem('jira_lang', currentLang);
+  applyLang();
+  // Re-render dynamic content
+  if (state.issues.length) renderAll();
+}
+
+function applyLang() {
+  const btn = document.getElementById('lang-toggle');
+  if (btn) btn.textContent = currentLang === 'ko' ? 'EN' : 'KO';
+  document.querySelectorAll('[data-i18n]').forEach(el => {
+    const key = el.getAttribute('data-i18n');
+    const attr = el.getAttribute('data-i18n-attr');
+    const val = t(key);
+    if (typeof val === 'string') {
+      if (attr) el.setAttribute(attr, val);
+      else el.textContent = val;
+    }
+  });
+  document.querySelectorAll('[data-i18n-ph]').forEach(el => {
+    el.placeholder = t(el.getAttribute('data-i18n-ph'));
+  });
+}
+
 // ===== COLOR HELPERS =====
 const PROJECT_COLORS = ['#0052CC','#6554c0','#00b8d9','#ff991f','#36b37e','#de350b','#00875a','#0747a6','#bf2600','#403294'];
 const AVATAR_COLORS = ['#0052CC','#6554c0','#00b8d9','#ff991f','#36b37e','#de350b','#00875a','#403294','#172b4d','#505f79'];
@@ -1936,7 +2177,7 @@ function statusCategory(status, statusCategoryKey) {
   return 'todo';
 }
 function statusLabel(cat) {
-  return cat === 'done' ? '완료' : cat === 'inprogress' ? '진행 중' : '할 일';
+  return cat === 'done' ? t('status_done') : cat === 'inprogress' ? t('status_inprogress') : t('status_todo');
 }
 function statusBadgeClass(status) {
   const cat = statusCategory(status, null);
@@ -2270,7 +2511,7 @@ function renderCharts(issues) {
   state.charts.donut = new Chart(document.getElementById('chart-donut'), {
     type: 'doughnut',
     data: {
-      labels: ['할 일', '진행 중', '완료'],
+      labels: [t('status_todo'), t('status_inprogress'), t('status_done')],
       datasets: [{ data: [todo, inprog, done], backgroundColor: [sc.todo, sc.inprogress, sc.done], borderWidth: 0, hoverOffset: 6 }]
     },
     options: {
@@ -2295,9 +2536,9 @@ function renderCharts(issues) {
   // Donut legend
   const legendEl = document.getElementById('donut-legend');
   legendEl.innerHTML = [
-    { label: '할 일', count: todo, color: sc.todo },
-    { label: '진행 중', count: inprog, color: sc.inprogress },
-    { label: '완료', count: done, color: sc.done },
+    { label: t('status_todo'), count: todo, color: sc.todo },
+    { label: t('status_inprogress'), count: inprog, color: sc.inprogress },
+    { label: t('status_done'), count: done, color: sc.done },
   ].map(i => `<div class="legend-item">
     <div class="legend-dot" style="background:${i.color}"></div>
     <span class="legend-label">${i.label}</span>
@@ -2385,9 +2626,9 @@ function renderCharts(issues) {
     data: {
       labels: projEntries.map(([k,v])=>v.name.length>14?v.name.slice(0,14)+'…':v.name),
       datasets: [
-        { label: '할 일', data: projEntries.map(([,v])=>v.todo), backgroundColor: sc.todo, borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 } },
-        { label: '진행 중', data: projEntries.map(([,v])=>v.inprogress), backgroundColor: sc.inprogress },
-        { label: '완료', data: projEntries.map(([,v])=>v.done), backgroundColor: sc.done, borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 } },
+        { label: t('status_todo'), data: projEntries.map(([,v])=>v.todo), backgroundColor: sc.todo, borderRadius: { topLeft: 0, topRight: 0, bottomLeft: 4, bottomRight: 4 } },
+        { label: t('status_inprogress'), data: projEntries.map(([,v])=>v.inprogress), backgroundColor: sc.inprogress },
+        { label: t('status_done'), data: projEntries.map(([,v])=>v.done), backgroundColor: sc.done, borderRadius: { topLeft: 4, topRight: 4, bottomLeft: 0, bottomRight: 0 } },
       ]
     },
     options: {
@@ -2423,7 +2664,7 @@ function renderActivityList(issues) {
     const key = iss.key;
     const summary = iss.fields?.summary || '(제목 없음)';
     const status = iss.fields?.status?.name || '';
-    const assignee = iss.fields?.assignee?.displayName || '미배정';
+    const assignee = iss.fields?.assignee?.displayName || t('iss_unassigned');
     const updated = iss.fields?.updated;
     const url = `${JIRA_BROWSE}/browse/${key}`;
     return `<div class="activity-item">
@@ -2485,21 +2726,21 @@ function renderProjects(issues) {
       <div class="project-stats">
         <div class="project-stat">
           <div class="project-stat-value">${p.todo.toLocaleString()}</div>
-          <div class="project-stat-label">할 일</div>
+          <div class="project-stat-label">${t('proj_todo')}</div>
         </div>
         <div class="project-stat">
           <div class="project-stat-value" style="color:var(--info)">${p.inprogress.toLocaleString()}</div>
-          <div class="project-stat-label">진행 중</div>
+          <div class="project-stat-label">${t('proj_inprogress')}</div>
         </div>
         <div class="project-stat">
           <div class="project-stat-value" style="color:var(--success)">${p.done.toLocaleString()}</div>
-          <div class="project-stat-label">완료</div>
+          <div class="project-stat-label">${t('proj_done_lbl')}</div>
         </div>
       </div>
       <div class="progress-bar"><div class="progress-fill" style="width:${pct}%"></div></div>
       <div class="progress-label">
-        <span>완료율 ${pct}%</span>
-        <span>전체 ${p.total.toLocaleString()}개</span>
+        <span>${t('completion_pct')(pct)}</span>
+        <span>${t('total_n')(p.total.toLocaleString())}</span>
       </div>
     </div>`;
   }).join('');
@@ -2516,7 +2757,7 @@ function renderTeam(issues) {
   const teamMap = {};
   for (const iss of issues) {
     const a = iss.fields?.assignee;
-    const name = a?.displayName || '미배정';
+    const name = a?.displayName || t('iss_unassigned');
     const accountId = a?.accountId || 'unassigned';
     if (!teamMap[accountId]) teamMap[accountId] = { name, accountId, todo: 0, inprogress: 0, done: 0, total: 0 };
     const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
@@ -2545,15 +2786,15 @@ function renderTeam(issues) {
       <div class="team-stats">
         <div class="team-stat">
           <div class="team-stat-value">${m.todo.toLocaleString()}</div>
-          <div class="team-stat-label">할 일</div>
+          <div class="team-stat-label">${t('proj_todo')}</div>
         </div>
         <div class="team-stat">
           <div class="team-stat-value" style="color:var(--info)">${m.inprogress.toLocaleString()}</div>
-          <div class="team-stat-label">진행 중</div>
+          <div class="team-stat-label">${t('proj_inprogress')}</div>
         </div>
         <div class="team-stat">
           <div class="team-stat-value" style="color:var(--success)">${m.done.toLocaleString()}</div>
-          <div class="team-stat-label">완료</div>
+          <div class="team-stat-label">${t('proj_done_lbl')}</div>
         </div>
       </div>
       <div class="team-bar">
@@ -2569,7 +2810,7 @@ function renderTeam(issues) {
 function populateFilters(issues) {
   const projects = [...new Set(issues.map(i => i.fields?.project?.key).filter(Boolean))].sort();
   const statuses = [...new Set(issues.map(i => i.fields?.status?.name).filter(Boolean))].sort();
-  const assignees = [...new Set(issues.map(i => i.fields?.assignee?.displayName || '미배정').filter(Boolean))].sort();
+  const assignees = [...new Set(issues.map(i => i.fields?.assignee?.displayName || t('iss_unassigned')).filter(Boolean))].sort();
   const types = [...new Set(issues.map(i => i.fields?.issuetype?.name).filter(Boolean))].sort();
 
   const setOpts = (id, values, label) => {
@@ -2578,10 +2819,10 @@ function populateFilters(issues) {
     el.innerHTML = `<option value="">${label}</option>` + values.map(v=>`<option value="${escHtml(v)}">${escHtml(v)}</option>`).join('');
     if (cur) el.value = cur;
   };
-  setOpts('filter-project', projects, '모든 프로젝트');
-  setOpts('filter-status', statuses, '모든 상태');
-  setOpts('filter-assignee', assignees, '모든 담당자');
-  setOpts('filter-type', types, '모든 타입');
+  setOpts('filter-project', projects, t('iss_filter_all_proj'));
+  setOpts('filter-status', statuses, t('iss_filter_all_status'));
+  setOpts('filter-assignee', assignees, t('nav_all_users'));
+  setOpts('filter-type', types, t('iss_filter_all_type'));
 }
 
 function filterIssues() {
@@ -2600,7 +2841,7 @@ function filterIssues() {
     if (search && !iss.key?.toLowerCase().includes(search) && !(f.summary||'').toLowerCase().includes(search)) return false;
     if (project && f.project?.key !== project) return false;
     if (status && f.status?.name !== status) return false;
-    const aName = f.assignee?.displayName || '미배정';
+    const aName = f.assignee?.displayName || t('iss_unassigned');
     if (assignee && aName !== assignee) return false;
     if (priority && f.priority?.name !== priority) return false;
     if (type && f.issuetype?.name !== type) return false;
@@ -2690,7 +2931,7 @@ function renderIssuesTable() {
     const type = f.issuetype?.name || '';
     const status = f.status?.name || '';
     const priority = f.priority?.name || '';
-    const assignee = f.assignee?.displayName || '미배정';
+    const assignee = f.assignee?.displayName || t('iss_unassigned');
     const project = f.project?.key || '';
     const updated = f.updated || '';
     const url = `${JIRA_BROWSE}/browse/${key}`;
@@ -2763,7 +3004,7 @@ function renderBottleneck(issues) {
       const key = i.key||'';
       const summary = f.summary||'(제목 없음)';
       const proj = f.project?.key||'';
-      const assignee = f.assignee?.displayName||'미배정';
+      const assignee = f.assignee?.displayName||t('iss_unassigned');
       const d = i.daysOpen;
       const cls = d >= 60 ? 'crit' : d >= 30 ? 'warn' : 'ok';
       const url = `${JIRA_BROWSE}/browse/${key}`;
@@ -2846,17 +3087,17 @@ function renderAvgResolution(issues) {
     type: 'bar',
     data: {
       labels: entries.map(e=>e.key),
-      datasets: [{ label:'평균 처리일', data: entries.map(e=>e.avg), backgroundColor: colors, borderRadius:5, borderSkipped:false }]
+      datasets: [{ label:t('team_avg_days'), data: entries.map(e=>e.avg), backgroundColor: colors, borderRadius:5, borderSkipped:false }]
     },
     options: {
       responsive:true, maintainAspectRatio:true,
       indexAxis: 'y',
       animation: { duration:600 },
       scales: {
-        x: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}}, title:{display:true,text:'일(days)',color:tickColor,font:{size:11}} },
+        x: { grid:{color:gridColor}, ticks:{color:tickColor,font:{size:11}}, title:{display:true,text:t('avg_days_unit'),color:tickColor,font:{size:11}} },
         y: { grid:{display:false}, ticks:{color:tickColor,font:{size:11}} }
       },
-      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`평균 ${ctx.raw}일` } } }
+      plugins: { legend:{display:false}, tooltip:{ callbacks:{ label: ctx=>`${t('team_avg_days')} ${ctx.raw}${t('avg_days_unit')}` } } }
     }
   });
 }
@@ -2893,8 +3134,8 @@ function renderTrendCharts(issues) {
     data: {
       labels: weeks.map(w=>w.label),
       datasets: [
-        { label:'생성', data: weeks.map(w=>w.created), borderColor:'#6554c0', backgroundColor:'rgba(101,84,192,0.12)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6 },
-        { label:'완료', data: weeks.map(w=>w.done), borderColor:'#36b37e', backgroundColor:'rgba(54,179,126,0.12)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6 }
+        { label:t('backlog_created'), data: weeks.map(w=>w.created), borderColor:'#6554c0', backgroundColor:'rgba(101,84,192,0.12)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6 },
+        { label:t('backlog_done_lbl'), data: weeks.map(w=>w.done), borderColor:'#36b37e', backgroundColor:'rgba(54,179,126,0.12)', tension:0.4, fill:true, pointRadius:4, pointHoverRadius:6 }
       ]
     },
     options: {
@@ -2929,8 +3170,8 @@ function renderTrendCharts(issues) {
     data: {
       labels: months.map(m=>m.label),
       datasets: [
-        { label:'생성', data: months.map(m=>m.created), backgroundColor:'rgba(101,84,192,0.75)', borderRadius:4, borderSkipped:false },
-        { label:'완료', data: months.map(m=>m.done), backgroundColor:'rgba(54,179,126,0.75)', borderRadius:4, borderSkipped:false }
+        { label:t('backlog_created'), data: months.map(m=>m.created), backgroundColor:'rgba(101,84,192,0.75)', borderRadius:4, borderSkipped:false },
+        { label:t('backlog_done_lbl'), data: months.map(m=>m.done), backgroundColor:'rgba(54,179,126,0.75)', borderRadius:4, borderSkipped:false }
       ]
     },
     options: {
@@ -3006,7 +3247,7 @@ function renderMyIssues(issues, fromTab) {
   let mine, subtitleText;
 
   if (state.globalUserFilter) {
-    mine = issues.filter(i => (i.fields?.assignee?.displayName || '미배정') === state.globalUserFilter);
+    mine = issues.filter(i => (i.fields?.assignee?.displayName || t('iss_unassigned')) === state.globalUserFilter);
     subtitleText = `${state.globalUserFilter}의 담당 이슈: 총 ${mine.length}개`;
   } else {
     const userId = state.currentUser?.accountId;
@@ -3032,9 +3273,9 @@ function renderMyIssues(issues, fromTab) {
   document.getElementById('my-stat-done').textContent = myDone;
 
   const groupOrder = [
-    { key:'inprogress', label:'진행 중', color:'var(--info)', issues: groups.inprogress },
-    { key:'todo', label:'할 일', color:'var(--text3)', issues: groups.todo },
-    { key:'done', label:'완료', color:'var(--success)', issues: groups.done },
+    { key:'inprogress', label:t('proj_inprogress'), color:'var(--info)', issues: groups.inprogress },
+    { key:'todo', label:t('proj_todo'), color:'var(--text3)', issues: groups.todo },
+    { key:'done', label:t('proj_done_lbl'), color:'var(--success)', issues: groups.done },
   ];
 
   const container = document.getElementById('my-issues-groups');
@@ -3071,7 +3312,7 @@ function renderMyIssues(issues, fromTab) {
 // ===== GLOBAL USER FILTER =====
 function getGlobalFilteredIssues() {
   if (!state.globalUserFilter) return state.issues;
-  return state.issues.filter(i => (i.fields?.assignee?.displayName || '미배정') === state.globalUserFilter);
+  return state.issues.filter(i => (i.fields?.assignee?.displayName || t('iss_unassigned')) === state.globalUserFilter);
 }
 
 function onGlobalUserFilter() {
@@ -3080,7 +3321,7 @@ function onGlobalUserFilter() {
 }
 
 function populateGlobalUserFilter(issues) {
-  const assignees = [...new Set(issues.map(i => i.fields?.assignee?.displayName || '미배정').filter(Boolean))].sort();
+  const assignees = [...new Set(issues.map(i => i.fields?.assignee?.displayName || t('iss_unassigned')).filter(Boolean))].sort();
   const el = document.getElementById('global-user-filter');
   const cur = el.value;
   el.innerHTML = `<option value="">전체 사용자</option>` + assignees.map(a => `<option value="${escHtml(a)}">${escHtml(a)}</option>`).join('');
@@ -3147,7 +3388,7 @@ function renderStaleIssues(issues) {
       const key = i.key||'';
       const summary = f.summary||'(제목 없음)';
       const status = f.status?.name||'';
-      const assignee = f.assignee?.displayName||'미배정';
+      const assignee = f.assignee?.displayName||t('iss_unassigned');
       const d = i.staleDays;
       const cls = d >= 14 ? 'crit' : d >= 7 ? 'warn' : 'ok';
       const url = `${JIRA_BROWSE}/browse/${key}`;
@@ -3166,7 +3407,7 @@ function renderStaleIssues(issues) {
 function renderAssigneePieChart(issues) {
   const assigneeMap = {};
   for (const iss of issues) {
-    const name = iss.fields?.assignee?.displayName || '미배정';
+    const name = iss.fields?.assignee?.displayName || t('iss_unassigned');
     assigneeMap[name] = (assigneeMap[name]||0)+1;
   }
   const entries = Object.entries(assigneeMap).sort((a,b)=>b[1]-a[1]).slice(0,12);
@@ -3211,7 +3452,7 @@ function showIssueModal(issueKey) {
   const status = f.status?.name || '';
   const priority = f.priority?.name || '';
   const type = f.issuetype?.name || '';
-  const assignee = f.assignee?.displayName || '미배정';
+  const assignee = f.assignee?.displayName || t('iss_unassigned');
   const project = f.project?.name || f.project?.key || '';
   const url = `${JIRA_BROWSE}/browse/${issueKey}`;
   const aColor = avatarColor(assignee);
@@ -3238,36 +3479,36 @@ function showIssueModal(issueKey) {
     </div>
     <div style="display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:20px;">
       <div class="modal-field">
-        <div class="modal-field-label">담당자</div>
+        <div class="modal-field-label">${t('modal_assignee')}</div>
         <div style="display:flex; align-items:center; gap:8px;">
           <div style="width:26px;height:26px;border-radius:50%;background:${aColor};display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;">${initials(assignee)}</div>
           <span class="modal-field-value">${escHtml(assignee)}</span>
         </div>
       </div>
       <div class="modal-field">
-        <div class="modal-field-label">프로젝트</div>
+        <div class="modal-field-label">${t('modal_project')}</div>
         <div class="modal-field-value">${escHtml(project)}</div>
       </div>
       <div class="modal-field">
-        <div class="modal-field-label">생성일</div>
+        <div class="modal-field-label">${t('modal_created')}</div>
         <div class="modal-field-value">${formatDate(f.created)}</div>
       </div>
       <div class="modal-field">
-        <div class="modal-field-label">마지막 업데이트</div>
+        <div class="modal-field-label">${t('modal_updated')}</div>
         <div class="modal-field-value">${timeAgo(f.updated)}</div>
       </div>
       ${f.duedate ? `<div class="modal-field">
-        <div class="modal-field-label">마감일</div>
+        <div class="modal-field-label">${t('modal_due')}</div>
         <div class="modal-field-value" style="color:${new Date(f.duedate)<new Date()?'var(--danger)':'var(--text)'}">${formatDate(f.duedate)}</div>
       </div>` : ''}
       ${changeDate ? `<div class="modal-field">
-        <div class="modal-field-label">상태 변경일</div>
+        <div class="modal-field-label">${t('modal_updated')}</div>
         <div class="modal-field-value">${timeAgo(changeDate)}</div>
       </div>` : ''}
     </div>
     <a href="${url}" target="_blank" rel="noopener" class="btn btn-primary" style="width:100%; justify-content:center; text-decoration:none;">
       <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-      JIRA에서 열기
+      ${t('modal_open_jira')}
     </a>
   `;
   document.getElementById('issue-modal').classList.add('show');
@@ -3345,7 +3586,7 @@ function exportCSV() {
       f.issuetype?.name || '',
       f.status?.name || '',
       f.priority?.name || '',
-      f.assignee?.displayName || '미배정',
+      f.assignee?.displayName || t('iss_unassigned'),
       f.project?.key || '',
       f.created ? new Date(f.created).toLocaleDateString('ko-KR') : '',
       f.updated ? new Date(f.updated).toLocaleDateString('ko-KR') : '',
@@ -3443,7 +3684,7 @@ function renderBacklogTrend(issues) {
     netEl.style.color = net > 0 ? 'var(--danger)' : net < 0 ? 'var(--success)' : 'var(--text3)';
   }
   if (verdictEl) {
-    verdictEl.textContent = net > 5 ? '📈 백로그 증가 중' : net < -5 ? '📉 백로그 감소 중' : '➡️ 균형 유지';
+    verdictEl.textContent = net > 5 ? t('backlog_growing') : net < -5 ? t('backlog_shrinking') : t('backlog_balanced');
     verdictEl.style.color = net > 5 ? 'var(--danger)' : net < -5 ? 'var(--success)' : 'var(--text3)';
   }
 }
@@ -3474,19 +3715,19 @@ function renderHeatmap(issues) {
     }
     weeks.push(week);
   }
-  const days = ['일','월','화','수','목','금','토'];
+  const days = currentLang === 'ko' ? ['일','월','화','수','목','금','토'] : ['S','M','T','W','T','F','S'];
   wrap.innerHTML = `
     <div style="display:flex; gap:3px; align-items:flex-start;">
       <div class="heatmap-days">${days.map(d => `<div class="heatmap-day-label">${d}</div>`).join('')}</div>
       <div class="heatmap-wrap"><div class="heatmap-grid">
         ${weeks.map(week => `<div class="heatmap-col">${week.map(day => {
           const lv = day.future || day.count===0 ? 0 : day.count<=2?1:day.count<=5?2:day.count<=10?3:4;
-          return `<div class="heatmap-cell${lv>0?' l'+lv:''}" title="${day.date}: ${day.count}건"></div>`;
+          return `<div class="heatmap-cell${lv>0?' l'+lv:''}" title="${day.date}: ${day.count}"></div>`;
         }).join('')}</div>`).join('')}
       </div></div>
     </div>
     <div style="display:flex; align-items:center; gap:3px; margin-top:8px; font-size:10px; color:var(--text4);">
-      적음 <div class="heatmap-cell"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l4"></div> 많음
+      ${t('heatmap_less')} <div class="heatmap-cell"></div><div class="heatmap-cell l1"></div><div class="heatmap-cell l2"></div><div class="heatmap-cell l3"></div><div class="heatmap-cell l4"></div> ${t('heatmap_more')}
     </div>`;
 }
 
@@ -3498,7 +3739,7 @@ function renderAssigneeSpeed(issues) {
     if (cat !== 'done') continue;
     const cr = iss.fields?.created, rd = iss.fields?.resolutiondate;
     if (!cr || !rd) continue;
-    const name = iss.fields?.assignee?.displayName || '미배정';
+    const name = iss.fields?.assignee?.displayName || t('iss_unassigned');
     const days = (new Date(rd) - new Date(cr)) / 86400000;
     if (!speedMap[name]) speedMap[name] = { sum: 0, count: 0 };
     speedMap[name].sum += days;
@@ -3523,10 +3764,10 @@ function renderAssigneeSpeed(issues) {
       responsive: true, maintainAspectRatio: true, indexAxis: 'y',
       animation: { duration: 600 },
       scales: {
-        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } }, title: { display: true, text: '평균 처리일', color: tickColor, font: { size: 11 } } },
+        x: { grid: { color: gridColor }, ticks: { color: tickColor, font: { size: 11 } }, title: { display: true, text: t('team_avg_days'), color: tickColor, font: { size: 11 } } },
         y: { grid: { display: false }, ticks: { color: tickColor, font: { size: 11 } } }
       },
-      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` 평균 ${ctx.raw}일` } } }
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${t('team_avg_days')} ${ctx.raw}${t('avg_days_unit')}` } } }
     }
   });
 }
@@ -3586,30 +3827,30 @@ function showContextMenu(e, issueKey) {
   const iss = state.issues.find(i => i.key === issueKey);
   if (!iss) return;
   const f = iss.fields || {};
-  const assignee = f.assignee?.displayName || '미배정';
+  const assignee = f.assignee?.displayName || t('iss_unassigned');
   const projKey = f.project?.key || '';
   const url = `${JIRA_BROWSE}/browse/${issueKey}`;
   const menu = document.getElementById('ctx-menu');
   menu.innerHTML = `
     <div class="ctx-item" onclick="showIssueModal('${escHtml(issueKey)}');hideCtxMenu()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> 상세 보기
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg> ${t('ctx_view')}
     </div>
     <div class="ctx-item" onclick="window.open('${url}','_blank');hideCtxMenu()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> JIRA에서 열기
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg> ${t('ctx_open_jira')}
     </div>
     <div class="ctx-divider"></div>
-    <div class="ctx-item" onclick="navigator.clipboard.writeText('${escHtml(issueKey)}');showToast('키 복사됨','success',2000);hideCtxMenu()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 키 복사 (${escHtml(issueKey)})
+    <div class="ctx-item" onclick="navigator.clipboard.writeText('${escHtml(issueKey)}');showToast('${t('ctx_copy_key')}','success',2000);hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> ${t('ctx_copy_key')} (${escHtml(issueKey)})
     </div>
-    <div class="ctx-item" onclick="navigator.clipboard.writeText('${url}');showToast('URL 복사됨','success',2000);hideCtxMenu()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> URL 복사
+    <div class="ctx-item" onclick="navigator.clipboard.writeText('${url}');showToast('${t('ctx_copy_url')}','success',2000);hideCtxMenu()">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg> ${t('ctx_copy_url')}
     </div>
     <div class="ctx-divider"></div>
     <div class="ctx-item" onclick="document.getElementById('filter-assignee').value='${escHtml(assignee)}';filterIssues();switchTab('issues');hideCtxMenu()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> 담당자 필터: ${escHtml(assignee)}
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg> ${t('ctx_filter_assignee')}: ${escHtml(assignee)}
     </div>
     <div class="ctx-item" onclick="document.getElementById('filter-project').value='${escHtml(projKey)}';filterIssues();switchTab('issues');hideCtxMenu()">
-      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> 프로젝트 필터: ${escHtml(projKey)}
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg> ${t('ctx_filter_project')}: ${escHtml(projKey)}
     </div>`;
   menu.style.display = 'block';
   menu.style.left = `${Math.min(e.clientX, window.innerWidth - 210)}px`;
@@ -3672,6 +3913,7 @@ function escHtml(str) {
   const savedTheme = localStorage.getItem(THEME_KEY) || 'light';
   document.documentElement.setAttribute('data-theme', savedTheme);
   updateThemeIcon(savedTheme);
+  applyLang();
 
   // Check saved creds
   const saved = localStorage.getItem(STORAGE_KEY);
