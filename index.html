@@ -2326,13 +2326,15 @@ function formatDate(dateStr) {
 // ===== API =====
 async function jiraFetch(path, params = {}, options = {}) {
   const { url: baseUrl, email, token } = state.creds;
-  const url = new URL(`${baseUrl}${path}`);
-  Object.entries(params).forEach(([k,v]) => url.searchParams.set(k, String(v)));
-  const resp = await fetch(url.toString(), {
+  const proxyUrl = new URL('/api/jira', window.location.origin);
+  proxyUrl.searchParams.set('path', path);
+  Object.entries(params).forEach(([k,v]) => proxyUrl.searchParams.set(k, String(v)));
+  const resp = await fetch(proxyUrl.toString(), {
     method: options.method || 'GET',
     headers: {
       'Authorization': `Basic ${btoa(`${email}:${token}`)}`,
       'Accept': 'application/json',
+      'x-jira-url': baseUrl,
       ...(options.body ? { 'Content-Type': 'application/json' } : {}),
     },
     ...(options.body ? { body: JSON.stringify(options.body) } : {}),
