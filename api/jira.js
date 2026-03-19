@@ -14,7 +14,7 @@ export default async function handler(req, res) {
       method: req.method === 'OPTIONS' ? 'GET' : req.method,
       headers: {
         'Authorization': auth,
-        'Accept': '*/*',
+        'Accept': path?.includes('/attachment/content') ? '*/*' : 'application/json',
         ...(req.body ? { 'Content-Type': 'application/json' } : {}),
       },
       ...(req.body ? { body: JSON.stringify(req.body) } : {}),
