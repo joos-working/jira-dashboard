@@ -14,13 +14,24 @@ export default async function handler(req, res) {
       method: req.method === 'OPTIONS' ? 'GET' : req.method,
       headers: {
         'Authorization': auth,
-        'Accept': 'application/json',
+        'Accept': '*/*',
         ...(req.body ? { 'Content-Type': 'application/json' } : {}),
       },
       ...(req.body ? { body: JSON.stringify(req.body) } : {}),
     });
-    const body = await upstream.text();
-    res.status(upstream.status).setHeader('Content-Type', 'application/json').send(body);
+
+    const contentType = upstream.headers.get('content-type') || 'application/json';
+    const isBinary = !contentType.includes('application/json') && !contentType.includes('text/');
+
+    if (isBinary) {
+      const buffer = await upstream.arrayBuffer();
+      res.status(upstream.status)
+        .setHeader('Content-Type', contentType)
+        .send(Buffer.from(buffer));
+    } else {
+      const body = await upstream.text();
+      res.status(upstream.status).setHeader('Content-Type', contentType).send(body);
+    }
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
