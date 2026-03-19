@@ -4174,6 +4174,7 @@ function renderMyIssues(issues, fromTab) {
 // ===== EXECUTIVE TAB =====
 function renderExecutive(issues) {
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   // --- KPI calculations ---
   const total = issues.length;
@@ -4183,7 +4184,7 @@ function renderExecutive(issues) {
 
   const overdue = issues.filter(i => {
     const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
-    return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now;
+    return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < today;
   }).length;
 
   const staleIssues = issues.filter(i => {
@@ -4255,7 +4256,7 @@ function renderExecutive(issues) {
     const kpiDrillIssues = [
       issues.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'done'),
       issues.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'indeterminate'),
-      issues.filter(i => { const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key); return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now; }),
+      issues.filter(i => { const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key); return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < today; }),
       ontime,
     ];
     kpiGrid.innerHTML = kpis.map((k) => `
@@ -4314,11 +4315,11 @@ function renderExecutive(issues) {
   const riskIssues = [
     ...issues.filter(i => {
       const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
-      return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now;
+      return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < today;
     }).map(i => ({ ...i, riskType: 'overdue', riskDays: Math.ceil((now - new Date(i.fields.duedate)) / 86400000) })),
     ...staleIssues.filter(i => !issues.filter(j => {
       const cat2 = statusCategory(j.fields?.status?.name||'', j.fields?.status?.statusCategory?.key);
-      return cat2 !== 'done' && j.fields?.duedate && new Date(j.fields.duedate) < now;
+      return cat2 !== 'done' && j.fields?.duedate && new Date(j.fields.duedate) < today;
     }).find(j => j.key === i.key))
       .map(i => {
         const changeDate = i.fields?.statuscategorychangedate || i.fields?.updated;
@@ -5708,6 +5709,7 @@ function updateNotifBtn() {
 function checkAndNotify(issues) {
   if (!notifEnabled || Notification.permission !== 'granted') return;
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   // Stale issues
   const newStale = issues.filter(iss => {
     const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
@@ -5727,7 +5729,7 @@ function checkAndNotify(issues) {
   // Overdue issues
   const newOverdue = issues.filter(i => {
     const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key);
-    return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now;
+    return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < today;
   });
   const newOverdueKeys = new Set(newOverdue.map(i => i.key));
   const addedOverdue = [...newOverdueKeys].filter(k => !prevOverdueKeys.has(k));
