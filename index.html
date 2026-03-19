@@ -3093,6 +3093,7 @@ function animateCount(el, target) {
 function updateStats(issues) {
   let total = issues.length, todo = 0, inprogress = 0, done = 0, overdue = 0;
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekStart = new Date(now);
   weekStart.setHours(0,0,0,0);
   weekStart.setDate(now.getDate() - ((now.getDay()+6)%7));
@@ -3103,7 +3104,7 @@ function updateStats(issues) {
     else if (cat === 'inprogress') inprogress++;
     else if (cat === 'done') done++;
     const due = iss.fields?.duedate;
-    if (due && cat !== 'done' && new Date(due) < now) overdue++;
+    if (due && cat !== 'done' && new Date(due) < today) overdue++;
     const rd = iss.fields?.resolutiondate;
     if (rd && new Date(rd) >= weekStart) weekDone++;
     const cr = iss.fields?.created;
@@ -3435,6 +3436,7 @@ function resetFilterUI() {
 
 function filterByStatCard(type) {
   const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   const weekStart = new Date(now); weekStart.setDate(now.getDate() - now.getDay() + (now.getDay() === 0 ? -6 : 1)); weekStart.setHours(0,0,0,0);
   const weekEnd = new Date(weekStart); weekEnd.setDate(weekStart.getDate() + 6); weekEnd.setHours(23,59,59,999);
   const base = getGlobalFilteredIssues();
@@ -3460,7 +3462,7 @@ function filterByStatCard(type) {
       filtered = base.filter(i => {
         const due = i.fields?.duedate;
         if (!due) return false;
-        return new Date(due) < now && statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done';
+        return new Date(due) < today && statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done';
       });
       label = currentLang === 'ko' ? '기한 초과' : 'Overdue';
       break;
