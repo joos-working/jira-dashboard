@@ -4377,8 +4377,11 @@ async function loadWeeklyIssueList() {
   view.innerHTML = '<div class="weekly-loading">주간 계획 이슈 목록을 불러오는 중...</div>';
 
   try {
-    const jql = encodeURIComponent('project = WP AND summary ~ "주간 계획" AND summary ~ "통합" ORDER BY created DESC');
-    const data = await jiraFetch(`/rest/api/3/search?jql=${jql}&fields=summary,created&maxResults=20`);
+    const data = await jiraFetch('/rest/api/3/search/jql', {
+      jql: 'project = WP AND summary ~ "주간 계획" AND summary ~ "통합" ORDER BY created DESC',
+      fields: 'summary,created',
+      maxResults: 20,
+    });
     _weeklyIssueList = data.issues || [];
     _weeklyIssueListLoaded = true;
 
