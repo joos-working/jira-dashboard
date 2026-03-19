@@ -1291,6 +1291,25 @@
     .backlog-trend-label { font-size:11px; color:var(--text3); margin-top:4px; }
 
     /* ===== EXECUTIVE TAB ===== */
+    .exec-drill-row {
+      display: flex; align-items: center; gap: 10px;
+      padding: 10px 20px; border-bottom: 1px solid var(--border);
+      cursor: pointer; transition: background var(--transition);
+      font-size: 13px;
+    }
+    .exec-drill-row:last-child { border-bottom: none; }
+    .exec-drill-row:hover { background: var(--surface2); }
+    .exec-drill-key { font-size: 11px; font-weight: 700; color: var(--primary); flex-shrink: 0; min-width: 70px; }
+    .exec-drill-summary { flex: 1; color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .exec-drill-assignee { font-size: 11px; color: var(--text3); flex-shrink: 0; }
+    .exec-drill-status { font-size: 10px; padding: 2px 7px; border-radius: var(--radius-full); flex-shrink: 0; white-space: nowrap; }
+    .exec-kpi-card { cursor: pointer; }
+    .exec-kpi-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+    .exec-project-bar { cursor: pointer; }
+    .exec-project-bar:hover { background: var(--surface2); border-radius: var(--radius-sm); }
+    .capacity-item { cursor: pointer; }
+    .capacity-item:hover { background: var(--surface2); border-radius: var(--radius-sm); }
+    .exec-risk-item { cursor: pointer; }
     .exec-header {
       text-align: center;
       padding: 32px 0 24px;
@@ -1460,6 +1479,22 @@
     .capacity-badge { font-size:10px; font-weight:700; padding:2px 7px; border-radius:var(--radius-full); flex-shrink:0; }
 
     /* ===== WEEKLY PLAN ===== */
+    .weekly-mode-btn {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text3);
+      cursor: pointer;
+      transition: background var(--transition), color var(--transition);
+    }
+    .weekly-mode-btn.active {
+      background: var(--surface);
+      color: var(--primary);
+      box-shadow: var(--shadow-sm);
+    }
     .weekly-toolbar {
       display: flex;
       align-items: center;
@@ -1542,6 +1577,39 @@
     .weekly-content-line { display: flex; align-items: flex-start; gap: 6px; margin-bottom: 2px; }
     .weekly-content-line::before { content: '·'; color: var(--primary); flex-shrink: 0; margin-top: 1px; }
     .weekly-loading { padding: 60px; text-align: center; color: var(--text3); font-size: 14px; }
+    .weekly-card {
+      background: var(--surface); border: 1px solid var(--border);
+      border-radius: var(--radius-lg); padding: 16px 18px;
+      margin-bottom: 14px; box-shadow: var(--shadow-sm);
+    }
+    .weekly-section-title {
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: .05em; color: var(--text3); margin: 12px 0 6px;
+    }
+    .weekly-checklist { display: flex; flex-direction: column; gap: 5px; }
+    .weekly-check-item {
+      display: flex; align-items: flex-start; gap: 8px;
+      font-size: 13px; color: var(--text2); line-height: 1.4;
+    }
+    .weekly-check-item.done { color: var(--text4); text-decoration: line-through; }
+    .weekly-check-icon { flex-shrink: 0; margin-top: 1px; }
+    .weekly-linked-item {
+      display: flex; align-items: center; gap: 8px; padding: 7px 10px;
+      border-radius: var(--radius-sm); background: var(--surface2);
+      margin-bottom: 5px; cursor: pointer; transition: background var(--transition);
+    }
+    .weekly-linked-item:hover { background: var(--surface3); }
+    .weekly-linked-key { font-size: 11px; font-weight: 700; color: var(--primary); flex-shrink: 0; }
+    .weekly-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .weekly-linked-summary {
+      flex: 1; font-size: 12px; color: var(--text2);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    @media (max-width: 700px) {
+      .weekly-cols { grid-template-columns: 1fr; }
+      .weekly-card { padding: 14px; }
+      .weekly-linked-summary { white-space: normal; word-break: break-word; }
+    }
     @media (max-width: 700px) {
       .weekly-table th, .weekly-table td { padding: 7px 8px; font-size: 11px; }
     }
@@ -2317,18 +2385,39 @@
           <div class="card-body" style="padding:20px;" id="exec-health-list"></div>
         </div>
       </div>
+
+      <!-- Drill-down Issue List -->
+      <div id="exec-drill-panel" style="display:none; margin-bottom:24px;">
+        <div class="card">
+          <div class="card-header" style="justify-content:space-between;">
+            <span class="card-title" id="exec-drill-title"></span>
+            <button onclick="closeExecDrill()" style="background:none;border:none;cursor:pointer;color:var(--text3);font-size:18px;line-height:1;">&times;</button>
+          </div>
+          <div class="card-body" style="padding:0;">
+            <div id="exec-drill-list"></div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- ===== 주간 계획 탭 ===== -->
     <div class="tab-panel" id="tab-weekly">
       <div class="weekly-toolbar">
         <h2 style="font-size:18px; font-weight:700; color:var(--text);" data-i18n="nav_weekly">주간 계획</h2>
-        <select id="weekly-issue-select" class="weekly-select" onchange="onWeeklyIssueChange()">
+        <div style="display:flex; gap:4px; background:var(--surface3); border-radius:var(--radius-sm); padding:3px;">
+          <button class="weekly-mode-btn active" onclick="setWeeklyMode('cards')" id="wmode-cards">담당자별</button>
+          <button class="weekly-mode-btn" onclick="setWeeklyMode('excel')" id="wmode-excel">통합 엑셀</button>
+          <button class="weekly-mode-btn" onclick="setWeeklyMode('both')" id="wmode-both">전체 보기</button>
+        </div>
+        <select id="weekly-issue-select" class="weekly-select" onchange="onWeeklyIssueChange()" style="display:none;">
           <option value="">-- 주차 선택 --</option>
         </select>
         <span style="font-size:12px; color:var(--text3);" id="weekly-range-label"></span>
       </div>
-      <div id="weekly-excel-view">
+      <div id="weekly-cards-view">
+        <div class="weekly-loading">데이터를 불러오는 중...</div>
+      </div>
+      <div id="weekly-excel-view" style="display:none; margin-top:24px;">
         <div class="weekly-loading">JIRA에서 주간 계획 이슈를 불러오는 중...</div>
       </div>
     </div>
@@ -2889,7 +2978,7 @@ function switchTab(tab, fromPopstate) {
     renderMyIssues(state.issues, true);
   }
   if (tab === 'executive' && state.issues.length) renderExecutive(getGlobalFilteredIssues());
-  if (tab === 'weekly') loadWeeklyIssueList();
+  if (tab === 'weekly') initWeeklyTab();
   // Push to browser history (skip when called from popstate to avoid loop)
   if (!fromPopstate && history.state?.tab !== tab) {
     const url = new URL(window.location.href);
@@ -4163,14 +4252,21 @@ function renderExecutive(issues) {
         trendTextColor: ontimePct === null ? 'var(--text3)' : ontimePct >= 80 ? 'var(--success)' : ontimePct >= 60 ? 'var(--warning)' : 'var(--danger)',
       },
     ];
-    kpiGrid.innerHTML = kpis.map(k => `
-      <div class="exec-kpi-card" style="--kpi-color:${k.color}">
+    const kpiDrillIssues = [
+      issues.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'done'),
+      issues.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'indeterminate'),
+      issues.filter(i => { const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key); return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now; }),
+      ontime,
+    ];
+    kpiGrid.innerHTML = kpis.map((k, idx) => `
+      <div class="exec-kpi-card" style="--kpi-color:${k.color}" onclick="showExecDrill(${JSON.stringify(k.label)}, _execDrillData[${idx}])">
         <div class="exec-kpi-icon">${k.icon}</div>
         <div class="exec-kpi-value">${k.value}</div>
         <div class="exec-kpi-label">${k.label}</div>
         <div class="exec-kpi-sub">${k.sub}</div>
         <div class="exec-kpi-trend" style="background:${k.trendColor};color:${k.trendTextColor};">${k.trend}</div>
       </div>`).join('');
+    window._execDrillData = kpiDrillIssues;
     // animate KPI values
     kpiGrid.querySelectorAll('.exec-kpi-value').forEach((el, i) => {
       const raw = kpis[i].value;
@@ -4191,10 +4287,14 @@ function renderExecutive(issues) {
   const projects = Object.values(projMap).sort((a,b) => b.total - a.total);
   const barsEl = document.getElementById('exec-project-bars');
   if (barsEl) {
-    barsEl.innerHTML = projects.map(p => {
+    window._execProjIssues = {};
+    for (const pk of Object.keys(projMap)) {
+      window._execProjIssues[pk] = issues.filter(i => i.fields?.project?.key === pk);
+    }
+    barsEl.innerHTML = Object.entries(projMap).sort((a,b) => b[1].total - a[1].total).map(([pk, p]) => {
       const pct = p.total > 0 ? Math.round(p.done / p.total * 100) : 0;
       const fillColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--info)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
-      return `<div class="exec-project-bar">
+      return `<div class="exec-project-bar" onclick="showExecDrill('${escHtml(p.name)} 이슈', _execProjIssues['${escHtml(pk)}'])">
         <div class="exec-project-name" title="${escHtml(p.name)}">${escHtml(p.name)}</div>
         <div class="exec-project-track"><div class="exec-project-fill" style="width:${pct}%;background:${fillColor};"></div></div>
         <div class="exec-project-pct" style="color:${fillColor}">${pct}%</div>
@@ -4231,7 +4331,7 @@ function renderExecutive(issues) {
         const badgeColor = isOverdue ? 'var(--danger-light)' : 'var(--warning-light)';
         const badgeTextColor = isOverdue ? 'var(--danger)' : 'var(--warning)';
         const badgeLabel = isOverdue ? (currentLang === 'ko' ? '기한초과' : 'Overdue') : (currentLang === 'ko' ? '묵은이슈' : 'Stale');
-        return `<div class="exec-risk-item">
+        return `<div class="exec-risk-item" onclick="showIssueModal('${escHtml(i.key)}')">
           <span class="exec-risk-badge" style="background:${badgeColor};color:${badgeTextColor};">${badgeLabel}</span>
           <span class="exec-risk-key">${escHtml(i.key)}</span>
           <span class="exec-risk-title" title="${escHtml(i.fields?.summary||'')}">${escHtml(i.fields?.summary||'')}</span>
@@ -4307,7 +4407,7 @@ function renderExecutive(issues) {
       const pct = Math.round(a.active / maxActive * 100);
       const isOverload = a.inprogress >= 5;
       const barColor = isOverload ? 'var(--danger)' : a.inprogress >= 3 ? 'var(--warning)' : 'var(--success)';
-      return `<div class="capacity-item">
+      return `<div class="capacity-item" onclick="showExecDrillAssignee('${escHtml(a.name)}')">
         <div class="capacity-avatar" style="background:${colors[i%colors.length]}">${a.name.slice(0,2)}</div>
         <div class="capacity-name">${escHtml(a.name)}</div>
         <div class="capacity-bar-wrap">
@@ -4343,6 +4443,46 @@ function renderExecutive(issues) {
   }
 }
 
+// ===== EXECUTIVE DRILL-DOWN =====
+function showExecDrill(title, issues) {
+  const panel = document.getElementById('exec-drill-panel');
+  const titleEl = document.getElementById('exec-drill-title');
+  const listEl = document.getElementById('exec-drill-list');
+  if (!panel || !titleEl || !listEl) return;
+
+  titleEl.textContent = `${title} (${issues.length}건)`;
+
+  if (!issues.length) {
+    listEl.innerHTML = `<div style="padding:24px;text-align:center;color:var(--text3);">이슈가 없습니다.</div>`;
+  } else {
+    listEl.innerHTML = issues.map(i => {
+      const status = i.fields?.status?.name || '';
+      const cat = statusCategory(status, i.fields?.status?.statusCategory?.key);
+      const statusColor = cat === 'done' ? 'var(--success)' : cat === 'indeterminate' ? 'var(--info)' : 'var(--text3)';
+      const assignee = i.fields?.assignee?.displayName || '—';
+      return `<div class="exec-drill-row" onclick="showIssueModal('${escHtml(i.key)}')">
+        <span class="exec-drill-key">${escHtml(i.key)}</span>
+        <span class="exec-drill-summary" title="${escHtml(i.fields?.summary||'')}">${escHtml(i.fields?.summary||'')}</span>
+        <span class="exec-drill-assignee">${escHtml(assignee)}</span>
+        <span class="exec-drill-status" style="background:${statusColor}1a;color:${statusColor};">${escHtml(status)}</span>
+      </div>`;
+    }).join('');
+  }
+
+  panel.style.display = '';
+  panel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function showExecDrillAssignee(name) {
+  const issues = state.issues.filter(i => (i.fields?.assignee?.displayName || t('iss_unassigned')) === name);
+  showExecDrill(`${name} 이슈`, issues);
+}
+
+function closeExecDrill() {
+  const panel = document.getElementById('exec-drill-panel');
+  if (panel) panel.style.display = 'none';
+}
+
 // ===== GLOBAL USER FILTER =====
 function getGlobalFilteredIssues() {
   if (!state.globalUserFilter) return state.issues;
@@ -4362,6 +4502,166 @@ function populateGlobalUserFilter(issues) {
   if (cur) el.value = cur;
 }
 
+// ===== WEEKLY PLAN =====
+let _weeklyMode = 'cards'; // 'cards' | 'excel' | 'both'
+
+function setWeeklyMode(mode) {
+  _weeklyMode = mode;
+  ['cards','excel','both'].forEach(m => {
+    document.getElementById(`wmode-${m}`)?.classList.toggle('active', m === mode);
+  });
+  const cardsView = document.getElementById('weekly-cards-view');
+  const excelView = document.getElementById('weekly-excel-view');
+  const sel = document.getElementById('weekly-issue-select');
+  const showCards = mode === 'cards' || mode === 'both';
+  const showExcel = mode === 'excel' || mode === 'both';
+  if (cardsView) cardsView.style.display = showCards ? '' : 'none';
+  if (excelView) excelView.style.display = showExcel ? '' : 'none';
+  if (sel) sel.style.display = showExcel ? '' : 'none';
+  if (showExcel) loadWeeklyIssueList();
+  if (showCards) renderWeeklyPlan(state.issues);
+}
+
+function initWeeklyTab() {
+  if (state.issues.length) renderWeeklyPlan(state.issues);
+}
+
+function getWeekRange(offsetWeeks) {
+  const now = new Date();
+  const day = now.getDay();
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offsetWeeks * 7);
+  monday.setHours(0, 0, 0, 0);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  sunday.setHours(23, 59, 59, 999);
+  return { start: monday, end: sunday };
+}
+
+function parseAdfCheckboxes(description) {
+  const items = [];
+  if (!description || typeof description !== 'object') return items;
+  function walk(node) {
+    if (!node) return;
+    if (node.type === 'taskItem') {
+      const done = node.attrs?.state === 'DONE';
+      const text = extractText(node.content || []);
+      if (text) items.push({ done, text });
+    }
+    (node.content || []).forEach(walk);
+  }
+  function extractText(nodes) {
+    return (nodes || []).map(n => {
+      if (n.type === 'text') return n.text || '';
+      return extractText(n.content || '');
+    }).join('');
+  }
+  walk(description);
+  return items;
+}
+
+function renderWeeklyPlan(issues) {
+  const wpIssues = issues.filter(i => i.fields?.project?.key === 'WP');
+  const thisWeek = getWeekRange(0);
+  const lastWeek = getWeekRange(-1);
+  const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
+  const rangeEl = document.getElementById('weekly-range-label');
+  if (rangeEl && _weeklyMode !== 'excel') rangeEl.textContent = `${fmt(lastWeek.start)}~${fmt(lastWeek.end)} / ${fmt(thisWeek.start)}~${fmt(thisWeek.end)}`;
+  const now = new Date();
+  const thisMonth = now.getMonth() + 1;
+  const thisWeekOfMonth = Math.ceil(now.getDate() / 7);
+  const lastDate = new Date(now); lastDate.setDate(now.getDate() - 7);
+  const lastMonth = lastDate.getMonth() + 1;
+  const lastWeekOfMonth = Math.ceil(lastDate.getDate() / 7);
+  const classify = (iss) => {
+    const title = iss.fields?.summary || '';
+    const m = title.match(/(\d+)월\s*(\d+)주/);
+    if (m) {
+      const mon = parseInt(m[1]), wk = parseInt(m[2]);
+      if (mon === thisMonth && wk === thisWeekOfMonth) return 'this';
+      if (mon === lastMonth && wk === lastWeekOfMonth) return 'last';
+    }
+    const cr = new Date(iss.fields?.created);
+    if (cr >= thisWeek.start && cr <= thisWeek.end) return 'this';
+    if (cr >= lastWeek.start && cr <= lastWeek.end) return 'last';
+    return null;
+  };
+  const userMap = {};
+  wpIssues.forEach(iss => {
+    const name = iss.fields?.assignee?.displayName;
+    if (!name) return;
+    if (!userMap[name]) userMap[name] = { this: null, last: null };
+    const week = classify(iss);
+    if (week === 'this') userMap[name].this = iss;
+    else if (week === 'last') userMap[name].last = iss;
+  });
+  const wrap = document.getElementById('weekly-cards-view');
+  if (!wrap) return;
+  const users = Object.entries(userMap);
+  if (!users.length) {
+    wrap.innerHTML = `<div class="empty-state" style="padding:40px 0;"><p>${t('no_data')}</p></div>`;
+    return;
+  }
+  wrap.innerHTML = users.map(([name, weeks]) => {
+    const avatarColors = ['#0052CC','#36b37e','#ff991f','#de350b','#6554c0','#00b8d9'];
+    const color = avatarColors[Math.abs(name.split('').reduce((a,c)=>a+c.charCodeAt(0),0)) % avatarColors.length];
+    return `<div class="weekly-card">
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border);">
+        <div style="width:32px;height:32px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;">${escHtml(name.slice(0,2))}</div>
+        <span style="font-size:15px;font-weight:700;color:var(--text);">${escHtml(name)}</span>
+      </div>
+      <div class="weekly-cols">
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px;">${t('weekly_last')}</div>
+          ${weeklyIssueHtml(weeks.last)}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:10px;">${t('weekly_this')}</div>
+          ${weeklyIssueHtml(weeks.this)}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function weeklyIssueHtml(iss) {
+  if (!iss) return `<div style="font-size:12px;color:var(--text4);">—</div>`;
+  const f = iss.fields || {};
+  const checkboxes = parseAdfCheckboxes(f.description);
+  const checklistHtml = checkboxes.length ? `
+    <div class="weekly-section-title">${currentLang === 'ko' ? '할 일' : 'Tasks'}</div>
+    <div class="weekly-checklist">
+      ${checkboxes.map(item => `
+        <div class="weekly-check-item${item.done ? ' done' : ''}">
+          <span class="weekly-check-icon">
+            ${item.done
+              ? `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--success)" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>`
+              : `<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="var(--border2)" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/></svg>`
+            }
+          </span>
+          <span>${escHtml(item.text)}</span>
+        </div>`).join('')}
+    </div>` : '';
+  const links = (f.issuelinks || []).filter(l => l.outwardIssue || l.inwardIssue);
+  const linkedHtml = links.length ? `
+    <div class="weekly-section-title">${currentLang === 'ko' ? '연결된 이슈' : 'Linked Issues'}</div>
+    ${links.map(l => {
+      const linked = l.outwardIssue || l.inwardIssue;
+      const lKey = linked.key || '';
+      const lSummary = linked.fields?.summary || '';
+      const lStatus = linked.fields?.status?.name || '';
+      const lCat = statusCategory(lStatus, linked.fields?.status?.statusCategory?.key);
+      const statusColor = lCat === 'done' ? 'var(--success)' : lCat === 'indeterminate' ? 'var(--info)' : 'var(--text3)';
+      return `<div class="weekly-linked-item" onclick="showIssueModal('${escHtml(lKey)}')">
+        <span class="weekly-linked-key">${escHtml(lKey)}</span>
+        <span class="weekly-linked-summary" title="${escHtml(lSummary)}">${escHtml(lSummary)}</span>
+        <span style="background:${statusColor}1a;color:${statusColor};font-size:10px;padding:2px 6px;border-radius:var(--radius-full);flex-shrink:0;white-space:nowrap;">${escHtml(lStatus)}</span>
+      </div>`;
+    }).join('')}` : '';
+  return `<div style="font-size:11px;color:var(--primary);font-weight:600;margin-bottom:8px;">${escHtml(iss.key)}</div>
+    ${checklistHtml}${linkedHtml}`;
+}
+
 // ===== WEEKLY PLAN (Excel 첨부 기반) =====
 let _weeklyIssueList = [];
 let _weeklyIssueListLoaded = false;
@@ -4378,7 +4678,7 @@ async function loadWeeklyIssueList() {
 
   try {
     const data = await jiraFetch('/rest/api/3/search/jql', {
-      jql: 'project = WP AND summary ~ "주간 계획" AND summary ~ "통합" ORDER BY created DESC',
+      jql: 'project = WP AND summary ~ "통합" ORDER BY created DESC',
       fields: 'summary,created',
       maxResults: 20,
     });
@@ -4595,6 +4895,7 @@ function renderAll() {
   renderAgeDist(issues);
   renderEpics(state.issues);
   renderExecutive(issues);
+  if (state.activeTab === 'weekly') renderWeeklyPlan(state.issues);
   populateFilters(issues);
   updateTabBadges(issues);
   state.filteredIssues = [...issues];
