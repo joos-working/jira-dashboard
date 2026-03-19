@@ -4258,16 +4258,17 @@ function renderExecutive(issues) {
       issues.filter(i => { const cat = statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key); return cat !== 'done' && i.fields?.duedate && new Date(i.fields.duedate) < now; }),
       ontime,
     ];
-    window._execDrillData = kpiDrillIssues;
-    window._execKpiLabels = kpis.map(k => k.label);
-    kpiGrid.innerHTML = kpis.map((k, idx) => `
-      <div class="exec-kpi-card" style="--kpi-color:${k.color}" onclick="showExecDrill(_execKpiLabels[${idx}], _execDrillData[${idx}])">
+    kpiGrid.innerHTML = kpis.map((k) => `
+      <div class="exec-kpi-card" style="--kpi-color:${k.color}; cursor:pointer;">
         <div class="exec-kpi-icon">${k.icon}</div>
         <div class="exec-kpi-value">${k.value}</div>
         <div class="exec-kpi-label">${k.label}</div>
         <div class="exec-kpi-sub">${k.sub}</div>
         <div class="exec-kpi-trend" style="background:${k.trendColor};color:${k.trendTextColor};">${k.trend}</div>
       </div>`).join('');
+    kpiGrid.querySelectorAll('.exec-kpi-card').forEach((card, idx) => {
+      card.addEventListener('click', () => showExecDrill(kpis[idx].label, kpiDrillIssues[idx]));
+    });
     // animate KPI values
     kpiGrid.querySelectorAll('.exec-kpi-value').forEach((el, i) => {
       const raw = kpis[i].value;
@@ -4292,15 +4293,21 @@ function renderExecutive(issues) {
     for (const pk of Object.keys(projMap)) {
       window._execProjIssues[pk] = issues.filter(i => i.fields?.project?.key === pk);
     }
-    barsEl.innerHTML = Object.entries(projMap).sort((a,b) => b[1].total - a[1].total).map(([pk, p]) => {
+    const projEntries = Object.entries(projMap).sort((a,b) => b[1].total - a[1].total);
+    barsEl.innerHTML = projEntries.map(([pk, p]) => {
       const pct = p.total > 0 ? Math.round(p.done / p.total * 100) : 0;
       const fillColor = pct >= 80 ? 'var(--success)' : pct >= 50 ? 'var(--info)' : pct >= 30 ? 'var(--warning)' : 'var(--danger)';
-      return `<div class="exec-project-bar" onclick="showExecDrillProj('${escHtml(pk)}')">
+      return `<div class="exec-project-bar" data-pk="${escHtml(pk)}">
         <div class="exec-project-name" title="${escHtml(p.name)}">${escHtml(p.name)}</div>
         <div class="exec-project-track"><div class="exec-project-fill" style="width:${pct}%;background:${fillColor};"></div></div>
         <div class="exec-project-pct" style="color:${fillColor}">${pct}%</div>
       </div>`;
     }).join('');
+    barsEl.querySelectorAll('.exec-project-bar').forEach(bar => {
+      const pk = bar.dataset.pk;
+      const pName = projMap[pk]?.name || pk;
+      bar.addEventListener('click', () => showExecDrill(`${pName} 이슈`, window._execProjIssues[pk] || []));
+    });
   }
 
   // --- Risk issues (overdue + stale, top 8) ---
@@ -4332,13 +4339,16 @@ function renderExecutive(issues) {
         const badgeColor = isOverdue ? 'var(--danger-light)' : 'var(--warning-light)';
         const badgeTextColor = isOverdue ? 'var(--danger)' : 'var(--warning)';
         const badgeLabel = isOverdue ? (currentLang === 'ko' ? '기한초과' : 'Overdue') : (currentLang === 'ko' ? '묵은이슈' : 'Stale');
-        return `<div class="exec-risk-item" onclick="showIssueModal('${escHtml(i.key)}')">
+        return `<div class="exec-risk-item" data-key="${escHtml(i.key)}">
           <span class="exec-risk-badge" style="background:${badgeColor};color:${badgeTextColor};">${badgeLabel}</span>
           <span class="exec-risk-key">${escHtml(i.key)}</span>
           <span class="exec-risk-title" title="${escHtml(i.fields?.summary||'')}">${escHtml(i.fields?.summary||'')}</span>
           <span class="exec-risk-days">${i.riskDays}${currentLang === 'ko' ? '일' : 'd'}</span>
         </div>`;
       }).join('');
+      riskListEl.querySelectorAll('.exec-risk-item').forEach(item => {
+        item.addEventListener('click', () => showIssueModal(item.dataset.key));
+      });
     }
   }
 
@@ -4408,7 +4418,7 @@ function renderExecutive(issues) {
       const pct = Math.round(a.active / maxActive * 100);
       const isOverload = a.inprogress >= 5;
       const barColor = isOverload ? 'var(--danger)' : a.inprogress >= 3 ? 'var(--warning)' : 'var(--success)';
-      return `<div class="capacity-item" onclick="showExecDrillAssignee('${escHtml(a.name)}')">
+      return `<div class="capacity-item" data-assignee="${escHtml(a.name)}">
         <div class="capacity-avatar" style="background:${colors[i%colors.length]}">${a.name.slice(0,2)}</div>
         <div class="capacity-name">${escHtml(a.name)}</div>
         <div class="capacity-bar-wrap">
@@ -4417,6 +4427,10 @@ function renderExecutive(issues) {
         <div class="capacity-count" style="color:${barColor}">${a.inprogress} ${currentLang==='ko'?'진행':'active'}</div>
       </div>`;
     }).join('');
+    execWorkloadEl.querySelectorAll('.capacity-item').forEach(item => {
+      const name = item.dataset.assignee;
+      item.addEventListener('click', () => showExecDrillAssignee(name));
+    });
   }
 
   // --- Health metrics ---
