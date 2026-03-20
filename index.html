@@ -1532,7 +1532,7 @@
       text-transform: uppercase;
       letter-spacing: .04em;
       padding: 10px 14px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border2);
       white-space: nowrap;
     }
     .weekly-table th.last-hd { background: #fff4e5; color: #b76200; }
@@ -1541,7 +1541,7 @@
     [data-theme="dark"] .weekly-table th.this-hd { background: var(--primary-light); color: var(--primary); }
     .weekly-table td {
       padding: 8px 14px;
-      border: 1px solid var(--border);
+      border: 1px solid var(--border2);
       vertical-align: top;
       color: var(--text2);
       line-height: 1.6;
@@ -4553,13 +4553,13 @@ function initWeeklyTab() {
 function getWeekRange(offsetWeeks) {
   const now = new Date();
   const day = now.getDay();
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - (day === 0 ? 6 : day - 1) + offsetWeeks * 7);
-  monday.setHours(0, 0, 0, 0);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  sunday.setHours(23, 59, 59, 999);
-  return { start: monday, end: sunday };
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - day + offsetWeeks * 7);
+  sunday.setHours(0, 0, 0, 0);
+  const saturday = new Date(sunday);
+  saturday.setDate(sunday.getDate() + 6);
+  saturday.setHours(23, 59, 59, 999);
+  return { start: sunday, end: saturday };
 }
 
 function parseAdfCheckboxes(description) {
@@ -4591,12 +4591,10 @@ function renderWeeklyPlan(issues) {
   const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
   const rangeEl = document.getElementById('weekly-range-label');
   if (rangeEl && _weeklyMode !== 'excel') rangeEl.textContent = `${fmt(lastWeek.start)}~${fmt(lastWeek.end)} / ${fmt(thisWeek.start)}~${fmt(thisWeek.end)}`;
-  const now = new Date();
-  const thisMonth = now.getMonth() + 1;
-  const thisWeekOfMonth = Math.ceil(now.getDate() / 7);
-  const lastDate = new Date(now); lastDate.setDate(now.getDate() - 7);
-  const lastMonth = lastDate.getMonth() + 1;
-  const lastWeekOfMonth = Math.ceil(lastDate.getDate() / 7);
+  const thisMonth = thisWeek.start.getMonth() + 1;
+  const thisWeekOfMonth = Math.ceil(thisWeek.start.getDate() / 7);
+  const lastMonth = lastWeek.start.getMonth() + 1;
+  const lastWeekOfMonth = Math.ceil(lastWeek.start.getDate() / 7);
   const classify = (iss) => {
     const title = iss.fields?.summary || '';
     const m = title.match(/(\d+)월\s*(\d+)주/);
