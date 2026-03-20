@@ -2406,12 +2406,10 @@
         <h2 style="font-size:18px; font-weight:700; color:var(--text);" data-i18n="nav_weekly">주간 계획</h2>
         <div style="display:flex; gap:4px; background:var(--surface3); border-radius:var(--radius-sm); padding:3px;">
           <button class="weekly-mode-btn active" onclick="setWeeklyMode('cards')" id="wmode-cards">담당자별</button>
-          <button class="weekly-mode-btn" onclick="setWeeklyMode('excel')" id="wmode-excel">통합 엑셀</button>
+          <button class="weekly-mode-btn" onclick="setWeeklyMode('excel')" id="wmode-excel">주간 계획</button>
           <button class="weekly-mode-btn" onclick="setWeeklyMode('both')" id="wmode-both">전체 보기</button>
         </div>
-        <select id="weekly-issue-select" class="weekly-select" onchange="onWeeklyIssueChange()" style="display:none;">
-          <option value="">-- 주차 선택 --</option>
-        </select>
+        <select id="weekly-issue-select" class="weekly-select" onchange="onWeeklyIssueChange()" style="display:none;"></select>
         <div id="weekly-nav" style="display:flex; align-items:center; gap:6px;">
           <button onclick="moveWeeklyOffset(-1)" style="background:var(--surface3); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:4px 10px; cursor:pointer; font-size:14px; color:var(--text2);">&#8249;</button>
           <span style="font-size:12px; color:var(--text3);" id="weekly-range-label"></span>
@@ -4535,10 +4533,12 @@ let _weeklyMode = 'cards'; // 'cards' | 'excel' | 'both'
 let _weeklyOffset = 0; // 0 = 이번주, -1 = 지난주, ...
 
 function moveWeeklyOffset(delta) {
-  _weeklyOffset += delta;
-  const nextBtn = document.getElementById('weekly-nav-next');
-  if (nextBtn) nextBtn.disabled = _weeklyOffset >= 0;
-  renderWeeklyPlan(state.issues);
+  const showExcel = _weeklyMode === 'excel' || _weeklyMode === 'both';
+  const maxOffset = showExcel ? Math.min(0, -(0)) : 0;
+  _weeklyOffset = Math.min(0, _weeklyOffset + delta);
+  const showCards = _weeklyMode === 'cards' || _weeklyMode === 'both';
+  if (showCards) renderWeeklyPlan(state.issues);
+  if (showExcel) loadWeeklyByOffset();
 }
 
 function setWeeklyMode(mode) {
@@ -4553,9 +4553,7 @@ function setWeeklyMode(mode) {
   const showExcel = mode === 'excel' || mode === 'both';
   if (cardsView) cardsView.style.display = showCards ? '' : 'none';
   if (excelView) excelView.style.display = showExcel ? '' : 'none';
-  if (sel) sel.style.display = showExcel ? '' : 'none';
-  const nav = document.getElementById('weekly-nav');
-  if (nav) nav.style.display = showCards ? '' : 'none';
+  if (sel) sel.style.display = 'none';
   if (showExcel) loadWeeklyIssueList();
   if (showCards) renderWeeklyPlan(state.issues);
 }
@@ -4730,8 +4728,7 @@ async function loadWeeklyIssueList() {
       ).join('');
 
     if (_weeklyIssueList.length > 0) {
-      sel.value = _weeklyIssueList[0].key;
-      await loadWeeklyExcel(_weeklyIssueList[0].key);
+      loadWeeklyByOffset();
     } else {
       view.innerHTML = '<div class="weekly-loading">주간 계획 통합 이슈가 없습니다.<br>WP 프로젝트에 "주간 계획 N월M주 통합" 이슈를 만들고 xlsx를 첨부해 주세요.</div>';
     }
@@ -4743,6 +4740,16 @@ async function loadWeeklyIssueList() {
 async function onWeeklyIssueChange() {
   const sel = document.getElementById('weekly-issue-select');
   if (sel?.value) await loadWeeklyExcel(sel.value);
+}
+
+function loadWeeklyByOffset() {
+  const idx = -_weeklyOffset;
+  const nextBtn = document.getElementById('weekly-nav-next');
+  if (nextBtn) nextBtn.disabled = _weeklyOffset >= 0;
+  if (idx < 0 || idx >= _weeklyIssueList.length) return;
+  const prevBtn = document.querySelector('[onclick="moveWeeklyOffset(-1)"]');
+  if (prevBtn) prevBtn.disabled = idx >= _weeklyIssueList.length - 1;
+  loadWeeklyExcel(_weeklyIssueList[idx].key);
 }
 
 async function loadWeeklyExcel(issueKey) {
