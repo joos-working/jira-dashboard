@@ -2412,7 +2412,11 @@
         <select id="weekly-issue-select" class="weekly-select" onchange="onWeeklyIssueChange()" style="display:none;">
           <option value="">-- 주차 선택 --</option>
         </select>
-        <span style="font-size:12px; color:var(--text3);" id="weekly-range-label"></span>
+        <div id="weekly-nav" style="display:flex; align-items:center; gap:6px;">
+          <button onclick="moveWeeklyOffset(-1)" style="background:var(--surface3); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:4px 10px; cursor:pointer; font-size:14px; color:var(--text2);">&#8249;</button>
+          <span style="font-size:12px; color:var(--text3);" id="weekly-range-label"></span>
+          <button onclick="moveWeeklyOffset(1)" id="weekly-nav-next" style="background:var(--surface3); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:4px 10px; cursor:pointer; font-size:14px; color:var(--text2);">&#8250;</button>
+        </div>
       </div>
       <div id="weekly-cards-view">
         <div class="weekly-loading">데이터를 불러오는 중...</div>
@@ -4528,6 +4532,14 @@ function populateGlobalUserFilter(issues) {
 
 // ===== WEEKLY PLAN =====
 let _weeklyMode = 'cards'; // 'cards' | 'excel' | 'both'
+let _weeklyOffset = 0; // 0 = 이번주, -1 = 지난주, ...
+
+function moveWeeklyOffset(delta) {
+  _weeklyOffset += delta;
+  const nextBtn = document.getElementById('weekly-nav-next');
+  if (nextBtn) nextBtn.disabled = _weeklyOffset >= 0;
+  renderWeeklyPlan(state.issues);
+}
 
 function setWeeklyMode(mode) {
   _weeklyMode = mode;
@@ -4542,6 +4554,8 @@ function setWeeklyMode(mode) {
   if (cardsView) cardsView.style.display = showCards ? '' : 'none';
   if (excelView) excelView.style.display = showExcel ? '' : 'none';
   if (sel) sel.style.display = showExcel ? '' : 'none';
+  const nav = document.getElementById('weekly-nav');
+  if (nav) nav.style.display = showCards ? '' : 'none';
   if (showExcel) loadWeeklyIssueList();
   if (showCards) renderWeeklyPlan(state.issues);
 }
@@ -4586,11 +4600,13 @@ function parseAdfCheckboxes(description) {
 
 function renderWeeklyPlan(issues) {
   const wpIssues = issues.filter(i => i.fields?.project?.key === 'WP');
-  const thisWeek = getWeekRange(0);
-  const lastWeek = getWeekRange(-1);
+  const thisWeek = getWeekRange(_weeklyOffset);
+  const lastWeek = getWeekRange(_weeklyOffset - 1);
   const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
   const rangeEl = document.getElementById('weekly-range-label');
   if (rangeEl && _weeklyMode !== 'excel') rangeEl.textContent = `${fmt(lastWeek.start)}~${fmt(lastWeek.end)} / ${fmt(thisWeek.start)}~${fmt(thisWeek.end)}`;
+  const nextBtn = document.getElementById('weekly-nav-next');
+  if (nextBtn) nextBtn.disabled = _weeklyOffset >= 0;
   const thisMonth = thisWeek.start.getMonth() + 1;
   const thisWeekOfMonth = Math.ceil(thisWeek.start.getDate() / 7);
   const lastMonth = lastWeek.start.getMonth() + 1;
