@@ -2409,10 +2409,9 @@
           <button class="weekly-mode-btn" onclick="setWeeklyMode('excel')" id="wmode-excel">주간 계획</button>
           <button class="weekly-mode-btn" onclick="setWeeklyMode('both')" id="wmode-both">전체 보기</button>
         </div>
-        <select id="weekly-issue-select" class="weekly-select" onchange="onWeeklyIssueChange()" style="display:none;"></select>
         <div id="weekly-nav" style="display:flex; align-items:center; gap:6px;">
-          <button onclick="moveWeeklyOffset(-1)" style="background:var(--surface3); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:4px 10px; cursor:pointer; font-size:14px; color:var(--text2);">&#8249;</button>
-          <span style="font-size:12px; color:var(--text3);" id="weekly-range-label"></span>
+          <button onclick="moveWeeklyOffset(-1)" id="weekly-nav-prev" style="background:var(--surface3); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:4px 10px; cursor:pointer; font-size:14px; color:var(--text2);">&#8249;</button>
+          <select id="weekly-issue-select" class="weekly-select" onchange="onWeeklySelectChange()"></select>
           <button onclick="moveWeeklyOffset(1)" id="weekly-nav-next" style="background:var(--surface3); border:1px solid var(--border2); border-radius:var(--radius-sm); padding:4px 10px; cursor:pointer; font-size:14px; color:var(--text2);">&#8250;</button>
         </div>
       </div>
@@ -4532,11 +4531,56 @@ function populateGlobalUserFilter(issues) {
 let _weeklyMode = 'cards'; // 'cards' | 'excel' | 'both'
 let _weeklyOffset = 0; // 0 = 이번주, -1 = 지난주, ...
 
+function buildWeekOptions() {
+  const options = [];
+  for (let offset = 0; offset >= -26; offset--) {
+    const week = getWeekRange(offset);
+    const month = week.start.getMonth() + 1;
+    const weekOfMonth = Math.ceil(week.start.getDate() / 7);
+    const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
+    options.push({ label: `${month}월 ${weekOfMonth}주 (${fmt(week.start)}~${fmt(week.end)})`, offset });
+  }
+  return options;
+}
+
+function initWeeklySelect() {
+  const sel = document.getElementById('weekly-issue-select');
+  if (!sel) return;
+  const options = buildWeekOptions();
+  sel.innerHTML = options.map(o =>
+    `<option value="${o.offset}">${o.label}</option>`
+  ).join('');
+  sel.value = String(_weeklyOffset);
+  syncWeeklyNavButtons();
+}
+
+function syncWeeklyNavButtons() {
+  const sel = document.getElementById('weekly-issue-select');
+  const nextBtn = document.getElementById('weekly-nav-next');
+  const prevBtn = document.getElementById('weekly-nav-prev');
+  if (nextBtn) nextBtn.disabled = _weeklyOffset >= 0;
+  if (prevBtn && sel) prevBtn.disabled = _weeklyOffset <= -26;
+}
+
+function onWeeklySelectChange() {
+  const sel = document.getElementById('weekly-issue-select');
+  if (!sel) return;
+  _weeklyOffset = parseInt(sel.value);
+  syncWeeklyNavButtons();
+  applyWeeklyOffset();
+}
+
 function moveWeeklyOffset(delta) {
-  const showExcel = _weeklyMode === 'excel' || _weeklyMode === 'both';
-  const maxOffset = showExcel ? Math.min(0, -(0)) : 0;
-  _weeklyOffset = Math.min(0, _weeklyOffset + delta);
+  _weeklyOffset = Math.max(-26, Math.min(0, _weeklyOffset + delta));
+  const sel = document.getElementById('weekly-issue-select');
+  if (sel) sel.value = String(_weeklyOffset);
+  syncWeeklyNavButtons();
+  applyWeeklyOffset();
+}
+
+function applyWeeklyOffset() {
   const showCards = _weeklyMode === 'cards' || _weeklyMode === 'both';
+  const showExcel = _weeklyMode === 'excel' || _weeklyMode === 'both';
   if (showCards) renderWeeklyPlan(state.issues);
   if (showExcel) loadWeeklyByOffset();
 }
@@ -4553,12 +4597,13 @@ function setWeeklyMode(mode) {
   const showExcel = mode === 'excel' || mode === 'both';
   if (cardsView) cardsView.style.display = showCards ? '' : 'none';
   if (excelView) excelView.style.display = showExcel ? '' : 'none';
-  if (sel) sel.style.display = 'none';
   if (showExcel) loadWeeklyIssueList();
   if (showCards) renderWeeklyPlan(state.issues);
 }
 
 function initWeeklyTab() {
+  _weeklyOffset = 0;
+  initWeeklySelect();
   if (state.issues.length) renderWeeklyPlan(state.issues);
 }
 
@@ -4601,10 +4646,6 @@ function renderWeeklyPlan(issues) {
   const thisWeek = getWeekRange(_weeklyOffset);
   const lastWeek = getWeekRange(_weeklyOffset - 1);
   const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
-  const rangeEl = document.getElementById('weekly-range-label');
-  if (rangeEl && _weeklyMode !== 'excel') rangeEl.textContent = `${fmt(lastWeek.start)}~${fmt(lastWeek.end)} / ${fmt(thisWeek.start)}~${fmt(thisWeek.end)}`;
-  const nextBtn = document.getElementById('weekly-nav-next');
-  if (nextBtn) nextBtn.disabled = _weeklyOffset >= 0;
   const thisMonth = thisWeek.start.getMonth() + 1;
   const thisWeekOfMonth = Math.ceil(thisWeek.start.getDate() / 7);
   const lastMonth = lastWeek.start.getMonth() + 1;
@@ -4703,9 +4744,8 @@ let _weeklyIssueList = [];
 let _weeklyIssueListLoaded = false;
 
 async function loadWeeklyIssueList() {
-  const sel = document.getElementById('weekly-issue-select');
   const view = document.getElementById('weekly-excel-view');
-  if (!sel || !view) return;
+  if (!view) return;
 
   // 이미 로드된 경우 재요청 안 함
   if (_weeklyIssueListLoaded) return;
@@ -4720,36 +4760,28 @@ async function loadWeeklyIssueList() {
     });
     _weeklyIssueList = data.issues || [];
     _weeklyIssueListLoaded = true;
-
-    // 드롭다운 채우기
-    sel.innerHTML = '<option value="">-- 주차 선택 --</option>' +
-      _weeklyIssueList.map(iss =>
-        `<option value="${escHtml(iss.key)}">${escHtml(iss.fields?.summary || iss.key)}</option>`
-      ).join('');
-
-    if (_weeklyIssueList.length > 0) {
-      loadWeeklyByOffset();
-    } else {
-      view.innerHTML = '<div class="weekly-loading">주간 계획 통합 이슈가 없습니다.<br>WP 프로젝트에 "주간 계획 N월M주 통합" 이슈를 만들고 xlsx를 첨부해 주세요.</div>';
-    }
+    loadWeeklyByOffset();
   } catch (e) {
     view.innerHTML = `<div class="weekly-loading" style="color:var(--danger);">오류: ${escHtml(e.message)}</div>`;
   }
 }
 
-async function onWeeklyIssueChange() {
-  const sel = document.getElementById('weekly-issue-select');
-  if (sel?.value) await loadWeeklyExcel(sel.value);
-}
-
 function loadWeeklyByOffset() {
-  const idx = -_weeklyOffset;
-  const nextBtn = document.getElementById('weekly-nav-next');
-  if (nextBtn) nextBtn.disabled = _weeklyOffset >= 0;
-  if (idx < 0 || idx >= _weeklyIssueList.length) return;
-  const prevBtn = document.querySelector('[onclick="moveWeeklyOffset(-1)"]');
-  if (prevBtn) prevBtn.disabled = idx >= _weeklyIssueList.length - 1;
-  loadWeeklyExcel(_weeklyIssueList[idx].key);
+  const view = document.getElementById('weekly-excel-view');
+  if (!view) return;
+  const week = getWeekRange(_weeklyOffset);
+  const month = week.start.getMonth() + 1;
+  const weekOfMonth = Math.ceil(week.start.getDate() / 7);
+  const matched = _weeklyIssueList.find(iss => {
+    const s = iss.fields?.summary || '';
+    const m = s.match(/(\d+)월\s*(\d+)주/);
+    return m && parseInt(m[1]) === month && parseInt(m[2]) === weekOfMonth;
+  });
+  if (matched) {
+    loadWeeklyExcel(matched.key);
+  } else {
+    view.innerHTML = `<div class="weekly-loading">${month}월 ${weekOfMonth}주 통합 이슈가 없습니다.</div>`;
+  }
 }
 
 async function loadWeeklyExcel(issueKey) {
