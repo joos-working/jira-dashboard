@@ -5810,6 +5810,7 @@ function escHtml(str) {
   updateThemeIcon(savedTheme);
   applyLang();
   updateNotifBtn();
+  initWeeklySelect();
   // Seed initial history entry so popstate fires on first back
   const initTab = new URLSearchParams(window.location.search).get('tab') || 'overview';
   history.replaceState({ tab: initTab }, '', window.location.href);
