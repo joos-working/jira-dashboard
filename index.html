@@ -4645,11 +4645,14 @@ function renderWeeklyPlan(issues) {
   const wpIssues = issues.filter(i => i.fields?.project?.key === 'WP');
   const thisWeek = getWeekRange(_weeklyOffset);
   const lastWeek = getWeekRange(_weeklyOffset - 1);
+  const nextWeek = getWeekRange(_weeklyOffset + 1);
   const fmt = (d) => `${d.getMonth()+1}/${d.getDate()}`;
   const thisMonth = thisWeek.start.getMonth() + 1;
   const thisWeekOfMonth = Math.ceil(thisWeek.start.getDate() / 7);
   const lastMonth = lastWeek.start.getMonth() + 1;
   const lastWeekOfMonth = Math.ceil(lastWeek.start.getDate() / 7);
+  const nextMonth = nextWeek.start.getMonth() + 1;
+  const nextWeekOfMonth = Math.ceil(nextWeek.start.getDate() / 7);
   const classify = (iss) => {
     const title = iss.fields?.summary || '';
     const m = title.match(/(\d+)월\s*(\d+)주/);
@@ -4657,21 +4660,24 @@ function renderWeeklyPlan(issues) {
       const mon = parseInt(m[1]), wk = parseInt(m[2]);
       if (mon === thisMonth && wk === thisWeekOfMonth) return 'this';
       if (mon === lastMonth && wk === lastWeekOfMonth) return 'last';
+      if (mon === nextMonth && wk === nextWeekOfMonth) return 'next';
       return null;
     }
     const cr = new Date(iss.fields?.created);
     if (cr >= thisWeek.start && cr <= thisWeek.end) return 'this';
     if (cr >= lastWeek.start && cr <= lastWeek.end) return 'last';
+    if (cr >= nextWeek.start && cr <= nextWeek.end) return 'next';
     return null;
   };
   const userMap = {};
   wpIssues.forEach(iss => {
     const name = iss.fields?.assignee?.displayName;
     if (!name) return;
-    if (!userMap[name]) userMap[name] = { this: null, last: null };
+    if (!userMap[name]) userMap[name] = { last: null, this: null, next: null };
     const week = classify(iss);
     if (week === 'this') userMap[name].this = iss;
     else if (week === 'last') userMap[name].last = iss;
+    else if (week === 'next') userMap[name].next = iss;
   });
   const wrap = document.getElementById('weekly-cards-view');
   if (!wrap) return;
@@ -4696,6 +4702,10 @@ function renderWeeklyPlan(issues) {
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:10px;">${t('weekly_this')}</div>
           ${weeklyIssueHtml(weeks.this)}
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--success);margin-bottom:10px;">${currentLang === 'ko' ? '다음 주' : 'Next Week'}</div>
+          ${weeklyIssueHtml(weeks.next)}
         </div>
       </div>
     </div>`;
