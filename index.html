@@ -4597,7 +4597,7 @@ function setWeeklyMode(mode) {
   const showExcel = mode === 'excel' || mode === 'both';
   if (cardsView) cardsView.style.display = showCards ? '' : 'none';
   if (excelView) excelView.style.display = showExcel ? '' : 'none';
-  if (showExcel) loadWeeklyByOffset();
+  if (showExcel) _weeklyIssueListLoaded ? loadWeeklyByOffset() : loadWeeklyIssueList();
   if (showCards) renderWeeklyPlan(state.issues);
 }
 
@@ -4642,7 +4642,7 @@ function parseAdfCheckboxes(description) {
 }
 
 function renderWeeklyPlan(issues) {
-  const wpIssues = issues.filter(i => i.fields?.project?.key === 'WP');
+  const wpIssues = issues.filter(i => i.fields?.project?.key === 'WP' && !/통합/.test(i.fields?.summary || ''));
   const thisWeek = getWeekRange(_weeklyOffset);
   const lastWeek = getWeekRange(_weeklyOffset - 1);
   const nextWeek = getWeekRange(_weeklyOffset + 1);
