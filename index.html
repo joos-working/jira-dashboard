@@ -5005,6 +5005,7 @@ function renderStaleIssues(issues) {
   const isStaleIssue = (iss) => {
     const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
     if (cat === 'done') return false;
+    if (/(backlog|백로그)/i.test(iss.fields?.status?.name||'')) return false;
     const changeDate = iss.fields?.statuscategorychangedate || iss.fields?.updated;
     if (!changeDate) return false;
     return (now - new Date(changeDate)) / 86400000 >= 3;
