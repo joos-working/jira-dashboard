@@ -3849,7 +3849,7 @@ function renderBottleneck(issues) {
   const now = new Date();
   const unresolved = issues
     .filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done')
-    .filter(i => (i.fields?.status?.name||'').toLowerCase() !== 'backlog')
+    .filter(i => !/(backlog|백로그)/i.test(i.fields?.status?.name||''))
     .map(i => {
       const created = new Date(i.fields?.created||now);
       const daysOpen = Math.floor((now - created) / 86400000);
