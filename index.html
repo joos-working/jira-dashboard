@@ -4671,8 +4671,9 @@ function renderWeeklyPlan(issues) {
   };
   const userMap = {};
   wpIssues.forEach(iss => {
-    const name = iss.fields?.assignee?.displayName;
-    if (!name) return;
+    const assignee = iss.fields?.assignee?.displayName;
+    const titleName = (iss.fields?.summary || '').replace(/\d+월\s*\d+주\s*/, '').trim();
+    const name = assignee || titleName || '미지정';
     if (!userMap[name]) userMap[name] = { last: null, this: null, next: null };
     const week = classify(iss);
     if (week === 'this') userMap[name].this = iss;
