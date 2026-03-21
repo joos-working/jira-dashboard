@@ -1985,18 +1985,6 @@
       </div>
 
       <!-- Issue Age Distribution -->
-      <div class="charts-row" style="grid-template-columns:1fr; margin-bottom:16px;">
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title" data-i18n="chart_age_dist">📦 미해결 이슈 연령 분포</span>
-          </div>
-          <div class="card-body">
-            <div class="chart-container" style="min-height:160px;">
-              <canvas id="chart-age-dist" style="max-height:180px;"></canvas>
-            </div>
-          </div>
-        </div>
-      </div>
 
       <!-- Backlog Trend + Heatmap -->
       <div class="charts-row charts-row-2" style="margin-bottom:16px;">
@@ -2195,27 +2183,15 @@
             <div class="empty-state" style="padding:20px 0;"><p>데이터 없음</p></div>
           </div>
         </div>
-        <!-- Issue type breakdown per assignee -->
+        <!-- Inflow vs Completion per assignee -->
         <div class="card">
           <div class="card-header">
-            <span class="card-title" data-i18n="team_type_dist">📊 담당자별 이슈 타입 분포</span>
+            <span class="card-title" data-i18n="team_inflow">📈 담당자별 유입 vs 완료 (최근 30일)</span>
           </div>
           <div class="card-body">
             <div class="chart-container" style="min-height:180px;">
-              <canvas id="chart-assignee-types" style="max-height:220px;"></canvas>
+              <canvas id="chart-assignee-inflow" style="max-height:220px;"></canvas>
             </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Inflow vs Completion per assignee -->
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-header">
-          <span class="card-title" data-i18n="team_inflow">📈 담당자별 유입 vs 완료 (최근 30일)</span>
-        </div>
-        <div class="card-body">
-          <div class="chart-container" style="min-height:160px;">
-            <canvas id="chart-assignee-inflow" style="max-height:180px;"></canvas>
           </div>
         </div>
       </div>
@@ -4696,13 +4672,10 @@ function renderWeeklyPlan(issues) {
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px;">${t('weekly_last')}</div>
           ${weeklyIssueHtml(weeks.last)}
         </div>
+        <div style="width:1px;background:var(--border2);align-self:stretch;flex-shrink:0;"></div>
         <div>
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:10px;">${t('weekly_this')}</div>
           ${weeklyIssueHtml(weeks.this)}
-        </div>
-        <div>
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--success);margin-bottom:10px;">${currentLang === 'ko' ? '다음 주' : 'Next Week'}</div>
-          ${weeklyIssueHtml(weeks.next)}
         </div>
       </div>
     </div>`;
