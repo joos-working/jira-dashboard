@@ -1600,7 +1600,7 @@
     }
     .weekly-linked-item:hover { background: var(--surface3); }
     .weekly-linked-key { font-size: 11px; font-weight: 700; color: var(--primary); flex-shrink: 0; }
-    .weekly-cols { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 0; }
+    .weekly-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 0; }
     .weekly-linked-summary {
       flex: 1; font-size: 12px; color: var(--text2);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
@@ -4675,10 +4675,6 @@ function renderWeeklyPlan(issues) {
         <div style="padding:0 16px;">
           <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--primary);margin-bottom:10px;">${t('weekly_this')}</div>
           ${weeklyIssueHtml(weeks.this)}
-        </div>
-        <div style="padding:0 0 0 16px;border-left:1px solid var(--border2);">
-          <div style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--success);margin-bottom:10px;">${currentLang === 'ko' ? '다음 주' : 'Next Week'}</div>
-          ${weeklyIssueHtml(weeks.next)}
         </div>
       </div>
     </div>`;
