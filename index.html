@@ -386,9 +386,12 @@
       align-items: center;
       gap: 2px;
       flex: 1;
+      overflow-x: auto;
+      scrollbar-width: none;
     }
+    .header-nav::-webkit-scrollbar { display: none; }
     .nav-tab {
-      padding: 6px 14px;
+      padding: 6px 10px;
       border-radius: var(--radius-sm);
       font-size: 13px;
       font-weight: 500;
@@ -1736,6 +1739,10 @@
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
         <span data-i18n="nav_weekly">주간 계획</span>
       </button>
+      <button class="nav-tab" data-tab="purchase" onclick="switchTab('purchase')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span>구매 현황</span>
+      </button>
       <div class="header-divider" style="margin:0 6px;"></div>
       <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터">
         <option value="">전체 사용자</option>
@@ -2395,6 +2402,71 @@
       </div>
     </div>
 
+    <div class="tab-panel" id="tab-purchase">
+      <div style="padding:0 0 20px;">
+        <h2 style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">구매 현황 <span style="font-size:13px;font-weight:400;color:var(--text3);">ASP 프로젝트</span></h2>
+        <p style="font-size:12px;color:var(--text3);">구매/납기 워크플로 기준 현황입니다.</p>
+      </div>
+
+      <!-- Stage KPI Cards -->
+      <div id="purchase-stage-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:20px;"></div>
+
+      <!-- Charts Row -->
+      <div class="charts-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:20px;">
+        <div class="card">
+          <div class="card-header"><span class="card-title">단계별 분포</span></div>
+          <div class="card-body">
+            <div class="donut-wrapper">
+              <div class="donut-chart"><canvas id="chart-purchase-stage"></canvas></div>
+              <div class="donut-legend" id="purchase-stage-legend"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">담당자별 현황</span></div>
+          <div class="card-body">
+            <div class="chart-container" style="min-height:180px;"><canvas id="chart-purchase-assignee"></canvas></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">납기 현황</span></div>
+          <div class="card-body" style="display:flex;flex-direction:column;gap:10px;justify-content:center;">
+            <div id="purchase-due-stats"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pipeline funnel -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header"><span class="card-title">구매 파이프라인</span></div>
+        <div class="card-body">
+          <div id="purchase-pipeline" style="display:flex;gap:0;overflow-x:auto;padding:8px 0;"></div>
+        </div>
+      </div>
+
+      <!-- Issues Table -->
+      <div class="card">
+        <div class="card-header">
+          <span class="card-title">ASP 이슈 목록</span>
+          <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+            <select id="purchase-filter-status" onchange="filterPurchaseIssues()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);">
+              <option value="">전체 단계</option>
+              <option value="견적 검토">견적 검토</option>
+              <option value="승인 대기">승인 대기</option>
+              <option value="발주 완료">발주 완료</option>
+              <option value="입고 대기">입고 대기</option>
+              <option value="입고 확인">입고 확인</option>
+              <option value="수입 검사">수입 검사</option>
+              <option value="완료">완료</option>
+            </select>
+          </div>
+        </div>
+        <div class="card-body" style="padding:0;">
+          <div id="purchase-issues-table"></div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -2413,6 +2485,7 @@
     <button class="mobile-menu-tab" onclick="switchTab('myissues');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>내 이슈</button>
     <button class="mobile-menu-tab" onclick="switchTab('executive');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>경영진</button>
     <button class="mobile-menu-tab" onclick="switchTab('weekly');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>주간 계획</button>
+    <button class="mobile-menu-tab" onclick="switchTab('purchase');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>구매 현황</button>
   </div>
 </div>
 
@@ -2952,6 +3025,7 @@ function switchTab(tab, fromPopstate) {
   }
   if (tab === 'executive' && state.issues.length) renderExecutive(getGlobalFilteredIssues());
   if (tab === 'weekly') initWeeklyTab();
+  if (tab === 'purchase' && state.issues.length) renderPurchase(getGlobalFilteredIssues());
   // Push to browser history (skip when called from popstate to avoid loop)
   if (!fromPopstate && history.state?.tab !== tab) {
     const url = new URL(window.location.href);
@@ -4956,6 +5030,7 @@ function renderAll() {
   renderEpics(state.issues);
   renderExecutive(issues);
   if (state.activeTab === 'weekly') renderWeeklyPlan(state.issues);
+  if (state.activeTab === 'purchase') renderPurchase(issues);
   populateFilters(issues);
   updateTabBadges(issues);
   state.filteredIssues = [...issues];
@@ -4968,6 +5043,204 @@ function renderAll() {
     state.urlParamsApplied = true;
     applyUrlParams();
   }
+}
+
+// ===== PURCHASE TAB =====
+const PURCHASE_STAGES = [
+  { key: '견적 검토', color: '#6554c0', light: '#ede9ff' },
+  { key: '승인 대기', color: '#ff991f', light: '#fff4e5' },
+  { key: '발주 완료', color: '#0065ff', light: '#e6f0ff' },
+  { key: '입고 대기', color: '#00b8d9', light: '#e6f9ff' },
+  { key: '입고 확인', color: '#20b2aa', light: '#e0f7f5' },
+  { key: '수입 검사', color: '#0052CC', light: '#e8f0fe' },
+  { key: '완료',     color: '#36b37e', light: '#e3fcef' },
+];
+
+function getPurchaseStage(statusName) {
+  const s = (statusName || '').trim();
+  return PURCHASE_STAGES.find(st => s === st.key || s.toLowerCase() === st.key.toLowerCase()) || null;
+}
+
+let _purchaseAllIssues = [];
+
+function renderPurchase(allIssues) {
+  const issues = allIssues.filter(i => i.fields?.project?.key === 'ASP');
+  _purchaseAllIssues = issues;
+  renderPurchaseStageCards(issues);
+  renderPurchaseStageChart(issues);
+  renderPurchaseAssigneeChart(issues);
+  renderPurchaseDueStats(issues);
+  renderPurchasePipeline(issues);
+  renderPurchaseIssuesTable(issues);
+}
+
+function renderPurchaseStageCards(issues) {
+  const container = document.getElementById('purchase-stage-cards');
+  if (!container) return;
+  const counts = {};
+  PURCHASE_STAGES.forEach(s => { counts[s.key] = 0; });
+  issues.forEach(i => {
+    const sn = i.fields?.status?.name || '';
+    const stage = getPurchaseStage(sn);
+    if (stage) counts[stage.key]++;
+  });
+  const total = issues.length;
+  let html = `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:4px;">
+    <div style="font-size:11px;color:var(--text3);font-weight:600;">전체</div>
+    <div style="font-size:26px;font-weight:700;color:var(--primary);">${total}</div>
+    <div style="font-size:11px;color:var(--text3);">ASP 이슈</div>
+  </div>`;
+  PURCHASE_STAGES.forEach(st => {
+    const cnt = counts[st.key];
+    html += `<div style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:14px 16px;display:flex;flex-direction:column;gap:4px;border-left:3px solid ${st.color};cursor:pointer;" onclick="filterPurchaseByStage('${st.key}')">
+      <div style="font-size:11px;color:var(--text3);font-weight:600;">${st.key}</div>
+      <div style="font-size:26px;font-weight:700;color:${st.color};">${cnt}</div>
+      <div style="height:3px;border-radius:2px;background:${st.light};margin-top:2px;"><div style="height:3px;border-radius:2px;background:${st.color};width:${total>0?Math.round(cnt/total*100):0}%;"></div></div>
+    </div>`;
+  });
+  container.innerHTML = html;
+}
+
+function renderPurchaseStageChart(issues) {
+  const ctx = document.getElementById('chart-purchase-stage');
+  if (!ctx) return;
+  if (state.charts.purchaseStage) { state.charts.purchaseStage.destroy(); delete state.charts.purchaseStage; }
+  const counts = PURCHASE_STAGES.map(st => issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key === st.key).length);
+  const legendEl = document.getElementById('purchase-stage-legend');
+  if (legendEl) {
+    legendEl.innerHTML = PURCHASE_STAGES.map((st, i) => `<div class="legend-item"><span class="legend-dot" style="background:${st.color};"></span><span>${st.key}</span><span style="margin-left:auto;font-weight:600;">${counts[i]}</span></div>`).join('');
+  }
+  state.charts.purchaseStage = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: PURCHASE_STAGES.map(s => s.key),
+      datasets: [{ data: counts, backgroundColor: PURCHASE_STAGES.map(s => s.color), borderWidth: 2, borderColor: 'var(--surface)', hoverOffset: 6 }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: true, cutout: '65%',
+      plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}건` } } }
+    }
+  });
+}
+
+function renderPurchaseAssigneeChart(issues) {
+  const ctx = document.getElementById('chart-purchase-assignee');
+  if (!ctx) return;
+  if (state.charts.purchaseAssignee) { state.charts.purchaseAssignee.destroy(); delete state.charts.purchaseAssignee; }
+  const activeIssues = issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key !== '완료');
+  const assigneeMap = {};
+  activeIssues.forEach(i => {
+    const name = i.fields?.assignee?.displayName || '미배정';
+    assigneeMap[name] = (assigneeMap[name] || 0) + 1;
+  });
+  const sorted = Object.entries(assigneeMap).sort((a,b) => b[1]-a[1]).slice(0, 8);
+  state.charts.purchaseAssignee = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: sorted.map(([n]) => n),
+      datasets: [{ label: '진행 중 이슈', data: sorted.map(([,v]) => v), backgroundColor: '#4c9aff', borderRadius: 4 }]
+    },
+    options: {
+      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { ticks: { font: { size: 11 } } } }
+    }
+  });
+}
+
+function renderPurchaseDueStats(issues) {
+  const el = document.getElementById('purchase-due-stats');
+  if (!el) return;
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const week = new Date(today); week.setDate(today.getDate() + 7);
+  const active = issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key !== '완료');
+  const overdue = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) < today);
+  const dueThisWeek = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) >= today && new Date(i.fields.duedate) <= week);
+  const noDue = active.filter(i => !i.fields?.duedate);
+  const stats = [
+    { label: '기한 초과', count: overdue.length, color: 'var(--danger)', icon: '⚠️' },
+    { label: '이번 주 마감', count: dueThisWeek.length, color: 'var(--warning)', icon: '⏰' },
+    { label: '마감일 없음', count: noDue.length, color: 'var(--text3)', icon: '📋' },
+    { label: '진행 중 (활성)', count: active.length, color: 'var(--info)', icon: '🔄' },
+  ];
+  el.innerHTML = stats.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:12px;color:var(--text2);">${s.icon} ${s.label}</span>
+    <span style="font-size:18px;font-weight:700;color:${s.color};">${s.count}</span>
+  </div>`).join('');
+}
+
+function renderPurchasePipeline(issues) {
+  const el = document.getElementById('purchase-pipeline');
+  if (!el) return;
+  const total = issues.length || 1;
+  el.innerHTML = PURCHASE_STAGES.map((st, idx) => {
+    const cnt = issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key === st.key).length;
+    const pct = Math.round(cnt / total * 100);
+    const isLast = idx === PURCHASE_STAGES.length - 1;
+    return `<div style="display:flex;align-items:center;flex:1;min-width:100px;">
+      <div style="flex:1;text-align:center;background:${st.light};border:2px solid ${st.color};border-radius:var(--radius);padding:12px 8px;cursor:pointer;" onclick="filterPurchaseByStage('${st.key}')">
+        <div style="font-size:11px;color:${st.color};font-weight:700;margin-bottom:4px;">${st.key}</div>
+        <div style="font-size:22px;font-weight:800;color:${st.color};">${cnt}</div>
+        <div style="font-size:10px;color:var(--text3);">${pct}%</div>
+      </div>
+      ${!isLast ? `<div style="color:var(--text3);font-size:18px;padding:0 4px;flex-shrink:0;">›</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderPurchaseIssuesTable(issues) {
+  const el = document.getElementById('purchase-issues-table');
+  if (!el) return;
+  const filterEl = document.getElementById('purchase-filter-status');
+  const filterVal = filterEl ? filterEl.value : '';
+  let filtered = filterVal ? issues.filter(i => (i.fields?.status?.name||'') === filterVal) : issues;
+  filtered = filtered.slice().sort((a,b) => new Date(b.fields?.updated||0) - new Date(a.fields?.updated||0));
+  if (!filtered.length) {
+    el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text3);">이슈가 없습니다.</div>';
+    return;
+  }
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const rows = filtered.map(i => {
+    const sn = i.fields?.status?.name || '';
+    const stage = getPurchaseStage(sn);
+    const color = stage ? stage.color : 'var(--text3)';
+    const light = stage ? stage.light : 'var(--surface3)';
+    const due = i.fields?.duedate;
+    const isOverdue = due && new Date(due) < today && sn !== '완료';
+    const dueStr = due ? `<span style="color:${isOverdue?'var(--danger)':'var(--text2)'};font-size:11px;">${isOverdue?'⚠️ ':''}${due}</span>` : '<span style="color:var(--text4);font-size:11px;">—</span>';
+    const assignee = i.fields?.assignee?.displayName || '—';
+    const key = i.key;
+    return `<tr style="border-bottom:1px solid var(--border);">
+      <td style="padding:10px 12px;white-space:nowrap;"><a href="${JIRA_BROWSE}/browse/${key}" target="_blank" style="color:var(--primary);font-size:12px;font-weight:600;">${escHtml(key)}</a></td>
+      <td style="padding:10px 12px;max-width:320px;"><span style="font-size:12px;color:var(--text);">${escHtml(i.fields?.summary||'')}</span></td>
+      <td style="padding:10px 12px;white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${color};background:${light};padding:2px 8px;border-radius:var(--radius-full);">${escHtml(sn)}</span></td>
+      <td style="padding:10px 12px;white-space:nowrap;font-size:12px;color:var(--text2);">${escHtml(assignee)}</td>
+      <td style="padding:10px 12px;">${dueStr}</td>
+    </tr>`;
+  }).join('');
+  el.innerHTML = `<table style="width:100%;border-collapse:collapse;">
+    <thead><tr style="background:var(--surface2);">
+      <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">키</th>
+      <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;">제목</th>
+      <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">단계</th>
+      <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">담당자</th>
+      <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">납기일</th>
+    </tr></thead>
+    <tbody>${rows}</tbody>
+  </table>`;
+}
+
+function filterPurchaseByStage(stage) {
+  const el = document.getElementById('purchase-filter-status');
+  if (el) { el.value = stage; }
+  renderPurchaseIssuesTable(_purchaseAllIssues);
+  switchTab('purchase');
+}
+
+function filterPurchaseIssues() {
+  renderPurchaseIssuesTable(_purchaseAllIssues);
 }
 
 // ===== STALE ISSUES =====
