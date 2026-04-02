@@ -2448,39 +2448,40 @@
         </div>
       </div>
 
-      <!-- Stage KPI Cards -->
-      <div id="purchase-stage-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px;"></div>
+      <!-- Stage KPI Cards (hidden) -->
+      <div id="purchase-stage-cards" style="display:none;"></div>
 
-      <!-- Item Progress (horizontal bars) -->
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-header">
-          <span class="card-title">구매 아이템별 진행현황</span>
-          <span style="font-size:11px;color:var(--text3);margin-left:8px;">작업 이슈의 하위 작업 완료율</span>
-        </div>
-        <div class="card-body">
-          <div id="purchase-item-progress"></div>
-        </div>
-      </div>
-
-      <!-- Issues Table -->
-      <div class="card">
-        <div class="card-header">
-          <span class="card-title">ASP 이슈 목록</span>
-          <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
-            <select id="purchase-filter-status" onchange="filterPurchaseIssues()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);">
-              <option value="">전체 단계</option>
-              <option value="견적 검토">견적 검토</option>
-              <option value="승인 대기">승인 대기</option>
-              <option value="발주 완료">발주 완료</option>
-              <option value="입고 대기">입고 대기</option>
-              <option value="입고 확인">입고 확인</option>
-              <option value="수입 검사">수입 검사</option>
-              <option value="완료">완료</option>
-            </select>
+      <!-- Item Progress + Issues Table (좌우 배치) -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;">
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">구매 아이템별 진행현황</span>
+            <span style="font-size:11px;color:var(--text3);margin-left:8px;">하위 작업 완료율</span>
+          </div>
+          <div class="card-body" style="max-height:500px;overflow-y:auto;">
+            <div id="purchase-item-progress"></div>
           </div>
         </div>
-        <div class="card-body" style="padding:0;">
-          <div id="purchase-issues-table"></div>
+
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">ASP 이슈 목록</span>
+            <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
+              <select id="purchase-filter-status" onchange="filterPurchaseIssues()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);">
+                <option value="">전체 단계</option>
+                <option value="견적 검토">견적 검토</option>
+                <option value="승인 대기">승인 대기</option>
+                <option value="발주 완료">발주 완료</option>
+                <option value="입고 대기">입고 대기</option>
+                <option value="입고 확인">입고 확인</option>
+                <option value="수입 검사">수입 검사</option>
+                <option value="완료">완료</option>
+              </select>
+            </div>
+          </div>
+          <div class="card-body" style="padding:0;max-height:500px;overflow-y:auto;">
+            <div id="purchase-issues-table"></div>
+          </div>
         </div>
       </div>
     </div>
