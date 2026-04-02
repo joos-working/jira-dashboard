@@ -5144,6 +5144,13 @@ function renderPurchaseStageChart(issues) {
   });
 }
 
+const EPIC_COLOR_PALETTE = [
+  '#0065ff', '#6554c0', '#00b8d9', '#ff991f', '#36b37e',
+  '#de350b', '#0052CC', '#20b2aa', '#e6730f', '#5243aa',
+  '#00a3bf', '#ff5630', '#006644', '#8777d9', '#008da6',
+];
+let _epicColorMap = {};
+let _epicTaskMap = {};
 let _purchaseItemChartData = [];
 
 function renderPurchaseItemChart(issues) {
@@ -5185,7 +5192,7 @@ function renderPurchaseItemChart(issues) {
   if (countEl) countEl.textContent = `총 ${data.length}개 유닛`;
   if (!data.length) return;
 
-  const barColors = data.map(t => t.pct === 100 ? '#36b37e' : t.pct >= 50 ? '#4c9aff' : t.pct > 0 ? '#ffab00' : '#cbd5e0');
+  const barColors = data.map(t => _epicTaskMap[t.key] || '#cbd5e0');
 
   state.charts.purchaseItem = new Chart(ctx, {
     type: 'bar',
@@ -5308,6 +5315,7 @@ function renderPurchaseEpicChart(allIssues, aspIssues) {
     name,
     key: d.key,
     taskCount: d.tasks.length,
+    taskKeys: d.tasks.map(t => t.key),
     totalSubs: d.totalSubs,
     doneSubs: d.doneSubs,
     pct: d.totalSubs > 0 ? Math.round(d.doneSubs / d.totalSubs * 100) : 0,
@@ -5315,7 +5323,15 @@ function renderPurchaseEpicChart(allIssues, aspIssues) {
 
   if (!epicData.length) return;
 
-  const barColors = epicData.map(e => e.pct === 100 ? '#36b37e' : e.pct >= 50 ? '#4c9aff' : e.pct > 0 ? '#ffab00' : '#cbd5e0');
+  // 에픽별 고유 색상 부여 및 전역 맵 저장
+  _epicColorMap = {};
+  _epicTaskMap = {};
+  epicData.forEach((e, i) => {
+    const color = EPIC_COLOR_PALETTE[i % EPIC_COLOR_PALETTE.length];
+    _epicColorMap[e.name] = color;
+    e.taskKeys.forEach(tk => { _epicTaskMap[tk] = color; });
+  });
+  const barColors = epicData.map(e => _epicColorMap[e.name]);
 
   state.charts.purchaseEpic = new Chart(ctx, {
     type: 'bar',
