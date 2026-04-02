@@ -5295,24 +5295,25 @@ function renderPurchaseEpicChart(allIssues, aspIssues) {
     return tn === '하위 작업' || tn === 'sub-task' || tn === 'subtask' || i.fields?.issuetype?.subtask === true;
   });
 
-  // 에픽별 그룹: 작업의 parent(에픽)별로 하위작업 완료율 집계
+  // 에픽별 그룹: epicKey(이슈 키)로 그룹핑하여 summary 불일치 문제 방지
   const epicMap = {};
   tasks.forEach(task => {
-    const epicKey = task.fields?.parent?.key || null;
-    const epicName = task.fields?.parent?.fields?.summary || epicKey || '미분류';
-    if (!epicMap[epicName]) epicMap[epicName] = { key: epicKey, tasks: [], totalSubs: 0, doneSubs: 0 };
-    epicMap[epicName].tasks.push(task);
+    const epicKey = task.fields?.parent?.key || '_none';
+    const epicName = task.fields?.parent?.fields?.summary || null;
+    if (!epicMap[epicKey]) epicMap[epicKey] = { key: epicKey === '_none' ? null : epicKey, name: epicName, tasks: [], totalSubs: 0, doneSubs: 0 };
+    if (epicName && !epicMap[epicKey].name) epicMap[epicKey].name = epicName;
+    epicMap[epicKey].tasks.push(task);
     const children = subtasks.filter(s => s.fields?.parent?.key === task.key);
-    epicMap[epicName].totalSubs += children.length;
-    epicMap[epicName].doneSubs += children.filter(s => {
+    epicMap[epicKey].totalSubs += children.length;
+    epicMap[epicKey].doneSubs += children.filter(s => {
       const cat = s.fields?.status?.statusCategory?.key;
       const sn = (s.fields?.status?.name || '').toLowerCase();
       return cat === 'done' || sn.includes('완료') || sn.includes('done') || sn.includes('closed');
     }).length;
   });
 
-  const epicData = Object.entries(epicMap).map(([name, d]) => ({
-    name,
+  const epicData = Object.values(epicMap).map(d => ({
+    name: d.name || d.key || '미분류',
     key: d.key,
     taskCount: d.tasks.length,
     taskKeys: d.tasks.map(t => t.key),
@@ -5328,10 +5329,10 @@ function renderPurchaseEpicChart(allIssues, aspIssues) {
   _epicTaskMap = {};
   epicData.forEach((e, i) => {
     const color = EPIC_COLOR_PALETTE[i % EPIC_COLOR_PALETTE.length];
-    _epicColorMap[e.name] = color;
+    _epicColorMap[e.key || e.name] = color;
     e.taskKeys.forEach(tk => { _epicTaskMap[tk] = color; });
   });
-  const barColors = epicData.map(e => _epicColorMap[e.name]);
+  const barColors = epicData.map(e => _epicColorMap[e.key || e.name]);
 
   state.charts.purchaseEpic = new Chart(ctx, {
     type: 'bar',
