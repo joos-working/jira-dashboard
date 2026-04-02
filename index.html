@@ -2403,16 +2403,13 @@
     </div>
 
     <div class="tab-panel" id="tab-purchase">
-      <div style="padding:0 0 20px;">
+      <div style="padding:0 0 16px;">
         <h2 style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">구매 현황 <span style="font-size:13px;font-weight:400;color:var(--text3);">ASP 프로젝트</span></h2>
         <p style="font-size:12px;color:var(--text3);">구매/납기 워크플로 기준 현황입니다.</p>
       </div>
 
-      <!-- Stage KPI Cards -->
-      <div id="purchase-stage-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:20px;"></div>
-
-      <!-- Charts Row -->
-      <div class="charts-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:20px;">
+      <!-- Row 1: 단계별 분포 + 납기 현황 -->
+      <div class="charts-row" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
         <div class="card">
           <div class="card-header"><span class="card-title">단계별 분포</span></div>
           <div class="card-body">
@@ -2423,12 +2420,6 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">물품(유닛)별 진행현황</span><span style="font-size:11px;color:var(--text3);margin-left:6px;">하위 작업 완료율 (%)</span></div>
-          <div class="card-body">
-            <div class="chart-container" style="min-height:180px;"><canvas id="chart-purchase-item"></canvas></div>
-          </div>
-        </div>
-        <div class="card">
           <div class="card-header"><span class="card-title">납기 현황</span></div>
           <div class="card-body" style="display:flex;flex-direction:column;gap:10px;justify-content:center;">
             <div id="purchase-due-stats"></div>
@@ -2436,16 +2427,39 @@
         </div>
       </div>
 
+      <!-- Row 2: 구분별(에픽) 진행현황 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><span class="card-title">구분별 진행현황</span><span style="font-size:11px;color:var(--text3);margin-left:6px;">에픽 단위 하위 작업 완료율</span></div>
+        <div class="card-body">
+          <div class="chart-container" style="min-height:180px;"><canvas id="chart-purchase-epic"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Row 3: 물품(유닛)별 진행현황 - 풀 와이드 -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header">
+          <span class="card-title">물품(유닛)별 진행현황</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:6px;">작업 → 하위 작업 완료율 (%)</span>
+          <span id="purchase-unit-count" style="font-size:11px;color:var(--text3);margin-left:auto;"></span>
+        </div>
+        <div class="card-body" style="padding:8px 12px;">
+          <div class="chart-container" style="min-height:220px;"><canvas id="chart-purchase-item"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Stage KPI Cards -->
+      <div id="purchase-stage-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px;"></div>
+
       <!-- Pipeline funnel -->
-      <div class="card" style="margin-bottom:20px;">
+      <div class="card" style="margin-bottom:16px;">
         <div class="card-header"><span class="card-title">구매 파이프라인</span></div>
         <div class="card-body">
           <div id="purchase-pipeline" style="display:flex;gap:0;overflow-x:auto;padding:8px 0;"></div>
         </div>
       </div>
 
-      <!-- Item Progress Chart -->
-      <div class="card" style="margin-bottom:20px;">
+      <!-- Item Progress (horizontal bars) -->
+      <div class="card" style="margin-bottom:16px;">
         <div class="card-header">
           <span class="card-title">구매 아이템별 진행현황</span>
           <span style="font-size:11px;color:var(--text3);margin-left:8px;">작업 이슈의 하위 작업 완료율</span>
@@ -5077,10 +5091,11 @@ let _purchaseAllIssues = [];
 function renderPurchase(allIssues) {
   const issues = allIssues.filter(i => i.fields?.project?.key === 'ASP');
   _purchaseAllIssues = issues;
-  renderPurchaseStageCards(issues);
   renderPurchaseStageChart(issues);
-  renderPurchaseItemChart(issues);
   renderPurchaseDueStats(issues);
+  renderPurchaseEpicChart(allIssues, issues);
+  renderPurchaseItemChart(issues);
+  renderPurchaseStageCards(issues);
   renderPurchasePipeline(issues);
   renderPurchaseItemProgress(issues);
   renderPurchaseIssuesTable(issues);
@@ -5165,14 +5180,15 @@ function renderPurchaseItemChart(issues) {
     });
     const pct = total > 0 ? Math.round(doneList.length / total * 100) : 0;
     return { key: task.key, summary: task.fields?.summary || '', total, done: doneList.length, pct, doneList, pendingList };
-  }).filter(t => t.total > 0)
-    .sort((a, b) => {
+  }).sort((a, b) => {
       const numA = parseInt(a.key.replace(/\D/g, '')) || 0;
       const numB = parseInt(b.key.replace(/\D/g, '')) || 0;
       return numA - numB;
     });
 
   const data = _purchaseItemChartData;
+  const countEl = document.getElementById('purchase-unit-count');
+  if (countEl) countEl.textContent = `총 ${data.length}개 유닛`;
   if (!data.length) return;
 
   const barColors = data.map(t => t.pct === 100 ? '#36b37e' : t.pct >= 50 ? '#4c9aff' : t.pct > 0 ? '#ffab00' : '#cbd5e0');
@@ -5251,25 +5267,124 @@ function renderPurchaseItemChart(issues) {
   });
 }
 
+function renderPurchaseEpicChart(allIssues, aspIssues) {
+  const ctx = document.getElementById('chart-purchase-epic');
+  if (!ctx) return;
+  if (state.charts.purchaseEpic) { state.charts.purchaseEpic.destroy(); delete state.charts.purchaseEpic; }
+
+  // ASP 에픽 가져오기 — 에픽은 메인 JQL에서 제외되므로 parent.key로 추론
+  // 작업(Task) 이슈의 parent가 에픽
+  const tasks = aspIssues.filter(i => {
+    const tn = (i.fields?.issuetype?.name || '').toLowerCase();
+    return tn === '작업' || tn === 'task';
+  });
+  const subtasks = aspIssues.filter(i => {
+    const tn = (i.fields?.issuetype?.name || '').toLowerCase();
+    return tn === '하위 작업' || tn === 'sub-task' || tn === 'subtask' || i.fields?.issuetype?.subtask === true;
+  });
+
+  // 에픽별 그룹: 작업의 parent(에픽)별로 하위작업 완료율 집계
+  const epicMap = {};
+  tasks.forEach(task => {
+    const epicKey = task.fields?.parent?.key || null;
+    const epicName = task.fields?.parent?.fields?.summary || epicKey || '미분류';
+    if (!epicMap[epicName]) epicMap[epicName] = { key: epicKey, tasks: [], totalSubs: 0, doneSubs: 0 };
+    epicMap[epicName].tasks.push(task);
+    const children = subtasks.filter(s => s.fields?.parent?.key === task.key);
+    epicMap[epicName].totalSubs += children.length;
+    epicMap[epicName].doneSubs += children.filter(s => {
+      const cat = s.fields?.status?.statusCategory?.key;
+      const sn = (s.fields?.status?.name || '').toLowerCase();
+      return cat === 'done' || sn.includes('완료') || sn.includes('done') || sn.includes('closed');
+    }).length;
+  });
+
+  const epicData = Object.entries(epicMap).map(([name, d]) => ({
+    name,
+    key: d.key,
+    taskCount: d.tasks.length,
+    totalSubs: d.totalSubs,
+    doneSubs: d.doneSubs,
+    pct: d.totalSubs > 0 ? Math.round(d.doneSubs / d.totalSubs * 100) : 0,
+  })).sort((a, b) => b.taskCount - a.taskCount);
+
+  if (!epicData.length) return;
+
+  const barColors = epicData.map(e => e.pct === 100 ? '#36b37e' : e.pct >= 50 ? '#4c9aff' : e.pct > 0 ? '#ffab00' : '#cbd5e0');
+
+  state.charts.purchaseEpic = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: epicData.map(e => e.name.length > 15 ? e.name.slice(0, 15) + '…' : e.name),
+      datasets: [{
+        label: '진행률',
+        data: epicData.map(e => e.pct),
+        backgroundColor: barColors,
+        borderRadius: 4,
+        maxBarThickness: 60,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true, max: 100,
+          ticks: { callback: v => v + '%', stepSize: 20, font: { size: 11 } },
+          grid: { color: 'rgba(128,128,128,0.1)' }
+        },
+        x: {
+          ticks: { font: { size: 11 } },
+          grid: { display: false }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(30,33,48,0.95)',
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 11 },
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: {
+            title: (items) => {
+              const e = epicData[items[0].dataIndex];
+              return e.key ? `${e.key} — ${e.name}` : e.name;
+            },
+            label: (item) => {
+              const e = epicData[item.dataIndex];
+              return `진행률: ${e.pct}%  (완료 ${e.doneSubs}/${e.totalSubs} 하위작업)`;
+            },
+            afterLabel: (item) => {
+              const e = epicData[item.dataIndex];
+              return [`유닛 ${e.taskCount}개 포함`];
+            }
+          }
+        }
+      }
+    }
+  });
+}
+
 function renderPurchaseDueStats(issues) {
   const el = document.getElementById('purchase-due-stats');
   if (!el) return;
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const week = new Date(today); week.setDate(today.getDate() + 7);
+  const week1 = new Date(today); week1.setDate(today.getDate() + 7);
+  const week2 = new Date(today); week2.setDate(today.getDate() + 14);
   const active = issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key !== '완료');
-  const overdue = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) < today);
-  const dueThisWeek = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) >= today && new Date(i.fields.duedate) <= week);
-  const noDue = active.filter(i => !i.fields?.duedate);
+  const dueThisWeek = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) >= today && new Date(i.fields.duedate) <= week1);
+  const dueNextWeek = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) > week1 && new Date(i.fields.duedate) <= week2);
   const stats = [
-    { label: '기한 초과', count: overdue.length, color: 'var(--danger)', icon: '⚠️' },
-    { label: '이번 주 마감', count: dueThisWeek.length, color: 'var(--warning)', icon: '⏰' },
-    { label: '마감일 없음', count: noDue.length, color: 'var(--text3)', icon: '📋' },
-    { label: '진행 중 (활성)', count: active.length, color: 'var(--info)', icon: '🔄' },
+    { label: '이번 주 입고 예정', count: dueThisWeek.length, color: 'var(--primary)', icon: '📦' },
+    { label: '차주 입고 예정', count: dueNextWeek.length, color: 'var(--warning)', icon: '🚚' },
+    { label: '2주 후 입고 예정', count: active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) > week2).length, color: 'var(--info)', icon: '📋' },
   ];
-  el.innerHTML = stats.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
-    <span style="font-size:12px;color:var(--text2);">${s.icon} ${s.label}</span>
-    <span style="font-size:18px;font-weight:700;color:${s.color};">${s.count}</span>
+  el.innerHTML = stats.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+    <span style="font-size:13px;color:var(--text2);">${s.icon} ${s.label}</span>
+    <span style="font-size:20px;font-weight:700;color:${s.color};">${s.count}</span>
   </div>`).join('');
 }
 
@@ -5319,16 +5434,14 @@ function renderPurchaseItemProgress(issues) {
     }).length;
     const pct = total > 0 ? Math.round(done / total * 100) : 0;
     return { key: task.key, summary: task.fields?.summary || '', total, done, pct };
-  }).filter(t => t.total > 0) // 하위 작업이 있는 것만
-    .sort((a, b) => {
-      // key에서 숫자 추출하여 정렬
+  }).sort((a, b) => {
       const numA = parseInt(a.key.replace(/\D/g, '')) || 0;
       const numB = parseInt(b.key.replace(/\D/g, '')) || 0;
       return numA - numB;
     });
 
   if (!taskData.length) {
-    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">하위 작업이 있는 구매 아이템이 없습니다.</div>';
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">구매 아이템이 없습니다.</div>';
     return;
   }
 
