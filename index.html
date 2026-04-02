@@ -2423,9 +2423,9 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">물품별 진행현황</span><span style="font-size:11px;color:var(--text3);margin-left:6px;">작업 → 하위 작업 완료율</span></div>
-          <div class="card-body" style="padding:12px 16px;">
-            <div id="purchase-item-chart" style="max-height:200px;overflow-y:auto;"></div>
+          <div class="card-header"><span class="card-title">물품(유닛)별 진행현황</span><span style="font-size:11px;color:var(--text3);margin-left:6px;">하위 작업 완료율 (%)</span></div>
+          <div class="card-body">
+            <div class="chart-container" style="min-height:180px;"><canvas id="chart-purchase-item"></canvas></div>
           </div>
         </div>
         <div class="card">
@@ -5135,9 +5135,12 @@ function renderPurchaseStageChart(issues) {
   });
 }
 
+let _purchaseItemChartData = [];
+
 function renderPurchaseItemChart(issues) {
-  const el = document.getElementById('purchase-item-chart');
-  if (!el) return;
+  const ctx = document.getElementById('chart-purchase-item');
+  if (!ctx) return;
+  if (state.charts.purchaseItem) { state.charts.purchaseItem.destroy(); delete state.charts.purchaseItem; }
 
   const tasks = issues.filter(i => {
     const tn = (i.fields?.issuetype?.name || '').toLowerCase();
@@ -5148,16 +5151,20 @@ function renderPurchaseItemChart(issues) {
     return tn === '하위 작업' || tn === 'sub-task' || tn === 'subtask' || i.fields?.issuetype?.subtask === true;
   });
 
-  const taskData = tasks.map(task => {
+  _purchaseItemChartData = tasks.map(task => {
     const children = subtasks.filter(s => s.fields?.parent?.key === task.key);
     const total = children.length;
-    const done = children.filter(s => {
+    const doneList = [];
+    const pendingList = [];
+    children.forEach(s => {
       const cat = s.fields?.status?.statusCategory?.key;
       const sn = (s.fields?.status?.name || '').toLowerCase();
-      return cat === 'done' || sn.includes('완료') || sn.includes('done') || sn.includes('closed');
-    }).length;
-    const pct = total > 0 ? Math.round(done / total * 100) : 0;
-    return { key: task.key, summary: task.fields?.summary || '', total, done, pct };
+      const isDone = cat === 'done' || sn.includes('완료') || sn.includes('done') || sn.includes('closed');
+      const info = { key: s.key, summary: s.fields?.summary || '', status: s.fields?.status?.name || '' };
+      if (isDone) { doneList.push(info); } else { pendingList.push(info); }
+    });
+    const pct = total > 0 ? Math.round(doneList.length / total * 100) : 0;
+    return { key: task.key, summary: task.fields?.summary || '', total, done: doneList.length, pct, doneList, pendingList };
   }).filter(t => t.total > 0)
     .sort((a, b) => {
       const numA = parseInt(a.key.replace(/\D/g, '')) || 0;
@@ -5165,23 +5172,83 @@ function renderPurchaseItemChart(issues) {
       return numA - numB;
     });
 
-  if (!taskData.length) {
-    el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">하위 작업이 있는 구매 아이템이 없습니다.</div>';
-    return;
-  }
+  const data = _purchaseItemChartData;
+  if (!data.length) return;
 
-  el.innerHTML = taskData.map(t => {
-    const barFill = t.pct === 100 ? 'var(--success)' : t.pct >= 50 ? 'var(--primary)' : t.pct > 0 ? '#ffab00' : 'var(--border)';
-    const barBg = t.pct === 100 ? 'var(--success-light)' : 'var(--surface3)';
-    const label = t.summary.length > 18 ? t.summary.slice(0, 18) + '…' : t.summary;
-    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
-      <span style="flex-shrink:0;width:90px;font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(t.summary)}">${escHtml(label)}</span>
-      <div style="flex:1;height:16px;background:${barBg};border-radius:3px;overflow:hidden;position:relative;min-width:60px;">
-        <div style="height:100%;width:${t.pct}%;background:${barFill};border-radius:3px;transition:width 0.4s ease;"></div>
-      </div>
-      <span style="flex-shrink:0;width:50px;text-align:right;font-size:10px;font-weight:600;color:${barFill};">${t.pct}% <span style="font-weight:400;color:var(--text4);">${t.done}/${t.total}</span></span>
-    </div>`;
-  }).join('');
+  const barColors = data.map(t => t.pct === 100 ? '#36b37e' : t.pct >= 50 ? '#4c9aff' : t.pct > 0 ? '#ffab00' : '#cbd5e0');
+
+  state.charts.purchaseItem = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: data.map(t => t.summary.length > 12 ? t.summary.slice(0, 12) + '…' : t.summary),
+      datasets: [{
+        label: '진행률',
+        data: data.map(t => t.pct),
+        backgroundColor: barColors,
+        borderRadius: 4,
+        maxBarThickness: 40,
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 100,
+          ticks: { callback: v => v + '%', stepSize: 20, font: { size: 11 } },
+          grid: { color: 'rgba(128,128,128,0.1)' }
+        },
+        x: {
+          ticks: { font: { size: 10 }, maxRotation: 45, minRotation: 0 },
+          grid: { display: false }
+        }
+      },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: 'rgba(30,33,48,0.95)',
+          titleFont: { size: 13, weight: 'bold' },
+          bodyFont: { size: 11 },
+          padding: 12,
+          cornerRadius: 8,
+          displayColors: false,
+          callbacks: {
+            title: (items) => {
+              const idx = items[0].dataIndex;
+              const t = data[idx];
+              return `${t.key} — ${t.summary}`;
+            },
+            label: (item) => {
+              const t = data[item.dataIndex];
+              return `진행률: ${t.pct}%  (${t.done}/${t.total})`;
+            },
+            afterLabel: (item) => {
+              const t = data[item.dataIndex];
+              const lines = [];
+              if (t.pendingList.length > 0) {
+                lines.push('');
+                lines.push('⏳ 미완료:');
+                t.pendingList.slice(0, 8).forEach(s => {
+                  lines.push(`  · ${s.key} ${s.summary.slice(0,25)}${s.summary.length>25?'…':''}`);
+                });
+                if (t.pendingList.length > 8) lines.push(`  … 외 ${t.pendingList.length - 8}건`);
+              }
+              if (t.doneList.length > 0) {
+                lines.push('');
+                lines.push('✅ 완료:');
+                t.doneList.slice(0, 5).forEach(s => {
+                  lines.push(`  · ${s.key} ${s.summary.slice(0,25)}${s.summary.length>25?'…':''}`);
+                });
+                if (t.doneList.length > 5) lines.push(`  … 외 ${t.doneList.length - 5}건`);
+              }
+              return lines;
+            }
+          }
+        }
+      }
+    }
+  });
 }
 
 function renderPurchaseDueStats(issues) {
