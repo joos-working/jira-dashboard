@@ -2403,13 +2403,16 @@
     </div>
 
     <div class="tab-panel" id="tab-purchase">
-      <div style="padding:0 0 16px;">
-        <h2 style="font-size:18px;font-weight:700;color:var(--text);margin-bottom:4px;">구매 현황 <span style="font-size:13px;font-weight:400;color:var(--text3);">ASP 프로젝트</span></h2>
-        <p style="font-size:12px;color:var(--text3);">구매/납기 워크플로 기준 현황입니다.</p>
+      <!-- Row 1: 구매 파이프라인 (최상단) -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-header"><span class="card-title">구매 파이프라인</span></div>
+        <div class="card-body">
+          <div id="purchase-pipeline" style="display:flex;gap:0;overflow-x:auto;padding:8px 0;"></div>
+        </div>
       </div>
 
-      <!-- Row 1: 단계별 분포 + 납기 현황 -->
-      <div class="charts-row" style="grid-template-columns:1fr 1fr;margin-bottom:16px;">
+      <!-- Row 2: 단계별 분포 + 납기 현황 + 구분별 진행현황 (3열) -->
+      <div class="charts-row" style="grid-template-columns:1fr 1fr 1fr;margin-bottom:16px;">
         <div class="card">
           <div class="card-header"><span class="card-title">단계별 분포</span></div>
           <div class="card-body">
@@ -2425,13 +2428,11 @@
             <div id="purchase-due-stats"></div>
           </div>
         </div>
-      </div>
-
-      <!-- Row 2: 구분별(에픽) 진행현황 -->
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-header"><span class="card-title">구분별 진행현황</span><span style="font-size:11px;color:var(--text3);margin-left:6px;">에픽 단위 하위 작업 완료율</span></div>
-        <div class="card-body">
-          <div class="chart-container" style="min-height:180px;"><canvas id="chart-purchase-epic"></canvas></div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">구분별 진행현황</span><span style="font-size:11px;color:var(--text3);margin-left:6px;">에픽 단위</span></div>
+          <div class="card-body">
+            <div class="chart-container" style="min-height:180px;"><canvas id="chart-purchase-epic"></canvas></div>
+          </div>
         </div>
       </div>
 
@@ -2449,14 +2450,6 @@
 
       <!-- Stage KPI Cards -->
       <div id="purchase-stage-cards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:12px;margin-bottom:16px;"></div>
-
-      <!-- Pipeline funnel -->
-      <div class="card" style="margin-bottom:16px;">
-        <div class="card-header"><span class="card-title">구매 파이프라인</span></div>
-        <div class="card-body">
-          <div id="purchase-pipeline" style="display:flex;gap:0;overflow-x:auto;padding:8px 0;"></div>
-        </div>
-      </div>
 
       <!-- Item Progress (horizontal bars) -->
       <div class="card" style="margin-bottom:16px;">
@@ -5223,43 +5216,54 @@ function renderPurchaseItemChart(issues) {
       plugins: {
         legend: { display: false },
         tooltip: {
-          backgroundColor: 'rgba(30,33,48,0.95)',
-          titleFont: { size: 13, weight: 'bold' },
-          bodyFont: { size: 11 },
-          padding: 12,
-          cornerRadius: 8,
-          displayColors: false,
-          callbacks: {
-            title: (items) => {
-              const idx = items[0].dataIndex;
-              const t = data[idx];
-              return `${t.key} — ${t.summary}`;
-            },
-            label: (item) => {
-              const t = data[item.dataIndex];
-              return `진행률: ${t.pct}%  (${t.done}/${t.total})`;
-            },
-            afterLabel: (item) => {
-              const t = data[item.dataIndex];
-              const lines = [];
-              if (t.pendingList.length > 0) {
-                lines.push('');
-                lines.push('⏳ 미완료:');
-                t.pendingList.slice(0, 8).forEach(s => {
-                  lines.push(`  · ${s.key} ${s.summary.slice(0,25)}${s.summary.length>25?'…':''}`);
-                });
-                if (t.pendingList.length > 8) lines.push(`  … 외 ${t.pendingList.length - 8}건`);
-              }
-              if (t.doneList.length > 0) {
-                lines.push('');
-                lines.push('✅ 완료:');
-                t.doneList.slice(0, 5).forEach(s => {
-                  lines.push(`  · ${s.key} ${s.summary.slice(0,25)}${s.summary.length>25?'…':''}`);
-                });
-                if (t.doneList.length > 5) lines.push(`  … 외 ${t.doneList.length - 5}건`);
-              }
-              return lines;
+          enabled: false,
+          external: function(context) {
+            let tooltipEl = document.getElementById('purchase-item-tooltip');
+            if (!tooltipEl) {
+              tooltipEl = document.createElement('div');
+              tooltipEl.id = 'purchase-item-tooltip';
+              tooltipEl.style.cssText = 'position:fixed;z-index:9999;pointer-events:none;background:rgba(30,33,48,0.97);color:#fff;border-radius:10px;padding:14px 16px;font-family:var(--font);font-size:12px;line-height:1.6;box-shadow:0 8px 32px rgba(0,0,0,0.3);max-width:380px;max-height:420px;overflow-y:auto;backdrop-filter:blur(8px);transition:opacity 0.15s;';
+              document.body.appendChild(tooltipEl);
             }
+            const tooltip = context.tooltip;
+            if (tooltip.opacity === 0) { tooltipEl.style.opacity = '0'; return; }
+            const idx = tooltip.dataPoints?.[0]?.dataIndex;
+            if (idx == null) return;
+            const t = data[idx];
+            let html = `<div style="font-size:14px;font-weight:700;margin-bottom:6px;color:#fff;">${escHtml(t.key)} — ${escHtml(t.summary)}</div>`;
+            const barColor = t.pct === 100 ? '#36b37e' : t.pct >= 50 ? '#4c9aff' : t.pct > 0 ? '#ffab00' : '#cbd5e0';
+            html += `<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;">
+              <div style="flex:1;height:8px;background:rgba(255,255,255,0.15);border-radius:4px;overflow:hidden;"><div style="height:100%;width:${t.pct}%;background:${barColor};border-radius:4px;"></div></div>
+              <span style="font-weight:700;font-size:13px;color:${barColor};">${t.pct}%</span>
+              <span style="color:rgba(255,255,255,0.5);font-size:11px;">(${t.done}/${t.total})</span>
+            </div>`;
+            if (t.pendingList.length > 0) {
+              html += `<div style="font-size:11px;font-weight:600;color:#ffab00;margin-bottom:4px;">⏳ 미완료 (${t.pendingList.length})</div>`;
+              html += '<div style="margin-bottom:8px;">';
+              t.pendingList.forEach(s => {
+                html += `<div style="font-size:11px;color:rgba(255,255,255,0.8);padding:1px 0;"><span style="color:rgba(255,255,255,0.4);">${escHtml(s.key)}</span> ${escHtml(s.summary)}</div>`;
+              });
+              html += '</div>';
+            }
+            if (t.doneList.length > 0) {
+              html += `<div style="font-size:11px;font-weight:600;color:#36b37e;margin-bottom:4px;">✅ 완료 (${t.doneList.length})</div>`;
+              html += '<div>';
+              t.doneList.forEach(s => {
+                html += `<div style="font-size:11px;color:rgba(255,255,255,0.5);padding:1px 0;text-decoration:line-through;"><span style="color:rgba(255,255,255,0.3);">${escHtml(s.key)}</span> ${escHtml(s.summary)}</div>`;
+              });
+              html += '</div>';
+            }
+            tooltipEl.innerHTML = html;
+            tooltipEl.style.opacity = '1';
+            const canvasRect = context.chart.canvas.getBoundingClientRect();
+            let left = canvasRect.left + tooltip.caretX + 12;
+            let top = canvasRect.top + tooltip.caretY - 20;
+            const ttRect = tooltipEl.getBoundingClientRect();
+            if (left + ttRect.width > window.innerWidth - 16) left = canvasRect.left + tooltip.caretX - ttRect.width - 12;
+            if (top + ttRect.height > window.innerHeight - 16) top = window.innerHeight - ttRect.height - 16;
+            if (top < 8) top = 8;
+            tooltipEl.style.left = left + 'px';
+            tooltipEl.style.top = top + 'px';
           }
         }
       }
