@@ -347,8 +347,8 @@
       height: var(--nav-h);
       display: flex;
       align-items: center;
-      padding: 0 20px;
-      gap: 16px;
+      padding: 0 16px;
+      gap: 10px;
       box-shadow: var(--shadow-sm);
       transition: background var(--transition), border-color var(--transition);
     }
@@ -391,9 +391,9 @@
     }
     .header-nav::-webkit-scrollbar { display: none; }
     .nav-tab {
-      padding: 6px 10px;
+      padding: 6px 8px;
       border-radius: var(--radius-sm);
-      font-size: 13px;
+      font-size: 12.5px;
       font-weight: 500;
       color: var(--text3);
       cursor: pointer;
@@ -403,17 +403,19 @@
       font-family: var(--font);
       display: flex;
       align-items: center;
-      gap: 6px;
+      gap: 5px;
       white-space: nowrap;
+      flex-shrink: 0;
     }
     .nav-tab:hover { background: var(--surface3); color: var(--text); }
     .nav-tab.active { background: var(--primary-light); color: var(--primary); font-weight: 600; }
-    .nav-tab svg { width: 15px; height: 15px; }
+    .nav-tab svg { width: 14px; height: 14px; }
     .header-actions {
       display: flex;
       align-items: center;
       gap: 8px;
       flex-shrink: 0;
+      margin-left: auto;
     }
     .date-range-select {
       padding: 6px 28px 6px 10px;
@@ -1745,14 +1747,11 @@
       </button>
     </nav>
 
-    <div class="header-divider" style="margin:0 6px;flex-shrink:0;"></div>
-    <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터" style="flex-shrink:0;">
-      <option value="">전체 사용자</option>
-    </select>
-
-    <div style="flex:1"></div>
-
     <div class="header-actions">
+      <select class="global-user-select" id="global-user-filter" onchange="onGlobalUserFilter()" title="사용자 필터">
+        <option value="">전체 사용자</option>
+      </select>
+      <div class="header-divider" style="margin:0 2px;flex-shrink:0;"></div>
       <select class="date-range-select" id="date-range-select" onchange="onDateRangeChange()">
         <option value="7">최근 7일</option>
         <option value="30" selected>최근 30일</option>
@@ -2424,9 +2423,9 @@
           </div>
         </div>
         <div class="card">
-          <div class="card-header"><span class="card-title">담당자별 현황</span></div>
-          <div class="card-body">
-            <div class="chart-container" style="min-height:180px;"><canvas id="chart-purchase-assignee"></canvas></div>
+          <div class="card-header"><span class="card-title">물품별 진행현황</span><span style="font-size:11px;color:var(--text3);margin-left:6px;">작업 → 하위 작업 완료율</span></div>
+          <div class="card-body" style="padding:12px 16px;">
+            <div id="purchase-item-chart" style="max-height:200px;overflow-y:auto;"></div>
           </div>
         </div>
         <div class="card">
@@ -2442,6 +2441,17 @@
         <div class="card-header"><span class="card-title">구매 파이프라인</span></div>
         <div class="card-body">
           <div id="purchase-pipeline" style="display:flex;gap:0;overflow-x:auto;padding:8px 0;"></div>
+        </div>
+      </div>
+
+      <!-- Item Progress Chart -->
+      <div class="card" style="margin-bottom:20px;">
+        <div class="card-header">
+          <span class="card-title">구매 아이템별 진행현황</span>
+          <span style="font-size:11px;color:var(--text3);margin-left:8px;">작업 이슈의 하위 작업 완료율</span>
+        </div>
+        <div class="card-body">
+          <div id="purchase-item-progress"></div>
         </div>
       </div>
 
@@ -5069,9 +5079,10 @@ function renderPurchase(allIssues) {
   _purchaseAllIssues = issues;
   renderPurchaseStageCards(issues);
   renderPurchaseStageChart(issues);
-  renderPurchaseAssigneeChart(issues);
+  renderPurchaseItemChart(issues);
   renderPurchaseDueStats(issues);
   renderPurchasePipeline(issues);
+  renderPurchaseItemProgress(issues);
   renderPurchaseIssuesTable(issues);
 }
 
@@ -5124,29 +5135,53 @@ function renderPurchaseStageChart(issues) {
   });
 }
 
-function renderPurchaseAssigneeChart(issues) {
-  const ctx = document.getElementById('chart-purchase-assignee');
-  if (!ctx) return;
-  if (state.charts.purchaseAssignee) { state.charts.purchaseAssignee.destroy(); delete state.charts.purchaseAssignee; }
-  const activeIssues = issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key !== '완료');
-  const assigneeMap = {};
-  activeIssues.forEach(i => {
-    const name = i.fields?.assignee?.displayName || '미배정';
-    assigneeMap[name] = (assigneeMap[name] || 0) + 1;
+function renderPurchaseItemChart(issues) {
+  const el = document.getElementById('purchase-item-chart');
+  if (!el) return;
+
+  const tasks = issues.filter(i => {
+    const tn = (i.fields?.issuetype?.name || '').toLowerCase();
+    return tn === '작업' || tn === 'task';
   });
-  const sorted = Object.entries(assigneeMap).sort((a,b) => b[1]-a[1]).slice(0, 8);
-  state.charts.purchaseAssignee = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: sorted.map(([n]) => n),
-      datasets: [{ label: '진행 중 이슈', data: sorted.map(([,v]) => v), backgroundColor: '#4c9aff', borderRadius: 4 }]
-    },
-    options: {
-      indexAxis: 'y', responsive: true, maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: { x: { beginAtZero: true, ticks: { stepSize: 1 } }, y: { ticks: { font: { size: 11 } } } }
-    }
+  const subtasks = issues.filter(i => {
+    const tn = (i.fields?.issuetype?.name || '').toLowerCase();
+    return tn === '하위 작업' || tn === 'sub-task' || tn === 'subtask' || i.fields?.issuetype?.subtask === true;
   });
+
+  const taskData = tasks.map(task => {
+    const children = subtasks.filter(s => s.fields?.parent?.key === task.key);
+    const total = children.length;
+    const done = children.filter(s => {
+      const cat = s.fields?.status?.statusCategory?.key;
+      const sn = (s.fields?.status?.name || '').toLowerCase();
+      return cat === 'done' || sn.includes('완료') || sn.includes('done') || sn.includes('closed');
+    }).length;
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    return { key: task.key, summary: task.fields?.summary || '', total, done, pct };
+  }).filter(t => t.total > 0)
+    .sort((a, b) => {
+      const numA = parseInt(a.key.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.key.replace(/\D/g, '')) || 0;
+      return numA - numB;
+    });
+
+  if (!taskData.length) {
+    el.innerHTML = '<div style="text-align:center;color:var(--text3);font-size:12px;padding:16px;">하위 작업이 있는 구매 아이템이 없습니다.</div>';
+    return;
+  }
+
+  el.innerHTML = taskData.map(t => {
+    const barFill = t.pct === 100 ? 'var(--success)' : t.pct >= 50 ? 'var(--primary)' : t.pct > 0 ? '#ffab00' : 'var(--border)';
+    const barBg = t.pct === 100 ? 'var(--success-light)' : 'var(--surface3)';
+    const label = t.summary.length > 18 ? t.summary.slice(0, 18) + '…' : t.summary;
+    return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:4px;">
+      <span style="flex-shrink:0;width:90px;font-size:10px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(t.summary)}">${escHtml(label)}</span>
+      <div style="flex:1;height:16px;background:${barBg};border-radius:3px;overflow:hidden;position:relative;min-width:60px;">
+        <div style="height:100%;width:${t.pct}%;background:${barFill};border-radius:3px;transition:width 0.4s ease;"></div>
+      </div>
+      <span style="flex-shrink:0;width:50px;text-align:right;font-size:10px;font-weight:600;color:${barFill};">${t.pct}% <span style="font-weight:400;color:var(--text4);">${t.done}/${t.total}</span></span>
+    </div>`;
+  }).join('');
 }
 
 function renderPurchaseDueStats(issues) {
@@ -5188,6 +5223,74 @@ function renderPurchasePipeline(issues) {
       ${!isLast ? `<div style="color:var(--text3);font-size:18px;padding:0 4px;flex-shrink:0;">›</div>` : ''}
     </div>`;
   }).join('');
+}
+
+function renderPurchaseItemProgress(issues) {
+  const el = document.getElementById('purchase-item-progress');
+  if (!el) return;
+
+  // 작업(Task) 이슈만 필터
+  const tasks = issues.filter(i => {
+    const tn = (i.fields?.issuetype?.name || '').toLowerCase();
+    return tn === '작업' || tn === 'task';
+  });
+
+  // 하위 작업(Sub-task)만 필터
+  const subtasks = issues.filter(i => {
+    const tn = (i.fields?.issuetype?.name || '').toLowerCase();
+    return tn === '하위 작업' || tn === 'sub-task' || tn === 'subtask' || i.fields?.issuetype?.subtask === true;
+  });
+
+  // 작업별 하위 작업 완료율 계산
+  const taskData = tasks.map(task => {
+    const children = subtasks.filter(s => s.fields?.parent?.key === task.key);
+    const total = children.length;
+    const done = children.filter(s => {
+      const sn = (s.fields?.status?.name || '').toLowerCase();
+      const cat = s.fields?.status?.statusCategory?.key;
+      return cat === 'done' || sn.includes('완료') || sn.includes('done') || sn.includes('closed');
+    }).length;
+    const pct = total > 0 ? Math.round(done / total * 100) : 0;
+    return { key: task.key, summary: task.fields?.summary || '', total, done, pct };
+  }).filter(t => t.total > 0) // 하위 작업이 있는 것만
+    .sort((a, b) => {
+      // key에서 숫자 추출하여 정렬
+      const numA = parseInt(a.key.replace(/\D/g, '')) || 0;
+      const numB = parseInt(b.key.replace(/\D/g, '')) || 0;
+      return numA - numB;
+    });
+
+  if (!taskData.length) {
+    el.innerHTML = '<div style="padding:24px;text-align:center;color:var(--text3);font-size:13px;">하위 작업이 있는 구매 아이템이 없습니다.</div>';
+    return;
+  }
+
+  const barHeight = 28;
+  const labelWidth = 220;
+  const gap = 6;
+  const chartHeight = taskData.length * (barHeight + gap) + 8;
+
+  let html = `<div style="max-height:500px;overflow-y:auto;">`;
+  html += taskData.map(t => {
+    const pctColor = t.pct === 100 ? 'var(--success)' : t.pct >= 50 ? 'var(--primary)' : t.pct > 0 ? 'var(--warning)' : 'var(--text4)';
+    const barBg = t.pct === 100 ? 'var(--success-light)' : 'var(--surface3)';
+    const barFill = t.pct === 100 ? 'var(--success)' : t.pct >= 50 ? 'var(--primary)' : t.pct > 0 ? '#ffab00' : 'var(--border)';
+    const summaryShort = t.summary.length > 30 ? t.summary.slice(0, 30) + '…' : t.summary;
+    return `<div style="display:flex;align-items:center;gap:10px;margin-bottom:${gap}px;">
+      <div style="flex-shrink:0;width:${labelWidth}px;display:flex;align-items:center;gap:6px;overflow:hidden;">
+        <a href="${JIRA_BROWSE}/browse/${t.key}" target="_blank" style="font-size:11px;font-weight:600;color:var(--primary);white-space:nowrap;">${escHtml(t.key)}</a>
+        <span style="font-size:11px;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;" title="${escHtml(t.summary)}">${escHtml(summaryShort)}</span>
+      </div>
+      <div style="flex:1;height:${barHeight}px;background:${barBg};border-radius:4px;position:relative;overflow:hidden;min-width:100px;">
+        <div style="height:100%;width:${t.pct}%;background:${barFill};border-radius:4px;transition:width 0.5s ease;"></div>
+        <span style="position:absolute;right:8px;top:50%;transform:translateY(-50%);font-size:11px;font-weight:700;color:${t.pct > 60 ? '#fff' : 'var(--text2)'};">${t.pct}%</span>
+      </div>
+      <div style="flex-shrink:0;width:60px;text-align:right;font-size:11px;color:var(--text3);">${t.done}/${t.total}</div>
+    </div>`;
+  }).join('');
+  html += '</div>';
+
+  el.innerHTML = html;
 }
 
 function renderPurchaseIssuesTable(issues) {
