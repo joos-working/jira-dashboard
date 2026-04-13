@@ -3186,7 +3186,7 @@ function updateStats(issues) {
     const cr = iss.fields?.created;
     if (cr && new Date(cr) >= weekStart) weekCreated++;
   }
-  animateCount(document.getElementById('stat-total'), total);
+  animateCount(document.getElementById('stat-total'), total - done);
   animateCount(document.getElementById('stat-todo'), todo);
   animateCount(document.getElementById('stat-inprogress'), inprogress);
   animateCount(document.getElementById('stat-done'), done);
@@ -3551,8 +3551,8 @@ function filterByStatCard(type) {
   let filtered, label;
   switch (type) {
     case 'total':
-      filtered = base;
-      label = currentLang === 'ko' ? '전체 이슈' : 'All Issues';
+      filtered = base.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done');
+      label = currentLang === 'ko' ? '전체 이슈 (완료 제외)' : 'All Issues (excl. Done)';
       break;
     case 'todo':
       filtered = base.filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) === 'todo');
