@@ -3621,7 +3621,7 @@ function renderTeam(issues) {
     const todoW = m.total > 0 ? Math.round(m.todo/m.total*100) : 0;
     const inpW = m.total > 0 ? Math.round(m.inprogress/m.total*100) : 0;
     const doneW = m.total > 0 ? Math.round(m.done/m.total*100) : 0;
-    const eName = escHtml(m.name).replace(/'/g, "\\'");
+    const eName = m.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
     return `<div class="team-card" style="cursor:pointer;" onclick="filterByAssignee('${eName}')">
       <div class="team-card-header">
         <div class="team-avatar" style="background:${color}">${initials(m.name)}</div>
@@ -3692,7 +3692,7 @@ function renderWorkloadAnalysis(issues) {
       const badgeBg = isOverload ? 'var(--danger-light)' : isIdle ? 'var(--surface3)' : 'var(--success-light)';
       const badgeColor = isOverload ? 'var(--danger)' : isIdle ? 'var(--text3)' : 'var(--success)';
       const colors = ['#0052CC','#36b37e','#ff991f','#de350b','#6554c0','#00b8d9','#ff5630','#57d9a3','#4c9aff','#998dd9'];
-      const eName = escHtml(a.name).replace(/'/g, "\\'");
+      const eName = a.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'");
       return `<div class="capacity-item" style="cursor:pointer;" onclick="filterByAssignee('${eName}','inprogress')">
         <div class="capacity-avatar" style="background:${colors[i%colors.length]}">${a.name.slice(0,2)}</div>
         <div class="capacity-name">${escHtml(a.name)}</div>
@@ -4691,7 +4691,7 @@ function moveWeeklyOffset(delta) {
 function applyWeeklyOffset() {
   const showCards = _weeklyMode === 'cards' || _weeklyMode === 'both';
   const showExcel = _weeklyMode === 'excel' || _weeklyMode === 'both';
-  if (showCards) renderWeeklyPlan(state.issues);
+  if (showCards) renderWeeklyPlan(state.issues.filter(i => !isPurchaseIssue(i)));
   if (showExcel) loadWeeklyByOffset();
 }
 
@@ -4708,13 +4708,13 @@ function setWeeklyMode(mode) {
   if (cardsView) cardsView.style.display = showCards ? '' : 'none';
   if (excelView) excelView.style.display = showExcel ? '' : 'none';
   if (showExcel) loadWeeklyIssueList();
-  if (showCards) renderWeeklyPlan(state.issues);
+  if (showCards) renderWeeklyPlan(state.issues.filter(i => !isPurchaseIssue(i)));
 }
 
 function initWeeklyTab() {
   _weeklyOffset = 0;
   initWeeklySelect();
-  if (state.issues.length) renderWeeklyPlan(state.issues);
+  if (state.issues.length) renderWeeklyPlan(state.issues.filter(i => !isPurchaseIssue(i)));
 }
 
 function getWeekRange(offsetWeeks) {
