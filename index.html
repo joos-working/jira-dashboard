@@ -3051,7 +3051,10 @@ function switchTab(tab, fromPopstate) {
   }
   if (tab === 'executive' && state.issues.length) renderExecutive(getGlobalFilteredIssues());
   if (tab === 'weekly') initWeeklyTab();
-  if (tab === 'purchase' && state.issues.length) renderPurchase(getGlobalFilteredIssues());
+  if (tab === 'purchase' && state.issues.length) {
+    _purchaseProjectKeys = identifyPurchaseProjects(state.issues);
+    renderPurchase(getGlobalFilteredIssues().filter(i => isPurchaseIssue(i)));
+  }
   // Push to browser history (skip when called from popstate to avoid loop)
   if (!fromPopstate && history.state?.tab !== tab) {
     const url = new URL(window.location.href);
@@ -5043,9 +5046,6 @@ function formatExcelCell(text) {
 function renderAll() {
   const allIssues = getGlobalFilteredIssues();
   _purchaseProjectKeys = identifyPurchaseProjects(state.issues);
-  console.log('[DEBUG] 전체 상태명:', [...new Set(state.issues.map(i => i.fields?.status?.name))]);
-  console.log('[DEBUG] ASP 이슈 상태:', [...new Set(state.issues.filter(i => i.fields?.project?.key === 'ASP').map(i => i.fields?.status?.name))]);
-  console.log('[DEBUG] 구매 프로젝트 키:', [..._purchaseProjectKeys]);
   const issues = allIssues.filter(i => !isPurchaseIssue(i));
   const purchaseIssues = allIssues.filter(i => isPurchaseIssue(i));
   updateStats(issues);
