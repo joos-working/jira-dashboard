@@ -3499,15 +3499,17 @@ function renderProjects(issues) {
 }
 
 function filterByProject(key) {
-  switchTab('issues');
+  resetFilterUI();
   document.getElementById('filter-project').value = key;
   filterIssues();
+  switchTab('issues');
 }
 
 function filterByAssignee(name) {
-  switchTab('issues');
+  resetFilterUI();
   document.getElementById('filter-assignee').value = name;
   filterIssues();
+  switchTab('issues');
 }
 
 function resetFilterUI() {
@@ -3765,7 +3767,7 @@ function filterIssues() {
   const excludeDone = document.getElementById('filter-exclude-done')?.checked;
   const now = new Date();
 
-  const baseIssues = getGlobalFilteredIssues();
+  const baseIssues = getGlobalFilteredIssues().filter(i => !isPurchaseIssue(i));
   state.filteredIssues = baseIssues.filter(iss => {
     const f = iss.fields || {};
     if (excludeDone && statusCategory(f.status?.name||'', f.status?.statusCategory?.key) === 'done') return false;
@@ -5515,7 +5517,7 @@ function renderPurchaseItemProgress(issues) {
   const gap = 6;
   const chartHeight = taskData.length * (barHeight + gap) + 8;
 
-  let html = `<div style="max-height:500px;overflow-y:auto;">`;
+  let html = `<div>`;
   html += taskData.map(t => {
     const pctColor = t.pct === 100 ? 'var(--success)' : t.pct >= 50 ? 'var(--primary)' : t.pct > 0 ? 'var(--warning)' : 'var(--text4)';
     const barBg = t.pct === 100 ? 'var(--success-light)' : 'var(--surface3)';
