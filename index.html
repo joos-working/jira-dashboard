@@ -5098,11 +5098,14 @@ function getPurchaseStage(statusName) {
 
 let _purchaseProjectKeys = new Set();
 
+// 구매 워크플로 전용 상태 (일반 프로젝트에는 없는 것들)
+const PURCHASE_IDENTIFY_STATUSES = ['견적 검토', '발주 완료', '입고 대기', '입고 확인', '수입 검사'];
+
 function identifyPurchaseProjects(issues) {
   const keys = new Set();
   for (const iss of issues) {
-    const sn = (iss.fields?.status?.name || '').trim();
-    if (sn === '견적 검토') {
+    const sn = (iss.fields?.status?.name || '').trim().toLowerCase();
+    if (PURCHASE_IDENTIFY_STATUSES.some(s => s.toLowerCase() === sn)) {
       const pk = iss.fields?.project?.key;
       if (pk) keys.add(pk);
     }
