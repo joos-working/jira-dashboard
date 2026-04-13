@@ -5096,22 +5096,19 @@ function getPurchaseStage(statusName) {
   return PURCHASE_STAGES.find(st => s === st.key || s.toLowerCase() === st.key.toLowerCase()) || null;
 }
 
-// 구매 전용 상태 (다른 워크플로에는 없는 것들)
-const PURCHASE_UNIQUE_STATUSES = ['견적 검토', '승인 대기', '발주 완료', '입고 대기', '입고 확인', '수입 검사'];
+let _purchaseProjectKeys = new Set();
 
 function identifyPurchaseProjects(issues) {
-  const projKeys = new Set();
+  const keys = new Set();
   for (const iss of issues) {
     const sn = (iss.fields?.status?.name || '').trim();
-    if (PURCHASE_UNIQUE_STATUSES.some(s => s === sn || s.toLowerCase() === sn.toLowerCase())) {
+    if (sn === '견적 검토') {
       const pk = iss.fields?.project?.key;
-      if (pk) projKeys.add(pk);
+      if (pk) keys.add(pk);
     }
   }
-  return projKeys;
+  return keys;
 }
-
-let _purchaseProjectKeys = new Set();
 
 function isPurchaseIssue(issue) {
   return _purchaseProjectKeys.has(issue.fields?.project?.key);
