@@ -2403,6 +2403,13 @@
     </div>
 
     <div class="tab-panel" id="tab-purchase">
+      <!-- 프로젝트 필터 -->
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;">
+        <label style="font-size:12px;font-weight:600;color:var(--text2);">프로젝트</label>
+        <select id="purchase-filter-project" onchange="onPurchaseProjectFilter()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);">
+          <option value="">전체</option>
+        </select>
+      </div>
       <!-- Row 1: 구매 파이프라인 (최상단) -->
       <div class="card" style="margin-bottom:16px;">
         <div class="card-header"><span class="card-title">구매 파이프라인</span></div>
@@ -2465,7 +2472,7 @@
 
         <div class="card">
           <div class="card-header">
-            <span class="card-title">ASP 이슈 목록</span>
+            <span class="card-title">구매 이슈 목록</span>
             <div style="display:flex;gap:8px;align-items:center;margin-left:auto;">
               <select id="purchase-filter-status" onchange="filterPurchaseIssues()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);">
                 <option value="">전체 단계</option>
@@ -3494,6 +3501,12 @@ function filterByProject(key) {
   filterIssues();
 }
 
+function filterByAssignee(name) {
+  switchTab('issues');
+  document.getElementById('filter-assignee').value = name;
+  filterIssues();
+}
+
 function resetFilterUI() {
   ['filter-project','filter-status','filter-assignee','filter-priority','filter-type','filter-stale'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   const excEl = document.getElementById('filter-exclude-done'); if (excEl) excEl.checked = false;
@@ -3579,7 +3592,7 @@ function renderTeam(issues) {
     const todoW = m.total > 0 ? Math.round(m.todo/m.total*100) : 0;
     const inpW = m.total > 0 ? Math.round(m.inprogress/m.total*100) : 0;
     const doneW = m.total > 0 ? Math.round(m.done/m.total*100) : 0;
-    return `<div class="team-card">
+    return `<div class="team-card" style="cursor:pointer;" onclick="filterByAssignee('${escHtml(m.name)}')">
       <div class="team-card-header">
         <div class="team-avatar" style="background:${color}">${initials(m.name)}</div>
         <div class="team-info">
@@ -5028,7 +5041,10 @@ function formatExcelCell(text) {
 }
 
 function renderAll() {
-  const issues = getGlobalFilteredIssues();
+  const allIssues = getGlobalFilteredIssues();
+  _purchaseProjectKeys = identifyPurchaseProjects(state.issues);
+  const issues = allIssues.filter(i => !isPurchaseIssue(i));
+  const purchaseIssues = allIssues.filter(i => isPurchaseIssue(i));
   updateStats(issues);
   renderCharts(issues);
   renderActivityList(issues);
@@ -5044,12 +5060,12 @@ function renderAll() {
   renderBacklogTrend(issues);
   renderHeatmap(issues);
   renderAssigneeSpeed(issues);
-  renderMyIssues(state.issues);
+  renderMyIssues(state.issues.filter(i => !isPurchaseIssue(i)));
   renderAgeDist(issues);
-  renderEpics(state.issues);
+  renderEpics(state.issues.filter(i => !isPurchaseIssue(i)));
   renderExecutive(issues);
-  if (state.activeTab === 'weekly') renderWeeklyPlan(state.issues);
-  if (state.activeTab === 'purchase') renderPurchase(issues);
+  if (state.activeTab === 'weekly') renderWeeklyPlan(state.issues.filter(i => !isPurchaseIssue(i)));
+  if (state.activeTab === 'purchase') renderPurchase(purchaseIssues);
   populateFilters(issues);
   updateTabBadges(issues);
   state.filteredIssues = [...issues];
@@ -5080,11 +5096,35 @@ function getPurchaseStage(statusName) {
   return PURCHASE_STAGES.find(st => s === st.key || s.toLowerCase() === st.key.toLowerCase()) || null;
 }
 
+// 구매 전용 상태 (다른 워크플로에는 없는 것들)
+const PURCHASE_UNIQUE_STATUSES = ['견적 검토', '승인 대기', '발주 완료', '입고 대기', '입고 확인', '수입 검사'];
+
+function identifyPurchaseProjects(issues) {
+  const projKeys = new Set();
+  for (const iss of issues) {
+    const sn = (iss.fields?.status?.name || '').trim();
+    if (PURCHASE_UNIQUE_STATUSES.some(s => s === sn || s.toLowerCase() === sn.toLowerCase())) {
+      const pk = iss.fields?.project?.key;
+      if (pk) projKeys.add(pk);
+    }
+  }
+  return projKeys;
+}
+
+let _purchaseProjectKeys = new Set();
+
+function isPurchaseIssue(issue) {
+  return _purchaseProjectKeys.has(issue.fields?.project?.key);
+}
+
 let _purchaseAllIssues = [];
 
 function renderPurchase(allIssues) {
-  const issues = allIssues.filter(i => i.fields?.project?.key === 'ASP');
-  _purchaseAllIssues = issues;
+  _purchaseAllIssues = allIssues;
+  populatePurchaseProjectFilter(allIssues);
+  const projEl = document.getElementById('purchase-filter-project');
+  const projVal = projEl ? projEl.value : '';
+  const issues = projVal ? allIssues.filter(i => (i.fields?.project?.key||'') === projVal) : allIssues;
   renderPurchaseStageChart(issues);
   renderPurchaseDueStats(issues);
   renderPurchaseEpicChart(allIssues, issues);
@@ -5495,6 +5535,15 @@ function renderPurchaseItemProgress(issues) {
   el.innerHTML = html;
 }
 
+function populatePurchaseProjectFilter(issues) {
+  const el = document.getElementById('purchase-filter-project');
+  if (!el) return;
+  const projects = [...new Set(issues.map(i => i.fields?.project?.key).filter(Boolean))].sort();
+  const cur = el.value;
+  el.innerHTML = `<option value="">전체 프로젝트</option>` + projects.map(p => `<option value="${escHtml(p)}">${escHtml(p)}</option>`).join('');
+  if (cur) el.value = cur;
+}
+
 function renderPurchaseIssuesTable(issues) {
   const el = document.getElementById('purchase-issues-table');
   if (!el) return;
@@ -5518,8 +5567,10 @@ function renderPurchaseIssuesTable(issues) {
     const dueStr = due ? `<span style="color:${isOverdue?'var(--danger)':'var(--text2)'};font-size:11px;">${isOverdue?'⚠️ ':''}${due}</span>` : '<span style="color:var(--text4);font-size:11px;">—</span>';
     const assignee = i.fields?.assignee?.displayName || '—';
     const key = i.key;
+    const proj = i.fields?.project?.key || '';
     return `<tr style="border-bottom:1px solid var(--border);">
       <td style="padding:10px 12px;white-space:nowrap;"><a href="${JIRA_BROWSE}/browse/${key}" target="_blank" style="color:var(--primary);font-size:12px;font-weight:600;">${escHtml(key)}</a></td>
+      <td style="padding:10px 12px;white-space:nowrap;font-size:11px;color:var(--text2);font-weight:600;">${escHtml(proj)}</td>
       <td style="padding:10px 12px;max-width:320px;"><span style="font-size:12px;color:var(--text);">${escHtml(i.fields?.summary||'')}</span></td>
       <td style="padding:10px 12px;white-space:nowrap;"><span style="font-size:11px;font-weight:600;color:${color};background:${light};padding:2px 8px;border-radius:var(--radius-full);">${escHtml(sn)}</span></td>
       <td style="padding:10px 12px;white-space:nowrap;font-size:12px;color:var(--text2);">${escHtml(assignee)}</td>
@@ -5529,6 +5580,7 @@ function renderPurchaseIssuesTable(issues) {
   el.innerHTML = `<table style="width:100%;border-collapse:collapse;">
     <thead><tr style="background:var(--surface2);">
       <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">키</th>
+      <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">프로젝트</th>
       <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;">제목</th>
       <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">단계</th>
       <th style="padding:8px 12px;text-align:left;font-size:11px;color:var(--text3);font-weight:600;white-space:nowrap;">담당자</th>
@@ -5538,15 +5590,26 @@ function renderPurchaseIssuesTable(issues) {
   </table>`;
 }
 
+function onPurchaseProjectFilter() {
+  renderPurchase(_purchaseAllIssues);
+}
+
+
+function _getPurchaseProjectFiltered() {
+  const projEl = document.getElementById('purchase-filter-project');
+  const projVal = projEl ? projEl.value : '';
+  return projVal ? _purchaseAllIssues.filter(i => (i.fields?.project?.key||'') === projVal) : _purchaseAllIssues;
+}
+
 function filterPurchaseByStage(stage) {
   const el = document.getElementById('purchase-filter-status');
   if (el) { el.value = stage; }
-  renderPurchaseIssuesTable(_purchaseAllIssues);
+  renderPurchaseIssuesTable(_getPurchaseProjectFiltered());
   switchTab('purchase');
 }
 
 function filterPurchaseIssues() {
-  renderPurchaseIssuesTable(_purchaseAllIssues);
+  renderPurchaseIssuesTable(_getPurchaseProjectFiltered());
 }
 
 // ===== STALE ISSUES =====
