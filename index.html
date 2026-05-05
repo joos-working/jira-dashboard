@@ -5203,7 +5203,7 @@ function renderPurchaseStageChart(issues) {
   const counts = PURCHASE_STAGES.map(st => issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key === st.key).length);
   const legendEl = document.getElementById('purchase-stage-legend');
   if (legendEl) {
-    legendEl.innerHTML = PURCHASE_STAGES.map((st, i) => `<div class="legend-item"><span class="legend-dot" style="background:${st.color};"></span><span>${st.key}</span><span style="margin-left:auto;font-weight:600;">${counts[i]}</span></div>`).join('');
+    legendEl.innerHTML = PURCHASE_STAGES.map((st, i) => `<div class="legend-item" style="cursor:pointer;" onclick="filterPurchaseByStage('${st.key}')"><span class="legend-dot" style="background:${st.color};"></span><span>${st.key}</span><span style="margin-left:auto;font-weight:600;">${counts[i]}</span></div>`).join('');
   }
   state.charts.purchaseStage = new Chart(ctx, {
     type: 'doughnut',
@@ -5213,6 +5213,13 @@ function renderPurchaseStageChart(issues) {
     },
     options: {
       responsive: true, maintainAspectRatio: true, cutout: '65%',
+      onClick: (evt, elements) => {
+        if (!elements.length) return;
+        const idx = elements[0].index;
+        const stageKey = PURCHASE_STAGES[idx]?.key;
+        if (stageKey) filterPurchaseByStage(stageKey);
+      },
+      onHover: (evt, elements) => { evt.native.target.style.cursor = elements.length ? 'pointer' : 'default'; },
       plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => ` ${ctx.label}: ${ctx.raw}건` } } }
     }
   });
@@ -5473,12 +5480,13 @@ function renderPurchaseDueStats(issues) {
   const active = issues.filter(i => getPurchaseStage(i.fields?.status?.name||'')?.key !== '완료');
   const dueThisWeek = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) >= today && new Date(i.fields.duedate) <= week1);
   const dueNextWeek = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) > week1 && new Date(i.fields.duedate) <= week2);
+  const dueAfter2 = active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) > week2);
   const stats = [
-    { label: '이번 주 입고 예정', count: dueThisWeek.length, color: 'var(--primary)', icon: '📦' },
-    { label: '차주 입고 예정', count: dueNextWeek.length, color: 'var(--warning)', icon: '🚚' },
-    { label: '2주 후 입고 예정', count: active.filter(i => i.fields?.duedate && new Date(i.fields.duedate) > week2).length, color: 'var(--info)', icon: '📋' },
+    { key: 'thisWeek', label: '이번 주 입고 예정', count: dueThisWeek.length, color: 'var(--primary)', icon: '📦' },
+    { key: 'nextWeek', label: '차주 입고 예정', count: dueNextWeek.length, color: 'var(--warning)', icon: '🚚' },
+    { key: 'after2', label: '2주 후 입고 예정', count: dueAfter2.length, color: 'var(--info)', icon: '📋' },
   ];
-  el.innerHTML = stats.map(s => `<div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);">
+  el.innerHTML = stats.map(s => `<div onclick="filterPurchaseByDue('${s.key}')" style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border);cursor:pointer;transition:background 0.15s;border-radius:4px;" onmouseover="this.style.background='var(--surface2)'" onmouseout="this.style.background='transparent'">
     <span style="font-size:13px;color:var(--text2);">${s.icon} ${s.label}</span>
     <span style="font-size:20px;font-weight:700;color:${s.color};">${s.count}</span>
   </div>`).join('');
@@ -5578,12 +5586,29 @@ function populatePurchaseProjectFilter(issues) {
   if (cur) el.value = cur;
 }
 
+let _purchaseDueFilter = '';
+
 function renderPurchaseIssuesTable(issues) {
   const el = document.getElementById('purchase-issues-table');
   if (!el) return;
   const filterEl = document.getElementById('purchase-filter-status');
   const filterVal = filterEl ? filterEl.value : '';
   let filtered = filterVal ? issues.filter(i => (i.fields?.status?.name||'') === filterVal) : issues;
+  if (_purchaseDueFilter) {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const week1 = new Date(today); week1.setDate(today.getDate() + 7);
+    const week2 = new Date(today); week2.setDate(today.getDate() + 14);
+    filtered = filtered.filter(i => {
+      if (getPurchaseStage(i.fields?.status?.name||'')?.key === '완료') return false;
+      const due = i.fields?.duedate; if (!due) return false;
+      const d = new Date(due);
+      if (_purchaseDueFilter === 'thisWeek') return d >= today && d <= week1;
+      if (_purchaseDueFilter === 'nextWeek') return d > week1 && d <= week2;
+      if (_purchaseDueFilter === 'after2') return d > week2;
+      return true;
+    });
+  }
   filtered = filtered.slice().sort((a,b) => new Date(b.fields?.updated||0) - new Date(a.fields?.updated||0));
   if (!filtered.length) {
     el.innerHTML = '<div style="padding:32px;text-align:center;color:var(--text3);">이슈가 없습니다.</div>';
@@ -5638,11 +5663,21 @@ function _getPurchaseProjectFiltered() {
 function filterPurchaseByStage(stage) {
   const el = document.getElementById('purchase-filter-status');
   if (el) { el.value = stage; }
+  _purchaseDueFilter = '';
+  renderPurchaseIssuesTable(_getPurchaseProjectFiltered());
+  switchTab('purchase');
+}
+
+function filterPurchaseByDue(dueKey) {
+  _purchaseDueFilter = (_purchaseDueFilter === dueKey) ? '' : dueKey;
+  const el = document.getElementById('purchase-filter-status');
+  if (el) { el.value = ''; }
   renderPurchaseIssuesTable(_getPurchaseProjectFiltered());
   switchTab('purchase');
 }
 
 function filterPurchaseIssues() {
+  _purchaseDueFilter = '';
   renderPurchaseIssuesTable(_getPurchaseProjectFiltered());
 }
 
