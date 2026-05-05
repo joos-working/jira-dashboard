@@ -3131,7 +3131,7 @@ async function loadDashboard() {
   showLoading('JIRA 데이터를 불러오는 중...');
   try {
     const days = state.dateRange;
-    const jql = `project in (ALS, ASP, BEG, CAMP, KPD, WP, RHD) AND issuetype != Epic ORDER BY updated DESC`;
+    const jql = `issuetype != Epic ORDER BY updated DESC`;
     const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate','parent','description','issuelinks'];
 
     const loadingMsg = days === 'custom' ? '이슈 목록 조회 중...' : `이슈 목록 조회 중 (최근 ${days}일)...`;
@@ -3957,6 +3957,7 @@ function goPage(p) {
 function renderBottleneck(issues) {
   const now = new Date();
   const unresolved = issues
+    .filter(i => i.fields?.project?.key !== 'WP')
     .filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done')
     .filter(i => !/(backlog|백로그)/i.test(i.fields?.status?.name||''))
     .map(i => {
@@ -5655,6 +5656,7 @@ function renderStaleIssues(issues) {
     return (now - new Date(changeDate)) / 86400000 >= 3;
   };
   const stale = issues
+    .filter(i => i.fields?.project?.key !== 'WP')
     .filter(isStaleIssue)
     .map(i => {
       const changeDate = i.fields?.statuscategorychangedate || i.fields?.updated;
