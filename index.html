@@ -3957,7 +3957,6 @@ function goPage(p) {
 function renderBottleneck(issues) {
   const now = new Date();
   const unresolved = issues
-    .filter(i => i.fields?.project?.key !== 'WP')
     .filter(i => statusCategory(i.fields?.status?.name||'', i.fields?.status?.statusCategory?.key) !== 'done')
     .filter(i => !/(backlog|백로그)/i.test(i.fields?.status?.name||''))
     .map(i => {
@@ -5077,23 +5076,26 @@ function renderAll() {
   _purchaseProjectKeys = identifyPurchaseProjects(state.issues);
   const issues = allIssues.filter(i => !isPurchaseIssue(i));
   const purchaseIssues = allIssues.filter(i => isPurchaseIssue(i));
-  updateStats(issues);
-  renderCharts(issues);
-  renderActivityList(issues);
-  renderProjects(issues);
+  // 개요/프로젝트 탭용: WP(주간 계획), BEG(Beginning AMR) 제외
+  const OV_EXCLUDED = ['WP', 'BEG'];
+  const ovIssues = issues.filter(i => !OV_EXCLUDED.includes(i.fields?.project?.key));
+  updateStats(ovIssues);
+  renderCharts(ovIssues);
+  renderActivityList(ovIssues);
+  renderProjects(ovIssues);
   renderTeam(issues);
-  renderBottleneck(issues);
-  renderDueSoon(issues);
-  renderAvgResolution(issues);
-  renderTrendCharts(issues);
-  renderLabelCloud(issues);
-  renderStaleIssues(issues);
-  renderAssigneePieChart(issues);
-  renderBacklogTrend(issues);
-  renderHeatmap(issues);
-  renderAssigneeSpeed(issues);
+  renderBottleneck(ovIssues);
+  renderDueSoon(ovIssues);
+  renderAvgResolution(ovIssues);
+  renderTrendCharts(ovIssues);
+  renderLabelCloud(ovIssues);
+  renderStaleIssues(ovIssues);
+  renderAssigneePieChart(ovIssues);
+  renderBacklogTrend(ovIssues);
+  renderHeatmap(ovIssues);
+  renderAssigneeSpeed(ovIssues);
   renderMyIssues(state.issues.filter(i => !isPurchaseIssue(i)));
-  renderAgeDist(issues);
+  renderAgeDist(ovIssues);
   renderEpics(state.issues.filter(i => !isPurchaseIssue(i)));
   renderExecutive(issues);
   if (state.activeTab === 'weekly') renderWeeklyPlan(state.issues.filter(i => !isPurchaseIssue(i)));
@@ -5656,7 +5658,6 @@ function renderStaleIssues(issues) {
     return (now - new Date(changeDate)) / 86400000 >= 3;
   };
   const stale = issues
-    .filter(i => i.fields?.project?.key !== 'WP')
     .filter(isStaleIssue)
     .map(i => {
       const changeDate = i.fields?.statuscategorychangedate || i.fields?.updated;
