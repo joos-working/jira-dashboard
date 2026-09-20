@@ -4946,7 +4946,15 @@ async function loadWeeklyExcel(issueKey) {
 
     const arrayBuf = await jiraFetchBinary(attachPath);
     const workbook = XLSX.read(arrayBuf, { type: 'array' });
-    const ws = workbook.Sheets[workbook.SheetNames[0]];
+    // 여러 시트 중 '전주' 또는 '금주' 헤더가 있는 시트를 자동 선택
+    let ws = null;
+    for (const name of workbook.SheetNames) {
+      const sheet = workbook.Sheets[name];
+      const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: '' });
+      const hasHeader = rows.slice(0, 8).some(r => r.map(c => String(c)).some(c => c.includes('전주') || c.includes('금주') || c.includes('PROJECT')));
+      if (hasHeader) { ws = sheet; break; }
+    }
+    if (!ws) ws = workbook.Sheets[workbook.SheetNames[0]];
     renderWeeklyExcel(ws, view);
   } catch (e) {
     view.innerHTML = `<div class="weekly-loading" style="color:var(--danger);">오류: ${escHtml(e.message)}</div>`;
@@ -5019,15 +5027,19 @@ function renderWeeklyExcel(ws, container) {
     return arr;
   });
 
-  // 프로젝트별 그룹핑
+  // 프로젝트별 그룹핑 — 프로젝트 셀이 비어도 데이터가 있으면 유지
   const projects = [];
   let cur = null;
   filled.forEach(r => {
     const proj = colProject >= 0 ? String(r[colProject]).trim() : '';
     const no   = colNo >= 0 ? String(r[colNo]).trim() : '';
-    if (!proj) return;
-    if (!cur || cur.name !== proj) {
-      cur = { no, name: proj, rows: [] };
+    const lastCheck  = colLast >= 0 ? String(r[colLast]).trim() : '';
+    const thisCheck  = colThis >= 0 ? String(r[colThis]).trim() : '';
+    // 프로젝트 비어있고 내용도 없으면 스킵
+    if (!proj && !lastCheck && !thisCheck) return;
+    const projName = proj || '(미분류)';
+    if (!cur || cur.name !== projName) {
+      cur = { no, name: projName, rows: [] };
       projects.push(cur);
     }
     const cat      = ''; // 카테고리는 해당 셀에 있을 수 있으나 구조상 전주실적/금주계획 컬럼에 포함
