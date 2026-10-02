@@ -2656,7 +2656,6 @@
         <label class="tl-check"><input type="checkbox" id="timeline-show-undated" onchange="renderTimeline()" checked> 일정 미설정 포함</label>
         <button class="btn btn-ghost btn-sm" onclick="toggleAllTimelineGroups()" id="tl-collapse-btn">모두 접기</button>
         <button class="btn btn-ghost btn-sm" onclick="loadTimelineEpics(true)" title="새로고침">↻</button>
-        <button class="btn btn-outline btn-sm" onclick="showTimelineDiag()" title="왜 이 에픽만 보이는지 확인">진단</button>
         <span id="timeline-range-label" class="tl-range"></span>
       </div>
       <div class="card" style="overflow:hidden;">
@@ -6103,7 +6102,11 @@ async function loadTimelineEpics(force) {
   }
 }
 
-/** 왜 특정 에픽/프로젝트만 보이는지 사람이 읽을 수 있게 보고 */
+/**
+ * 왜 특정 에픽/프로젝트만 보이는지 보고.
+ * 평소엔 쓰지 않지만 에픽이 누락될 때 원인(타입 ID·JQL·조회 중단 여부)을
+ * 단번에 특정할 수 있어 남겨둔다. 콘솔에서 showTimelineDiag() 로 호출.
+ */
 function showTimelineDiag() {
   const L = [];
   L.push('=== 타임라인 진단 ===');
