@@ -6141,6 +6141,14 @@ function tlAnimateScroll(c, target) {
   }, dur + 140);
 }
 
+/** 날짜 입력칸을 현재 보고 있는 지점으로 동기화 */
+function tlSyncDateInput(date) {
+  const el = document.getElementById('timeline-date-jump');
+  if (!el || !date) return;
+  const v = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  if (el.value !== v) el.value = v;
+}
+
 function scrollTimelineTo(date, align) {
   const c = document.getElementById('timeline-container');
   if (!c || !date) return;
@@ -6148,6 +6156,7 @@ function scrollTimelineTo(date, align) {
   const x = tlX(date) + lw;
   const target = align === 'center' ? x - c.clientWidth / 2 : x - lw - 40;
   tlAnimateScroll(c, target);
+  tlSyncDateInput(date);
 }
 
 function scrollTimelineToToday() {
@@ -6165,6 +6174,18 @@ function panTimeline(dir) {
   if (!c) return;
   const step = Math.max(200, c.clientWidth - tlLabelWidth() - 40);
   tlAnimateScroll(c, c.scrollLeft + dir * step);
+}
+
+/** 가로 스크롤 시 날짜 입력칸이 보이는 구간을 따라가도록 (1회만 바인딩) */
+function tlBindScrollSync() {
+  const c = document.getElementById('timeline-container');
+  if (!c || c._tlSyncBound) return;
+  c._tlSyncBound = true;
+  let t = null;
+  c.addEventListener('scroll', () => {
+    if (t) clearTimeout(t);
+    t = setTimeout(() => tlSyncDateInput(tlCenterDate()), 120);
+  }, { passive: true });
 }
 
 function renderTimeline() {
@@ -6324,8 +6345,11 @@ function renderTimeline() {
 
   gridEl.innerHTML = html;
 
+  tlBindScrollSync();
+
   if (!_tlDidInitialScroll) {
     _tlDidInitialScroll = true;
+    tlSyncDateInput(today);
     // 패널이 아직 레이아웃되지 않았으면(탭 전환 직후) 폭이 잡힐 때까지 재시도
     const settle = tries => {
       const el = document.getElementById('timeline-container');
