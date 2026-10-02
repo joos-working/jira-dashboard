@@ -1231,18 +1231,22 @@
       font-size: 9px; padding: 1px 4px; min-width: 14px;
     }
 
-    /* ===== TIMELINE TAB (Jira-style gantt) ===== */
-    /* 막대 색은 흰 글자 대비 4.5:1 이상을 확보한 값. 배경에 묻히지 않도록 opacity 대신 색 자체로 구분한다. */
+    /* ===== TIMELINE TAB (gantt) ===== */
+    /* 막대 색은 흰 글자 대비 4.5:1 이상을 확보한 값. opacity 대신 색 자체로 구분한다. */
     :root {
-      --tl-label-w: 280px; --tl-row-h: 34px;
-      --tl-done: #17724E;   /* 흰 글자 대비 ≈ 6.0:1 */
-      --tl-prog: #0052CC;   /* ≈ 8.6:1 */
-      --tl-todo: #4F3FA8;   /* ≈ 7.6:1 */
+      --tl-label-w: 290px; --tl-row-h: 38px;
+      --tl-done: #2A7F59;   /* 흰 글자 대비 ≈ 4.9:1 */
+      --tl-prog: #2F6FD0;   /* ≈ 4.9:1 */
+      --tl-todo: #6B5BC4;   /* ≈ 5.4:1 */
+      --tl-grid: rgba(16,24,40,0.055);
+      --tl-grid-strong: rgba(16,24,40,0.10);
     }
     [data-theme="dark"] {
-      --tl-done: #19815A;   /* 흰 글자 대비 ≈ 4.8:1 */
-      --tl-prog: #1B63D8;   /* ≈ 5.5:1 */
-      --tl-todo: #6554C0;   /* ≈ 5.9:1 */
+      --tl-done: #26855F;   /* ≈ 4.7:1 */
+      --tl-prog: #3A72D6;   /* ≈ 4.6:1 */
+      --tl-todo: #7465CC;   /* ≈ 4.8:1 */
+      --tl-grid: rgba(255,255,255,0.055);
+      --tl-grid-strong: rgba(255,255,255,0.10);
     }
 
     .tl-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
@@ -1281,100 +1285,95 @@
     .tl-canvas { position:relative; width:max-content; min-width:100%; }
 
     /* header (sticky top) */
-    .tl-head { display:flex; position:sticky; top:0; z-index:30; background:var(--surface); box-shadow:0 1px 0 var(--border2); }
+    .tl-head { display:flex; position:sticky; top:0; z-index:30; background:var(--surface); border-bottom:1px solid var(--border); }
     .tl-corner {
       position:sticky; left:0; z-index:32;
       width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
-      background:var(--surface2); border-right:1px solid var(--border2);
-      display:flex; align-items:flex-end; padding:0 12px 8px;
-      font-size:11px; font-weight:600; color:var(--text3);
+      background:var(--surface); border-right:1px solid var(--border);
+      display:flex; align-items:flex-end; padding:0 16px 9px;
+      font-size:11px; font-weight:600; color:var(--text4);
+      letter-spacing:.02em;
     }
     .tl-head-scale { position:relative; }
-    .tl-scale-major { display:flex; height:24px; border-bottom:1px solid var(--border); }
-    .tl-scale-minor { display:flex; height:22px; }
+    .tl-scale-major { display:flex; height:26px; }
+    .tl-scale-minor { display:flex; height:24px; }
     .tl-major-cell {
-      flex:0 0 auto; display:flex; align-items:center; justify-content:center;
-      font-size:11px; font-weight:700; color:var(--text2);
-      border-right:1px solid var(--border2); background:var(--surface2);
+      flex:0 0 auto; display:flex; align-items:center; padding-left:10px;
+      font-size:11px; font-weight:600; color:var(--text2);
+      border-left:1px solid var(--tl-grid-strong);
       white-space:nowrap; overflow:hidden;
     }
     .tl-minor-cell {
       flex:0 0 auto; display:flex; align-items:center; justify-content:center;
-      font-size:10px; color:var(--text3); border-right:1px solid var(--border);
-      background:var(--surface); white-space:nowrap; overflow:hidden;
+      font-size:10px; color:var(--text4);
+      border-left:1px solid var(--tl-grid);
+      white-space:nowrap; overflow:hidden;
     }
-    .tl-minor-cell.now { background:var(--primary-light); color:var(--primary); font-weight:700; }
+    .tl-minor-cell.now { color:var(--primary); font-weight:700; }
 
-    /* body */
-    /* 프로젝트 경계: 위아래 굵은 구분선 + 프로젝트별 색 띠로 묶음을 명확히 */
-    .tl-group { border-bottom:3px solid var(--border2); }
-    .tl-group:last-child { border-bottom:none; }
+    /* body — 선 대신 '여백 + 옅은 헤더 띠'로 그룹을 나눈다 (선이 많으면 어지럽다) */
+    .tl-group + .tl-group { border-top:10px solid var(--bg); }
     .tl-group-head {
       display:flex; cursor:pointer; position:sticky; z-index:12;
-      background:var(--surface3); border-top:2px solid var(--border2);
+      background:var(--surface2); box-shadow:inset 0 -1px 0 var(--border);
     }
-    .tl-group-head:hover { background:var(--border); }
     .tl-group-label {
       position:sticky; left:0; z-index:14;
       width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
-      background:var(--surface3); border-right:1px solid var(--border2);
-      display:flex; align-items:center; gap:6px; padding:9px 12px 9px 9px;
-      font-size:12px; font-weight:700; color:var(--text);
-      border-left:4px solid var(--tl-accent, var(--primary));
+      background:var(--surface2); border-right:1px solid var(--border);
+      display:flex; align-items:center; gap:8px; padding:9px 16px;
+      font-size:12px; font-weight:600; color:var(--text);
     }
-    .tl-group-head:hover .tl-group-label { background:var(--border); }
-    /* 소속 행에도 같은 색 띠를 얇게 이어 붙여 어느 프로젝트인지 추적 가능하게 */
-    .tl-group .tl-row .tl-label { border-left:4px solid var(--tl-accent, var(--primary)); padding-left:9px; }
-    .tl-group .tl-row .tl-label::before {
-      content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
-      background:var(--surface); opacity:0.55;
+    .tl-group-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
+    .tl-group-head:hover, .tl-group-head:hover .tl-group-label { background:var(--surface3); }
+    .tl-group-count {
+      margin-left:auto; flex-shrink:0; font-size:10px; font-weight:600;
+      color:var(--text4); background:var(--surface3);
+      padding:1px 7px; border-radius:var(--radius-full);
     }
-    .tl-caret { font-size:10px; color:var(--text3); transition:transform 0.15s; display:inline-block; }
+    .tl-caret { font-size:9px; color:var(--text4); transition:transform 0.15s; display:inline-block; }
     .tl-caret.collapsed { transform:rotate(-90deg); }
     .tl-group-track { flex:0 0 auto; position:relative; }
 
-    .tl-row { display:flex; height:var(--tl-row-h); border-bottom:1px solid var(--border); }
+    .tl-row { display:flex; height:var(--tl-row-h); }
     .tl-row:hover .tl-label { background:var(--surface2); }
-    .tl-row:hover .tl-track { background:rgba(128,128,128,0.04); }
+    .tl-row:hover .tl-track { background:var(--tl-grid); }
     .tl-label {
       position:sticky; left:0; z-index:10;
       width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
-      background:var(--surface); border-right:1px solid var(--border2);
-      display:flex; align-items:center; gap:6px; padding:0 12px;
-      font-size:12px; color:var(--text); cursor:pointer; overflow:hidden;
+      background:var(--surface); border-right:1px solid var(--border);
+      display:flex; align-items:center; gap:7px; padding:0 16px 0 31px;
+      font-size:12px; color:var(--text2); cursor:pointer; overflow:hidden;
     }
     .tl-label:hover .tl-label-txt { color:var(--primary); }
-    .tl-label-key { font-size:10px; font-weight:700; flex-shrink:0; }
+    .tl-label-key { font-size:10px; font-weight:600; flex-shrink:0; color:var(--text4); }
     .tl-label-txt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     .tl-track { flex:0 0 auto; position:relative; }
 
     .tl-bar {
-      position:absolute; top:50%; transform:translateY(-50%); height:20px;
-      border-radius:4px; display:flex; align-items:center; padding:0 8px;
-      font-size:11px; font-weight:600; color:#fff; cursor:pointer;
+      position:absolute; top:50%; transform:translateY(-50%); height:22px;
+      border-radius:6px; display:flex; align-items:center; padding:0 9px;
+      font-size:11px; font-weight:500; color:#fff; cursor:pointer;
       overflow:hidden; white-space:nowrap;
-      box-shadow:0 1px 2px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.14);
-      text-shadow:0 1px 1px rgba(0,0,0,0.35);
-      transition:box-shadow 0.15s, height 0.15s; z-index:3;
+      transition:box-shadow .15s, transform .15s; z-index:3;
     }
-    .tl-bar:hover { height:24px; z-index:5; box-shadow:0 3px 10px rgba(0,0,0,0.3); }
-    /* 진행 완료 구간은 어둡게 덮는다. 밝게 덮으면 흰 글자가 묻힌다. */
-    .tl-bar-fill { position:absolute; left:0; top:0; bottom:0; background:rgba(0,0,0,0.26); pointer-events:none; }
+    .tl-bar:hover { z-index:5; box-shadow:0 4px 12px rgba(16,24,40,0.18); transform:translateY(-50%) scale(1.012); }
+    /* 진행 완료 구간: 은은하게 밝혀 표시 (글자 대비를 해치지 않을 정도로만) */
+    .tl-bar-fill { position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,0.16); pointer-events:none; }
     .tl-bar-txt { position:relative; z-index:1; overflow:hidden; text-overflow:ellipsis; }
-    .tl-nobar { position:absolute; top:50%; transform:translateY(-50%); left:8px; font-size:10px; color:var(--text4); font-style:italic; }
+    .tl-nobar { position:absolute; top:50%; transform:translateY(-50%); left:9px; font-size:10px; color:var(--text4); }
 
     /* today marker spanning full canvas height */
-    .tl-today { position:absolute; top:0; bottom:0; width:2px; background:var(--danger); z-index:20; pointer-events:none; }
+    .tl-today { position:absolute; top:0; bottom:0; width:1px; background:var(--danger); opacity:.55; z-index:20; pointer-events:none; }
     .tl-today::before {
-      content:''; position:absolute; top:0; left:-4px;
-      border-left:5px solid transparent; border-right:5px solid transparent;
-      border-top:6px solid var(--danger);
+      content:''; position:absolute; top:0; left:-3px;
+      width:7px; height:7px; border-radius:50%; background:var(--danger);
     }
 
     @media (max-width: 768px) {
-      :root { --tl-label-w: 150px; }
-      .tl-label { padding:0 8px; font-size:11px; }
-      .tl-group-label { padding:8px; font-size:11px; }
+      :root { --tl-label-w: 160px; }
+      .tl-label { padding:0 10px 0 22px; font-size:11px; }
+      .tl-group-label { padding:9px 10px; font-size:11px; }
       .tl-range { margin-left:0; width:100%; }
     }
 
@@ -6551,8 +6550,8 @@ function renderTimeline() {
     return `<div class="tl-minor-cell${isNow ? ' now' : ''}" style="width:${_tlCellPx}px;">${escHtml(c.label)}</div>`;
   }).join('');
 
-  // 트랙 배경 격자
-  const gridBg = `background-image:repeating-linear-gradient(to right, var(--border) 0 1px, transparent 1px ${_tlCellPx}px);`;
+  // 트랙 배경 격자 (아주 옅게 — 선이 진하면 막대보다 격자가 먼저 읽힌다)
+  const gridBg = `background-image:repeating-linear-gradient(to right, var(--tl-grid) 0 1px, transparent 1px ${_tlCellPx}px);`;
 
   let html = `<div class="tl-canvas">
     <div class="tl-head">
@@ -6571,9 +6570,10 @@ function renderTimeline() {
       <div class="tl-group-head" onclick="toggleTimelineGroup('${escHtml(g.key)}')">
         <div class="tl-group-label">
           <span class="tl-caret${collapsed ? ' collapsed' : ''}">▼</span>
-          <span style="color:${accent};">${escHtml(g.key)}</span>
-          <span style="font-weight:500;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.name)}</span>
-          <span style="font-weight:400;color:var(--text4);margin-left:auto;flex-shrink:0;">${count}</span>
+          <span class="tl-group-dot" style="background:${accent};"></span>
+          <span>${escHtml(g.key)}</span>
+          <span style="font-weight:400;color:var(--text4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.name)}</span>
+          <span class="tl-group-count">${count}</span>
         </div>
         <div class="tl-group-track" style="width:${totalPx}px;${gridBg}"></div>
       </div>`;
