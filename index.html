@@ -3108,13 +3108,19 @@ async function jiraFetch(path, params = {}, options = {}) {
   return resp.json();
 }
 
-async function fetchAllIssues(jql, fields, onProgress) {
+/**
+ * 전체 페이지 수집. 중단(타임아웃/페이지 상한)되면 truncated=true 로 알려준다.
+ * 조용히 일부만 반환하면 "데이터가 원래 그것뿐"인 것과 구분되지 않는다.
+ */
+async function fetchAllIssuesEx(jql, fields, onProgress) {
   const all = [];
   let nextPageToken = null;
   const maxResults = 100;
   const MAX_PAGES = 50; // 5000 issues 상한
   const PER_PAGE_TIMEOUT_MS = 25000;
   let page = 0;
+  let truncated = false;
+  let reason = null;
   while (page < MAX_PAGES) {
     page++;
     const params = { jql, maxResults, fields: fields.join(',') };
@@ -3127,6 +3133,8 @@ async function fetchAllIssues(jql, fields, onProgress) {
       ]);
     } catch (e) {
       console.warn(`[fetchAllIssues] page ${page} failed:`, e.message);
+      truncated = true;
+      reason = e.message;
       if (onProgress) onProgress(all.length, page, e);
       break;
     }
@@ -3134,11 +3142,18 @@ async function fetchAllIssues(jql, fields, onProgress) {
     if (onProgress) onProgress(all.length, page, null);
     if (data.isLast || !data.issues || data.issues.length === 0 || !data.nextPageToken) break;
     nextPageToken = data.nextPageToken;
+    if (page >= MAX_PAGES) {
+      truncated = true;
+      reason = `페이지 상한(${MAX_PAGES}) 도달`;
+      console.warn(`[fetchAllIssues] max pages reached: ${all.length}`);
+    }
   }
-  if (page >= MAX_PAGES) {
-    console.warn(`[fetchAllIssues] max pages reached: ${all.length}`);
-  }
-  return all;
+  return { issues: all, truncated, reason, pages: page };
+}
+
+async function fetchAllIssues(jql, fields, onProgress) {
+  const res = await fetchAllIssuesEx(jql, fields, onProgress);
+  return res.issues;
 }
 
 // ===== AUTH =====
@@ -3321,18 +3336,36 @@ async function refreshData() {
   }
 }
 
+/**
+ * 접근 가능한 전체 프로젝트 키 (페이지네이션 포함, 세션 캐시).
+ * JQL에 project 절이 없으면 Jira 쿼리가 매우 느려져 타임아웃으로 일부만 받게 된다.
+ */
+let _allProjectKeys = null;
+async function getAllProjectKeys(force) {
+  if (_allProjectKeys && !force) return _allProjectKeys;
+  const keys = [];
+  try {
+    let startAt = 0;
+    for (let guard = 0; guard < 20; guard++) {
+      const resp = await jiraFetch('/rest/api/3/project/search', { maxResults: 50, startAt });
+      (resp.values || []).forEach(p => keys.push(p.key));
+      if (resp.isLast || !resp.values || resp.values.length === 0) break;
+      startAt += resp.values.length;
+      if (typeof resp.total === 'number' && startAt >= resp.total) break;
+    }
+  } catch (e) {
+    console.warn('[projects] fetch failed:', e.message);
+  }
+  _allProjectKeys = keys;
+  console.info(`[projects] ${keys.length} keys:`, keys.join(','));
+  return keys;
+}
+
 async function loadDashboard() {
   showLoading('데이터 로딩 중...');
   try {
     const days = state.dateRange;
-    // 전체 프로젝트 자동 조회 — JQL이 project 명시 안 하면 Jira 쿼리가 매우 느려짐
-    let projectKeys = [];
-    try {
-      const projResp = await jiraFetch('/rest/api/3/project/search', { maxResults: 100 });
-      projectKeys = (projResp.values || []).map(p => p.key);
-    } catch (e) {
-      console.warn('[loadDashboard] project list fetch failed, falling back to all:', e.message);
-    }
+    const projectKeys = await getAllProjectKeys(true);
     const projectClause = projectKeys.length ? `project in (${projectKeys.join(',')}) AND ` : '';
     const jql = `${projectClause}issuetype != Epic ORDER BY updated DESC`;
     const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate','parent','description','issuelinks'];
@@ -5983,18 +6016,26 @@ async function loadTimelineEpics(force) {
     const base = ['summary','status','project','created','updated','duedate','resolutiondate','issuetype'];
     const fields = [...new Set([...base, ..._tlStartFieldIds, ..._tlEndFieldIds])];
     const typeClause = _tlEpicTypeNames.map(n => `"${n.replace(/"/g, '\\"')}"`).join(',');
-    const jql = `issuetype in (${typeClause}) ORDER BY project, created DESC`;
+
+    // project 절이 없으면 쿼리가 느려져 타임아웃으로 앞쪽 프로젝트만 받게 된다
+    loadingEl.textContent = '프로젝트 목록 확인 중...';
+    const projectKeys = await getAllProjectKeys(false);
+    const projectClause = projectKeys.length ? `project in (${projectKeys.join(',')}) AND ` : '';
+    const jql = `${projectClause}issuetype in (${typeClause}) ORDER BY project, created DESC`;
 
     loadingEl.textContent = '에픽 로딩 중...';
-    const data = await fetchAllIssues(jql, fields, (count) => {
+    const res = await fetchAllIssuesEx(jql, fields, (count) => {
       loadingEl.textContent = `에픽 로딩 중... ${count}개`;
     });
-    _timelineEpics = data || [];
+    _timelineEpics = res.issues || [];
     _tlDiag = {
       startFields: _tlStartFieldIds,
       endFields: _tlEndFieldIds,
       epicTypes: _tlEpicTypeNames,
+      projectsQueried: projectKeys.length,
       fetched: _timelineEpics.length,
+      truncated: res.truncated,
+      truncateReason: res.reason,
     };
     console.info('[timeline] meta', _tlDiag);
     // children progress 집계 (state.issues 내 parent로 매칭)
@@ -6297,17 +6338,6 @@ function renderTimeline() {
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
   const fmt = d => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
-  const rangeEl = document.getElementById('timeline-range-label');
-  if (rangeEl) {
-    const total = _timelineEpics.length;
-    let txt = `${fmt(cells[0].start)} ~ ${fmt(new Date(cells[cells.length - 1].end.getTime() - 86400000))}`;
-    txt += ` · 에픽 ${total}개 (일정 ${dated.length} / 미설정 ${undated.length})`;
-    if (epics.length !== total) txt += ` · 필터로 ${total - epics.length}개 숨김`;
-    rangeEl.textContent = txt;
-    rangeEl.title = _tlDiag
-      ? `시작일 필드: ${_tlDiag.startFields.join(', ') || '없음'}\n종료일 필드: ${(_tlDiag.endFields||[]).join(', ') || 'duedate'}\n에픽 타입: ${_tlDiag.epicTypes.join(', ')}`
-      : '';
-  }
 
   // 프로젝트별 그룹 (일정 없는 것도 같은 프로젝트에 포함)
   const groups = {};
@@ -6321,6 +6351,28 @@ function renderTimeline() {
   if (showUndated) undated.forEach(x => put(x, true));
 
   const groupArr = Object.values(groups).sort((a, b) => a.key.localeCompare(b.key));
+
+  const rangeEl = document.getElementById('timeline-range-label');
+  if (rangeEl) {
+    const total = _timelineEpics.length;
+    let txt = `${fmt(cells[0].start)} ~ ${fmt(new Date(cells[cells.length - 1].end.getTime() - 86400000))}`;
+    txt += ` · 에픽 ${total}개 (일정 ${dated.length} / 미설정 ${undated.length})`;
+    txt += ` · 프로젝트 ${groupArr.length}개`;
+    if (epics.length !== total) txt += ` · 필터로 ${total - epics.length}개 숨김`;
+    if (_tlDiag?.truncated) txt += ` · ⚠ 조회 중단됨`;
+    rangeEl.textContent = txt;
+    rangeEl.style.color = _tlDiag?.truncated ? 'var(--danger)' : 'var(--text3)';
+    rangeEl.title = _tlDiag
+      ? [
+          `시작일 필드: ${_tlDiag.startFields.join(', ') || '없음'}`,
+          `종료일 필드: ${(_tlDiag.endFields || []).join(', ') || 'duedate'}`,
+          `에픽 타입: ${_tlDiag.epicTypes.join(', ')}`,
+          `조회 대상 프로젝트: ${_tlDiag.projectsQueried}개`,
+          `가져온 에픽: ${_tlDiag.fetched}개`,
+          _tlDiag.truncated ? `⚠ 중단 사유: ${_tlDiag.truncateReason}` : '',
+        ].filter(Boolean).join('\n')
+      : '';
+  }
 
   loadingEl.style.display = 'none';
   gridEl.style.display = 'block';
