@@ -1231,49 +1231,127 @@
       font-size: 9px; padding: 1px 4px; min-width: 14px;
     }
 
-    /* ===== TIMELINE TAB ===== */
+    /* ===== TIMELINE TAB (Jira-style gantt) ===== */
+    :root { --tl-label-w: 280px; --tl-row-h: 34px; }
+
+    .tl-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
+    .tl-title { font-size:18px; font-weight:700; color:var(--text); margin-right:2px; }
+    .tl-zoom { display:flex; align-items:center; gap:4px; background:var(--surface2); padding:3px; border-radius:var(--radius-sm); }
     .timeline-mode-btn {
-      padding: 5px 12px; border:none; background:transparent; color:var(--text2);
+      padding:5px 14px; border:none; background:transparent; color:var(--text2);
       font-size:12px; font-weight:600; cursor:pointer; border-radius:var(--radius-sm);
       font-family:var(--font); transition:all var(--transition);
     }
     .timeline-mode-btn:hover { background:var(--surface); color:var(--text); }
     .timeline-mode-btn.active { background:var(--primary); color:#fff; }
-    .tl-header-row { display:flex; position:sticky; top:0; z-index:10; background:var(--surface); border-bottom:2px solid var(--border); }
-    .tl-label-col { width:260px; flex-shrink:0; border-right:1px solid var(--border); background:var(--surface2); font-size:12px; font-weight:600; color:var(--text3); padding:10px 12px; display:flex; align-items:center; position:sticky; left:0; z-index:5; }
-    .tl-time-cells { display:flex; flex:1; }
-    .tl-time-cell { flex:1; min-width:60px; padding:6px 4px; text-align:center; font-size:11px; color:var(--text3); border-right:1px solid var(--border); font-weight:500; }
-    .tl-time-cell.today { background:var(--primary-light); color:var(--primary); font-weight:700; }
-    .tl-time-cell.weekend { background:var(--surface2); }
-    .tl-project-group { border-bottom:1px solid var(--border); }
-    .tl-project-header { display:flex; background:var(--surface3); font-weight:700; font-size:12px; color:var(--text); position:sticky; left:0; }
-    .tl-project-header .tl-label-col { background:var(--surface3); color:var(--text); font-weight:700; font-size:12px; }
-    .tl-row { display:flex; min-height:34px; border-bottom:1px solid var(--border); position:relative; }
-    .tl-row:hover { background:var(--surface2); }
-    .tl-row:hover .tl-label-col { background:var(--surface2); }
-    .tl-row .tl-label-col { font-weight:500; color:var(--text); background:var(--surface); font-size:12px; cursor:pointer; }
-    .tl-row .tl-label-col:hover { color:var(--primary); }
-    .tl-track { flex:1; position:relative; display:flex; }
-    .tl-track-cell { flex:1; min-width:60px; border-right:1px solid var(--border); }
-    .tl-track-cell.today { background:rgba(0,82,204,0.04); }
-    .tl-track-cell.weekend { background:var(--surface2); }
+    .tl-nav { display:flex; align-items:center; gap:4px; }
+    .tl-nav input[type="date"] {
+      font-size:12px; padding:5px 8px; border:1px solid var(--border);
+      border-radius:var(--radius-sm); background:var(--surface); color:var(--text);
+      font-family:var(--font); outline:none; cursor:pointer;
+    }
+    .tl-nav input[type="date"]:focus { border-color:var(--primary); }
+    #timeline-project-filter {
+      font-size:12px; padding:5px 8px; border:1px solid var(--border);
+      border-radius:var(--radius-sm); background:var(--surface); color:var(--text); max-width:220px;
+    }
+    .tl-check { font-size:12px; color:var(--text2); display:flex; align-items:center; gap:4px; cursor:pointer; white-space:nowrap; }
+    .tl-range { font-size:11px; color:var(--text3); margin-left:auto; white-space:nowrap; }
+
+    /* scroll viewport */
+    #timeline-container {
+      position:relative; overflow:auto;
+      max-height:calc(100vh - 210px);
+      scrollbar-width:thin;
+    }
+    .timeline-loading { padding:60px; text-align:center; color:var(--text3); font-size:13px; }
+
+    /* canvas: label col + track area, wider than viewport */
+    .tl-canvas { position:relative; width:max-content; min-width:100%; }
+
+    /* header (sticky top) */
+    .tl-head { display:flex; position:sticky; top:0; z-index:30; background:var(--surface); box-shadow:0 1px 0 var(--border2); }
+    .tl-corner {
+      position:sticky; left:0; z-index:32;
+      width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
+      background:var(--surface2); border-right:1px solid var(--border2);
+      display:flex; align-items:flex-end; padding:0 12px 8px;
+      font-size:11px; font-weight:600; color:var(--text3);
+    }
+    .tl-head-scale { position:relative; }
+    .tl-scale-major { display:flex; height:24px; border-bottom:1px solid var(--border); }
+    .tl-scale-minor { display:flex; height:22px; }
+    .tl-major-cell {
+      flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+      font-size:11px; font-weight:700; color:var(--text2);
+      border-right:1px solid var(--border2); background:var(--surface2);
+      white-space:nowrap; overflow:hidden;
+    }
+    .tl-minor-cell {
+      flex:0 0 auto; display:flex; align-items:center; justify-content:center;
+      font-size:10px; color:var(--text3); border-right:1px solid var(--border);
+      background:var(--surface); white-space:nowrap; overflow:hidden;
+    }
+    .tl-minor-cell.now { background:var(--primary-light); color:var(--primary); font-weight:700; }
+
+    /* body */
+    .tl-group { border-bottom:2px solid var(--border2); }
+    .tl-group-head { display:flex; background:var(--surface3); cursor:pointer; position:sticky; z-index:12; }
+    .tl-group-head:hover { background:var(--border); }
+    .tl-group-label {
+      position:sticky; left:0; z-index:14;
+      width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
+      background:var(--surface3); border-right:1px solid var(--border2);
+      display:flex; align-items:center; gap:6px; padding:8px 12px;
+      font-size:12px; font-weight:700; color:var(--text);
+    }
+    .tl-group-head:hover .tl-group-label { background:var(--border); }
+    .tl-caret { font-size:10px; color:var(--text3); transition:transform 0.15s; display:inline-block; }
+    .tl-caret.collapsed { transform:rotate(-90deg); }
+    .tl-group-track { flex:0 0 auto; position:relative; }
+
+    .tl-row { display:flex; height:var(--tl-row-h); border-bottom:1px solid var(--border); }
+    .tl-row:hover .tl-label { background:var(--surface2); }
+    .tl-row:hover .tl-track { background:rgba(128,128,128,0.04); }
+    .tl-label {
+      position:sticky; left:0; z-index:10;
+      width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
+      background:var(--surface); border-right:1px solid var(--border2);
+      display:flex; align-items:center; gap:6px; padding:0 12px;
+      font-size:12px; color:var(--text); cursor:pointer; overflow:hidden;
+    }
+    .tl-label:hover .tl-label-txt { color:var(--primary); }
+    .tl-label-key { font-size:10px; font-weight:700; flex-shrink:0; }
+    .tl-label-txt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .tl-track { flex:0 0 auto; position:relative; }
+
     .tl-bar {
-      position:absolute; top:50%; transform:translateY(-50%); height:22px;
+      position:absolute; top:50%; transform:translateY(-50%); height:20px;
       border-radius:4px; display:flex; align-items:center; padding:0 8px;
       font-size:11px; font-weight:600; color:#fff; cursor:pointer;
-      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
-      box-shadow:0 1px 2px rgba(0,0,0,0.1);
-      transition:all 0.15s; z-index:2;
+      overflow:hidden; white-space:nowrap;
+      box-shadow:0 1px 2px rgba(0,0,0,0.12);
+      transition:box-shadow 0.15s, height 0.15s; z-index:3;
     }
-    .tl-bar:hover { height:26px; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
-    .tl-bar.done { opacity:0.6; }
-    .tl-bar-pct { position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,0.3); border-radius:4px 0 0 4px; pointer-events:none; }
-    .tl-today-line { position:absolute; top:0; bottom:0; width:2px; background:var(--danger); z-index:4; pointer-events:none; }
-    .tl-empty { padding:40px; text-align:center; color:var(--text3); font-size:13px; }
+    .tl-bar:hover { height:24px; z-index:5; box-shadow:0 3px 8px rgba(0,0,0,0.25); }
+    .tl-bar.done { opacity:0.55; }
+    .tl-bar-fill { position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,0.28); pointer-events:none; }
+    .tl-bar-txt { position:relative; z-index:1; overflow:hidden; text-overflow:ellipsis; }
+    .tl-nobar { position:absolute; top:50%; transform:translateY(-50%); left:8px; font-size:10px; color:var(--text4); font-style:italic; }
+
+    /* today marker spanning full canvas height */
+    .tl-today { position:absolute; top:0; bottom:0; width:2px; background:var(--danger); z-index:20; pointer-events:none; }
+    .tl-today::before {
+      content:''; position:absolute; top:0; left:-4px;
+      border-left:5px solid transparent; border-right:5px solid transparent;
+      border-top:6px solid var(--danger);
+    }
+
     @media (max-width: 768px) {
-      .tl-label-col { width:140px; padding:8px; font-size:11px; }
-      .tl-time-cell { min-width:50px; font-size:10px; }
-      .tl-track-cell { min-width:50px; }
+      :root { --tl-label-w: 150px; }
+      .tl-label { padding:0 8px; font-size:11px; }
+      .tl-group-label { padding:8px; font-size:11px; }
+      .tl-range { margin-left:0; width:100%; }
     }
 
     /* ===== PURCHASE TAB GRID ===== */
@@ -2558,30 +2636,31 @@
 
     <!-- ===== 타임라인 탭 ===== -->
     <div class="tab-panel" id="tab-timeline">
-      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
-        <h2 style="font-size:18px;font-weight:700;color:var(--text);margin-right:8px;">프로젝트 타임라인 <span style="font-size:12px;font-weight:400;color:var(--text3);">전체 프로젝트 에픽 간트</span></h2>
-        <div style="display:flex;align-items:center;gap:6px;background:var(--surface2);padding:3px;border-radius:var(--radius-sm);">
+      <div class="tl-toolbar">
+        <h2 class="tl-title">프로젝트 타임라인</h2>
+        <div class="tl-zoom">
           <button class="timeline-mode-btn active" data-mode="week" onclick="setTimelineMode('week')">주</button>
           <button class="timeline-mode-btn" data-mode="month" onclick="setTimelineMode('month')">월</button>
         </div>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <button class="btn btn-ghost btn-sm" onclick="shiftTimeline(-1)">◀</button>
-          <span id="timeline-range-label" style="font-size:12px;color:var(--text2);font-weight:600;min-width:160px;text-align:center;"></span>
-          <button class="btn btn-ghost btn-sm" onclick="shiftTimeline(1)">▶</button>
-          <button class="btn btn-outline btn-sm" onclick="resetTimeline()">오늘</button>
+        <div class="tl-nav">
+          <button class="btn btn-ghost btn-sm" onclick="panTimeline(-1)" title="이전">‹</button>
+          <input type="date" id="timeline-date-jump" onchange="jumpTimelineToDate(this.value)" title="날짜로 이동">
+          <button class="btn btn-ghost btn-sm" onclick="panTimeline(1)" title="다음">›</button>
+          <button class="btn btn-outline btn-sm" onclick="scrollTimelineToToday()">오늘</button>
         </div>
-        <select id="timeline-project-filter" onchange="renderTimeline()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);">
+        <select id="timeline-project-filter" onchange="renderTimeline()">
           <option value="">전체 프로젝트</option>
         </select>
-        <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;">
-          <input type="checkbox" id="timeline-hide-done" onchange="renderTimeline()"> 완료 숨김
-        </label>
+        <label class="tl-check"><input type="checkbox" id="timeline-hide-done" onchange="renderTimeline()"> 완료 숨김</label>
+        <label class="tl-check"><input type="checkbox" id="timeline-show-undated" onchange="renderTimeline()"> 일정 미설정 포함</label>
+        <button class="btn btn-ghost btn-sm" onclick="toggleAllTimelineGroups()" id="tl-collapse-btn">모두 접기</button>
         <button class="btn btn-ghost btn-sm" onclick="loadTimelineEpics(true)" title="새로고침">↻</button>
+        <span id="timeline-range-label" class="tl-range"></span>
       </div>
-      <div class="card">
-        <div class="card-body" style="padding:0;overflow:hidden;">
-          <div id="timeline-container" style="position:relative;overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 220px);">
-            <div class="timeline-loading" id="timeline-loading" style="padding:60px;text-align:center;color:var(--text3);">탭을 선택하면 에픽을 불러옵니다...</div>
+      <div class="card" style="overflow:hidden;">
+        <div class="card-body" style="padding:0;">
+          <div id="timeline-container">
+            <div class="timeline-loading" id="timeline-loading">탭을 선택하면 에픽을 불러옵니다...</div>
             <div id="timeline-grid" style="display:none;"></div>
           </div>
         </div>
@@ -5819,12 +5898,19 @@ function filterPurchaseIssues() {
   renderPurchaseIssuesTable(_getPurchaseProjectFiltered());
 }
 
-// ===== TIMELINE TAB =====
+// ===== TIMELINE TAB (Jira-style gantt) =====
+const TL_CFG = {
+  week:  { cellPx: 46, pad: 28 },   // 셀=1주, 앞뒤 28일 여유
+  month: { cellPx: 104, pad: 62 },  // 셀=1개월, 앞뒤 ~2개월 여유
+};
 let _timelineEpics = null;
-let _timelineChildrenMap = {}; // epicKey -> {total, done}
-let _timelineMode = 'week'; // 'week' | 'month'
-let _timelineOffset = 0; // 0 = 현재 기준
+let _timelineChildrenMap = {};      // epicKey -> {total, done}
+let _timelineMode = 'week';
 let _timelineLoaded = false;
+let _tlCollapsed = new Set();       // 접힌 프로젝트 키
+let _tlCells = [];                  // [{start,end,label,major}]
+let _tlCellPx = 46;
+let _tlDidInitialScroll = false;
 
 function initTimelineTab() {
   if (!_timelineLoaded) {
@@ -5884,58 +5970,174 @@ function populateTimelineProjectFilter() {
 }
 
 function setTimelineMode(mode) {
+  if (_timelineMode === mode) return;
   _timelineMode = mode;
-  _timelineOffset = 0;
   document.querySelectorAll('.timeline-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  const anchor = tlCenterDate() || new Date();
   renderTimeline();
+  scrollTimelineTo(anchor, 'center');
 }
 
-function shiftTimeline(dir) {
-  _timelineOffset += dir;
+function toggleTimelineGroup(key) {
+  if (_tlCollapsed.has(key)) _tlCollapsed.delete(key);
+  else _tlCollapsed.add(key);
+  const keepX = document.getElementById('timeline-container')?.scrollLeft || 0;
   renderTimeline();
+  const c = document.getElementById('timeline-container');
+  if (c) c.scrollLeft = keepX;
 }
 
-function resetTimeline() {
-  _timelineOffset = 0;
+function toggleAllTimelineGroups() {
+  const btn = document.getElementById('tl-collapse-btn');
+  const allKeys = [...new Set((_timelineEpics || []).map(e => e.fields?.project?.key).filter(Boolean))];
+  const collapsing = _tlCollapsed.size < allKeys.length;
+  _tlCollapsed = collapsing ? new Set(allKeys) : new Set();
+  if (btn) btn.textContent = collapsing ? '모두 펼치기' : '모두 접기';
+  const keepX = document.getElementById('timeline-container')?.scrollLeft || 0;
   renderTimeline();
+  const c = document.getElementById('timeline-container');
+  if (c) c.scrollLeft = keepX;
 }
 
-function getTimelineRange() {
+/** 'YYYY-MM-DD'를 로컬 자정으로 파싱 (new Date(str)는 UTC로 읽혀 날짜가 밀림) */
+function tlParseDate(v) {
+  if (!v) return null;
+  const m = String(v).match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  const d = new Date(v);
+  return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
+
+/** 에픽들의 날짜를 모아 전체 렌더 범위를 산출 (스크롤로 전 구간 접근) */
+function buildTimelineScale(epicInfo) {
+  const cfg = TL_CFG[_timelineMode];
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  let start, end, cells, cellLabel, cellUnit;
+
+  let min = today, max = today;
+  epicInfo.forEach(x => {
+    if (x.start && x.start < min) min = x.start;
+    if (x.end && x.end > max) max = x.end;
+  });
+  min = new Date(min.getTime() - cfg.pad * 86400000);
+  max = new Date(max.getTime() + cfg.pad * 86400000);
+
+  const cells = [];
   if (_timelineMode === 'week') {
-    // 12주 기본, 월요일 시작
-    const monday = new Date(today);
-    const dow = (monday.getDay() + 6) % 7;
-    monday.setDate(monday.getDate() - dow - 14); // 2주 전부터
-    monday.setDate(monday.getDate() + _timelineOffset * 7 * 12);
-    start = monday;
-    cells = [];
-    const nWeeks = 12;
-    for (let i = 0; i < nWeeks; i++) {
-      const d = new Date(monday);
-      d.setDate(monday.getDate() + i * 7);
-      const month = d.getMonth() + 1;
-      const weekOfMonth = Math.ceil(d.getDate() / 7);
-      cells.push({ start: new Date(d), end: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7), label: `${month}/${d.getDate()}` });
+    // 월요일 스냅
+    const s = new Date(min.getFullYear(), min.getMonth(), min.getDate());
+    s.setDate(s.getDate() - ((s.getDay() + 6) % 7));
+    for (let d = new Date(s); d < max; d.setDate(d.getDate() + 7)) {
+      const cs = new Date(d);
+      const ce = new Date(d); ce.setDate(ce.getDate() + 7);
+      cells.push({
+        start: cs, end: ce,
+        label: `${cs.getMonth() + 1}/${cs.getDate()}`,
+        major: `${cs.getFullYear()}년 ${cs.getMonth() + 1}월`,
+      });
     }
-    end = new Date(cells[cells.length - 1].end);
-    cellUnit = 7 * 86400000;
   } else {
-    // 6개월
-    const base = new Date(today.getFullYear(), today.getMonth() + _timelineOffset * 6 - 1, 1);
-    cells = [];
-    for (let i = 0; i < 6; i++) {
-      const s = new Date(base.getFullYear(), base.getMonth() + i, 1);
-      const e = new Date(base.getFullYear(), base.getMonth() + i + 1, 1);
-      cells.push({ start: s, end: e, label: `${s.getFullYear()}/${s.getMonth()+1}` });
+    const s = new Date(min.getFullYear(), min.getMonth(), 1);
+    for (let d = new Date(s); d < max; d.setMonth(d.getMonth() + 1)) {
+      const cs = new Date(d.getFullYear(), d.getMonth(), 1);
+      const ce = new Date(d.getFullYear(), d.getMonth() + 1, 1);
+      cells.push({
+        start: cs, end: ce,
+        label: `${cs.getMonth() + 1}월`,
+        major: `${cs.getFullYear()}년`,
+      });
     }
-    start = cells[0].start;
-    end = cells[cells.length - 1].end;
-    cellUnit = null;
   }
-  return { start, end, cells };
+  if (!cells.length) {
+    const cs = new Date(today); const ce = new Date(today); ce.setDate(ce.getDate() + 7);
+    cells.push({ start: cs, end: ce, label: '—', major: '—' });
+  }
+  _tlCells = cells;
+  _tlCellPx = cfg.cellPx;
+  return cells;
+}
+
+/** 날짜 → 캔버스 X좌표(px). 셀 내부는 선형 보간 (월 길이 차이도 정확) */
+function tlX(date) {
+  const cells = _tlCells;
+  if (!cells.length) return 0;
+  const t = date.getTime();
+  if (t <= cells[0].start.getTime()) return 0;
+  const last = cells[cells.length - 1];
+  if (t >= last.end.getTime()) return cells.length * _tlCellPx;
+  let lo = 0, hi = cells.length - 1;
+  while (lo < hi) {
+    const mid = (lo + hi) >> 1;
+    if (t < cells[mid].end.getTime()) hi = mid; else lo = mid + 1;
+  }
+  const c = cells[lo];
+  const frac = (t - c.start.getTime()) / (c.end.getTime() - c.start.getTime());
+  return (lo + frac) * _tlCellPx;
+}
+
+function tlLabelWidth() {
+  const v = getComputedStyle(document.documentElement).getPropertyValue('--tl-label-w').trim();
+  return parseInt(v) || 280;
+}
+
+/** 현재 뷰포트 중앙에 해당하는 날짜 (줌 전환 시 기준점 유지용) */
+function tlCenterDate() {
+  const c = document.getElementById('timeline-container');
+  if (!c || !_tlCells.length) return null;
+  const lw = tlLabelWidth();
+  const x = c.scrollLeft + c.clientWidth / 2 - lw;
+  if (x < 0) return _tlCells[0].start;
+  const idx = Math.min(_tlCells.length - 1, Math.floor(x / _tlCellPx));
+  const frac = (x / _tlCellPx) - idx;
+  const c0 = _tlCells[idx];
+  return new Date(c0.start.getTime() + frac * (c0.end.getTime() - c0.start.getTime()));
+}
+
+/** 컨테이너 가로 스크롤 애니메이션 (scrollTo smooth가 동작하지 않는 환경 대응) */
+function tlAnimateScroll(c, target) {
+  const max = Math.max(0, c.scrollWidth - c.clientWidth);
+  const to = Math.max(0, Math.min(max, Math.round(target)));
+  const from = c.scrollLeft;
+  const delta = to - from;
+  if (c._tlAnim) { cancelAnimationFrame(c._tlAnim); c._tlAnim = null; }
+  // 탭이 백그라운드면 rAF가 멈추므로 즉시 반영
+  if (Math.abs(delta) < 2 || document.hidden) { c.scrollLeft = to; return; }
+  const dur = 320;
+  const t0 = performance.now();
+  const ease = t => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+  const step = now => {
+    const p = Math.min(1, (now - t0) / dur);
+    c.scrollLeft = from + delta * ease(p);
+    if (p < 1) c._tlAnim = requestAnimationFrame(step);
+    else c._tlAnim = null;
+  };
+  c._tlAnim = requestAnimationFrame(step);
+}
+
+function scrollTimelineTo(date, align) {
+  const c = document.getElementById('timeline-container');
+  if (!c || !date) return;
+  const lw = tlLabelWidth();
+  const x = tlX(date) + lw;
+  const target = align === 'center' ? x - c.clientWidth / 2 : x - lw - 40;
+  tlAnimateScroll(c, target);
+}
+
+function scrollTimelineToToday() {
+  scrollTimelineTo(new Date(), 'center');
+}
+
+function jumpTimelineToDate(val) {
+  const d = tlParseDate(val);
+  if (d) scrollTimelineTo(d, 'center');
+}
+
+/** 한 화면 분량만큼 좌/우 이동 */
+function panTimeline(dir) {
+  const c = document.getElementById('timeline-container');
+  if (!c) return;
+  const step = Math.max(200, c.clientWidth - tlLabelWidth() - 40);
+  tlAnimateScroll(c, c.scrollLeft + dir * step);
 }
 
 function renderTimeline() {
@@ -5944,129 +6146,168 @@ function renderTimeline() {
   const gridEl = document.getElementById('timeline-grid');
   if (!loadingEl || !gridEl) return;
 
-  const { start, end, cells } = getTimelineRange();
-
-  // 라벨 업데이트
-  const labelEl = document.getElementById('timeline-range-label');
-  if (labelEl) {
-    const fmt = d => `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-    labelEl.textContent = `${fmt(start)} ~ ${fmt(new Date(end.getTime() - 86400000))}`;
-  }
-
   const projFilter = document.getElementById('timeline-project-filter')?.value || '';
   const hideDone = document.getElementById('timeline-hide-done')?.checked;
+  const showUndated = document.getElementById('timeline-show-undated')?.checked;
 
-  // 에픽 필터 + 그룹핑
   let epics = _timelineEpics.slice();
   if (projFilter) epics = epics.filter(e => e.fields?.project?.key === projFilter);
-  if (hideDone) epics = epics.filter(e => statusCategory(e.fields?.status?.name||'', e.fields?.status?.statusCategory?.key) !== 'done');
+  if (hideDone) epics = epics.filter(e => statusCategory(e.fields?.status?.name || '', e.fields?.status?.statusCategory?.key) !== 'done');
 
-  // Jira의 start/end 기본 + 폴백
-  const epicInfo = epics.map(e => {
-    const startDateStr = e.fields?.customfield_10015 || null;
-    const dueStr = e.fields?.duedate || e.fields?.resolutiondate || null;
-    const createdStr = e.fields?.created;
-    let s = startDateStr ? new Date(startDateStr) : (createdStr ? new Date(createdStr) : null);
-    let d = dueStr ? new Date(dueStr) : null;
-    if (s && !d) d = new Date(s.getTime() + 7 * 86400000); // 종료 없으면 1주
-    if (!s && d) s = new Date(d.getTime() - 7 * 86400000);
-    return { epic: e, start: s, end: d };
-  }).filter(x => x.start && x.end);
-
-  // 현재 시야에 걸치는 것만
-  const visible = epicInfo.filter(x => x.end >= start && x.start <= end);
-
-  // 프로젝트별 그룹
-  const groups = {};
-  visible.forEach(x => {
-    const key = x.epic.fields?.project?.key || '?';
-    const name = x.epic.fields?.project?.name || key;
-    if (!groups[key]) groups[key] = { key, name, items: [] };
-    groups[key].items.push(x);
+  // Jira 일정: Start date(customfield_10015) + Due date. 하나만 있으면 반대쪽을 추정.
+  const parsed = epics.map(e => {
+    const sRaw = e.fields?.customfield_10015 || null;
+    const dRaw = e.fields?.duedate || e.fields?.resolutiondate || null;
+    let s = tlParseDate(sRaw);
+    let d = tlParseDate(dRaw);
+    let inferred = false;
+    if (s && !d) { d = new Date(s.getTime() + 14 * 86400000); inferred = true; }
+    if (!s && d) { s = new Date(d.getTime() - 14 * 86400000); inferred = true; }
+    return { epic: e, start: s, end: d, inferred, dated: !!(s && d) };
   });
 
-  const groupArr = Object.values(groups).sort((a,b) => a.key.localeCompare(b.key));
+  const dated = parsed.filter(x => x.dated);
+  const undated = parsed.filter(x => !x.dated);
 
-  if (!groupArr.length) {
+  if (!dated.length && !(showUndated && undated.length)) {
     loadingEl.style.display = 'block';
-    loadingEl.textContent = '해당 범위에 에픽이 없습니다.';
+    loadingEl.textContent = '표시할 에픽이 없습니다.';
     gridEl.style.display = 'none';
     return;
   }
 
-  loadingEl.style.display = 'none';
-  gridEl.style.display = 'block';
-
-  const totalMs = end.getTime() - start.getTime();
+  const cells = buildTimelineScale(dated);
+  const totalPx = cells.length * _tlCellPx;
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
 
-  // 헤더
-  let html = `<div class="tl-header-row">
-    <div class="tl-label-col">프로젝트 / 에픽</div>
-    <div class="tl-time-cells">`;
-  cells.forEach(c => {
-    const isToday = today >= c.start && today < c.end;
-    const dow = c.start.getDay();
-    const weekend = (_timelineMode === 'week' && (dow === 0 || dow === 6));
-    html += `<div class="tl-time-cell${isToday ? ' today' : ''}${weekend ? ' weekend' : ''}">${c.label}</div>`;
-  });
-  html += `</div></div>`;
-
-  // today line position (percent across the time cells area)
-  let todayPct = null;
-  if (today >= start && today <= end) {
-    todayPct = ((today.getTime() - start.getTime()) / totalMs) * 100;
+  const fmt = d => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
+  const rangeEl = document.getElementById('timeline-range-label');
+  if (rangeEl) {
+    const shown = dated.length + (showUndated ? undated.length : 0);
+    rangeEl.textContent = `${fmt(cells[0].start)} ~ ${fmt(new Date(cells[cells.length - 1].end.getTime() - 86400000))} · 에픽 ${shown}개`;
   }
 
+  // 프로젝트별 그룹 (일정 없는 것도 같은 프로젝트에 포함)
+  const groups = {};
+  const put = (x, isUndated) => {
+    const key = x.epic.fields?.project?.key || '?';
+    const name = x.epic.fields?.project?.name || key;
+    if (!groups[key]) groups[key] = { key, name, items: [], undated: [] };
+    (isUndated ? groups[key].undated : groups[key].items).push(x);
+  };
+  dated.forEach(x => put(x, false));
+  if (showUndated) undated.forEach(x => put(x, true));
+
+  const groupArr = Object.values(groups).sort((a, b) => a.key.localeCompare(b.key));
+
+  loadingEl.style.display = 'none';
+  gridEl.style.display = 'block';
+
+  // 헤더 눈금 (상단: 월/연, 하단: 주/월)
+  let majorHtml = '';
+  let i = 0;
+  while (i < cells.length) {
+    let j = i;
+    while (j < cells.length && cells[j].major === cells[i].major) j++;
+    majorHtml += `<div class="tl-major-cell" style="width:${(j - i) * _tlCellPx}px;">${escHtml(cells[i].major)}</div>`;
+    i = j;
+  }
+  const minorHtml = cells.map(c => {
+    const isNow = today >= c.start && today < c.end;
+    return `<div class="tl-minor-cell${isNow ? ' now' : ''}" style="width:${_tlCellPx}px;">${escHtml(c.label)}</div>`;
+  }).join('');
+
+  // 트랙 배경 격자
+  const gridBg = `background-image:repeating-linear-gradient(to right, var(--border) 0 1px, transparent 1px ${_tlCellPx}px);`;
+
+  let html = `<div class="tl-canvas">
+    <div class="tl-head">
+      <div class="tl-corner">프로젝트 / 에픽</div>
+      <div class="tl-head-scale" style="width:${totalPx}px;">
+        <div class="tl-scale-major">${majorHtml}</div>
+        <div class="tl-scale-minor">${minorHtml}</div>
+      </div>
+    </div>`;
+
   groupArr.forEach(g => {
-    html += `<div class="tl-project-group">
-      <div class="tl-project-header"><div class="tl-label-col">${escHtml(g.key)} — ${escHtml(g.name)} <span style="font-weight:400;color:var(--text3);margin-left:6px;">(${g.items.length})</span></div><div class="tl-track"></div></div>`;
-    g.items.sort((a,b) => a.start - b.start);
-    g.items.forEach(x => {
-      const e = x.epic;
-      const status = e.fields?.status?.name || '';
-      const cat = statusCategory(status, e.fields?.status?.statusCategory?.key);
-      const barColor = cat === 'done' ? 'var(--success)' : cat === 'inprogress' ? 'var(--primary)' : 'var(--purple)';
-      const barClass = cat === 'done' ? 'tl-bar done' : 'tl-bar';
-      // 진행률 (하위 작업 기반)
-      const prog = _timelineChildrenMap[e.key];
-      const pct = prog && prog.total > 0 ? Math.round(prog.done / prog.total * 100) : 0;
-
-      // bar 위치 계산 (뷰 밖은 clamp)
-      const bStart = Math.max(x.start.getTime(), start.getTime());
-      const bEnd = Math.min(x.end.getTime(), end.getTime());
-      const leftPct = ((bStart - start.getTime()) / totalMs) * 100;
-      const widthPct = Math.max(0.5, ((bEnd - bStart) / totalMs) * 100);
-      const fmt = d => `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
-      const tooltip = `${e.key} ${e.fields?.summary || ''}\n${fmt(x.start)} ~ ${fmt(x.end)}\n상태: ${status}${prog ? ` / 진행 ${pct}% (${prog.done}/${prog.total})` : ''}`;
-
-      html += `<div class="tl-row">
-        <div class="tl-label-col" title="${escHtml(e.key)} — ${escHtml(e.fields?.summary||'')}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}', '_blank')">
-          <span style="color:${barColor};font-weight:700;font-size:11px;margin-right:6px;">${escHtml(e.key)}</span>
-          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.fields?.summary||'')}</span>
+    const collapsed = _tlCollapsed.has(g.key);
+    const count = g.items.length + g.undated.length;
+    html += `<div class="tl-group">
+      <div class="tl-group-head" onclick="toggleTimelineGroup('${escHtml(g.key)}')">
+        <div class="tl-group-label">
+          <span class="tl-caret${collapsed ? ' collapsed' : ''}">▼</span>
+          <span>${escHtml(g.key)}</span>
+          <span style="font-weight:500;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.name)}</span>
+          <span style="font-weight:400;color:var(--text4);margin-left:auto;flex-shrink:0;">${count}</span>
         </div>
-        <div class="tl-track">`;
-      cells.forEach(c => {
-        const isToday = today >= c.start && today < c.end;
-        const dow = c.start.getDay();
-        const weekend = (_timelineMode === 'week' && (dow === 0 || dow === 6));
-        html += `<div class="tl-track-cell${isToday ? ' today' : ''}${weekend ? ' weekend' : ''}"></div>`;
+        <div class="tl-group-track" style="width:${totalPx}px;${gridBg}"></div>
+      </div>`;
+
+    if (!collapsed) {
+      g.items.sort((a, b) => a.start - b.start);
+      g.items.forEach(x => {
+        const e = x.epic;
+        const status = e.fields?.status?.name || '';
+        const cat = statusCategory(status, e.fields?.status?.statusCategory?.key);
+        const color = cat === 'done' ? '#36b37e' : cat === 'inprogress' ? '#0052CC' : '#6554c0';
+        const prog = _timelineChildrenMap[e.key];
+        const pct = prog && prog.total > 0 ? Math.round(prog.done / prog.total * 100) : 0;
+
+        const x0 = tlX(x.start);
+        const x1 = tlX(x.end);
+        const w = Math.max(6, x1 - x0);
+        const tip = `${e.key} ${e.fields?.summary || ''}\n${fmt(x.start)} ~ ${fmt(x.end)}${x.inferred ? ' (일부 추정)' : ''}\n상태: ${status}${prog ? `\n진행: ${pct}% (${prog.done}/${prog.total})` : ''}`;
+        const dash = x.inferred ? 'border:1px dashed rgba(255,255,255,0.65);' : '';
+
+        html += `<div class="tl-row">
+          <div class="tl-label" title="${escHtml(e.key)} — ${escHtml(e.fields?.summary || '')}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}','_blank')">
+            <span class="tl-label-key" style="color:${color};">${escHtml(e.key)}</span>
+            <span class="tl-label-txt">${escHtml(e.fields?.summary || '')}</span>
+          </div>
+          <div class="tl-track" style="width:${totalPx}px;${gridBg}">
+            <div class="tl-bar${cat === 'done' ? ' done' : ''}" style="left:${x0}px;width:${w}px;background:${color};${dash}" title="${escHtml(tip)}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}','_blank')">
+              ${pct > 0 ? `<div class="tl-bar-fill" style="width:${pct}%;"></div>` : ''}
+              <span class="tl-bar-txt">${escHtml(e.fields?.summary || e.key)}${pct > 0 ? ` · ${pct}%` : ''}</span>
+            </div>
+          </div>
+        </div>`;
       });
-      html += `<div class="${barClass}" style="left:${leftPct}%;width:${widthPct}%;background:${barColor};" title="${escHtml(tooltip)}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}', '_blank')">`;
-      if (pct > 0) html += `<div class="tl-bar-pct" style="width:${pct}%;"></div>`;
-      html += `<span style="position:relative;z-index:1;">${escHtml(e.fields?.summary||e.key).slice(0, 40)}${pct > 0 ? ` · ${pct}%` : ''}</span>`;
-      html += `</div>`;
-      if (todayPct !== null) {
-        // today line 각 row에도
-      }
-      html += `</div></div>`;
-    });
+
+      g.undated.forEach(x => {
+        const e = x.epic;
+        html += `<div class="tl-row">
+          <div class="tl-label" title="${escHtml(e.key)} — ${escHtml(e.fields?.summary || '')}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}','_blank')">
+            <span class="tl-label-key" style="color:var(--text4);">${escHtml(e.key)}</span>
+            <span class="tl-label-txt" style="color:var(--text3);">${escHtml(e.fields?.summary || '')}</span>
+          </div>
+          <div class="tl-track" style="width:${totalPx}px;${gridBg}">
+            <span class="tl-nobar" style="left:${Math.max(0, tlX(today) - 40)}px;">일정 미설정</span>
+          </div>
+        </div>`;
+      });
+    }
+    html += `</div>`;
   });
+
+  // 오늘 마커
+  const todayX = tlX(today);
+  html += `<div class="tl-today" style="left:calc(var(--tl-label-w) + ${todayX}px);"></div>`;
+  html += `</div>`;
 
   gridEl.innerHTML = html;
 
-  // today 라인: 전체 그리드 위에 한 번 그리기 (optional, already shown via cell background)
+  if (!_tlDidInitialScroll) {
+    _tlDidInitialScroll = true;
+    // 패널이 아직 레이아웃되지 않았으면(탭 전환 직후) 폭이 잡힐 때까지 재시도
+    const settle = tries => {
+      const el = document.getElementById('timeline-container');
+      if (!el) return;
+      if (el.clientWidth === 0 && tries > 0) { setTimeout(() => settle(tries - 1), 60); return; }
+      el.scrollLeft = Math.max(0, tlX(today) + tlLabelWidth() - el.clientWidth / 2);
+    };
+    setTimeout(() => settle(12), 0);
+  }
 }
 
 // ===== STALE ISSUES =====
