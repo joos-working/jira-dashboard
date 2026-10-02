@@ -3028,7 +3028,7 @@ async function jiraFetch(path, params = {}, options = {}) {
   return resp.json();
 }
 
-async function fetchAllIssues(jql, fields) {
+async function fetchAllIssues(jql, fields, onProgress) {
   const all = [];
   let nextPageToken = null;
   const maxResults = 100;
@@ -3047,11 +3047,11 @@ async function fetchAllIssues(jql, fields) {
       ]);
     } catch (e) {
       console.warn(`[fetchAllIssues] page ${page} failed:`, e.message);
-      showLoading(`이슈 로드 중단: ${all.length}개 (오류: ${e.message})`);
+      if (onProgress) onProgress(all.length, page, e);
       break;
     }
     all.push(...(data.issues || []));
-    showLoading(`데이터 로딩 중... ${all.length.toLocaleString()}개`);
+    if (onProgress) onProgress(all.length, page, null);
     if (data.isLast || !data.issues || data.issues.length === 0 || !data.nextPageToken) break;
     nextPageToken = data.nextPageToken;
   }
@@ -3257,7 +3257,9 @@ async function loadDashboard() {
     const jql = `${projectClause}issuetype != Epic ORDER BY updated DESC`;
     const fields = ['summary','status','priority','issuetype','assignee','project','created','updated','duedate','resolutiondate','labels','components','statuscategorychangedate','parent','description','issuelinks'];
 
-    const issues = await fetchAllIssues(jql, fields);
+    const issues = await fetchAllIssues(jql, fields, (count) => {
+      showLoading(`데이터 로딩 중... ${count.toLocaleString()}개`);
+    });
     state.issues = issues;
     populateGlobalUserFilter(issues);
     renderAll();
@@ -5843,7 +5845,9 @@ async function loadTimelineEpics(force) {
   try {
     // Jira Cloud 기본 Start date = customfield_10015
     const fields = 'summary,status,project,created,updated,duedate,resolutiondate,customfield_10015,issuetype';
-    const data = await fetchAllIssues('issuetype = Epic ORDER BY project, created DESC', fields.split(','));
+    const data = await fetchAllIssues('issuetype = Epic ORDER BY project, created DESC', fields.split(','), (count) => {
+      loadingEl.textContent = `에픽 로딩 중... ${count}개`;
+    });
     _timelineEpics = data || [];
     // children progress 집계 (state.issues 내 parent로 매칭)
     _timelineChildrenMap = {};
