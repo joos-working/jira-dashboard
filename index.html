@@ -2656,6 +2656,7 @@
         <label class="tl-check"><input type="checkbox" id="timeline-show-undated" onchange="renderTimeline()" checked> 일정 미설정 포함</label>
         <button class="btn btn-ghost btn-sm" onclick="toggleAllTimelineGroups()" id="tl-collapse-btn">모두 접기</button>
         <button class="btn btn-ghost btn-sm" onclick="loadTimelineEpics(true)" title="새로고침">↻</button>
+        <button class="btn btn-outline btn-sm" onclick="showTimelineDiag()" title="왜 이 에픽만 보이는지 확인">진단</button>
         <span id="timeline-range-label" class="tl-range"></span>
       </div>
       <div class="card" style="overflow:hidden;">
@@ -3341,12 +3342,15 @@ async function refreshData() {
  * JQL에 project 절이 없으면 Jira 쿼리가 매우 느려져 타임아웃으로 일부만 받게 된다.
  */
 let _allProjectKeys = null;
+let _projectFetchError = null;
 async function getAllProjectKeys(force) {
-  if (_allProjectKeys && !force) return _allProjectKeys;
+  // 빈 배열은 캐시하지 않는다 (한 번 실패하면 영구히 빈 절로 조회하게 됨)
+  if (_allProjectKeys && _allProjectKeys.length && !force) return _allProjectKeys;
   const keys = [];
+  _projectFetchError = null;
   try {
     let startAt = 0;
-    for (let guard = 0; guard < 20; guard++) {
+    for (let guard = 0; guard < 40; guard++) {
       const resp = await jiraFetch('/rest/api/3/project/search', { maxResults: 50, startAt });
       (resp.values || []).forEach(p => keys.push(p.key));
       if (resp.isLast || !resp.values || resp.values.length === 0) break;
@@ -3354,6 +3358,7 @@ async function getAllProjectKeys(force) {
       if (typeof resp.total === 'number' && startAt >= resp.total) break;
     }
   } catch (e) {
+    _projectFetchError = e.message;
     console.warn('[projects] fetch failed:', e.message);
   }
   _allProjectKeys = keys;
@@ -6036,6 +6041,7 @@ async function loadTimelineEpics(force) {
       fetched: _timelineEpics.length,
       truncated: res.truncated,
       truncateReason: res.reason,
+      jql,
     };
     console.info('[timeline] meta', _tlDiag);
     // children progress 집계 (state.issues 내 parent로 매칭)
@@ -6053,6 +6059,79 @@ async function loadTimelineEpics(force) {
     renderTimeline();
   } catch (e) {
     loadingEl.textContent = `에픽 로딩 실패: ${e.message}`;
+  }
+}
+
+/** 왜 특정 에픽/프로젝트만 보이는지 사람이 읽을 수 있게 보고 */
+function showTimelineDiag() {
+  const L = [];
+  L.push('=== 타임라인 진단 ===');
+  L.push('');
+  L.push(`[1] 프로젝트 조회`);
+  L.push(`  접근 가능한 프로젝트: ${_allProjectKeys ? _allProjectKeys.length + '개' : '조회 안 함'}`);
+  if (_allProjectKeys?.length) L.push(`  키: ${_allProjectKeys.join(', ')}`);
+  if (_projectFetchError) L.push(`  ⚠ 조회 오류: ${_projectFetchError}`);
+  L.push('');
+
+  L.push(`[2] Jira 필드/타입 탐색`);
+  if (_tlDiag) {
+    L.push(`  시작일 필드: ${_tlDiag.startFields?.join(', ') || '없음'}`);
+    L.push(`  종료일 필드: ${_tlDiag.endFields?.join(', ') || '(duedate 사용)'}`);
+    L.push(`  에픽 이슈타입: ${_tlDiag.epicTypes?.join(', ') || '없음'}`);
+  } else {
+    L.push('  아직 로딩되지 않음');
+  }
+  L.push('');
+
+  L.push(`[3] 에픽 조회 결과`);
+  L.push(`  JQL: ${_tlDiag?.jql || '(없음)'}`);
+  L.push(`  가져온 에픽: ${_timelineEpics?.length ?? 0}개`);
+  if (_tlDiag?.truncated) {
+    L.push(`  ⚠ 조회가 중간에 끊김: ${_tlDiag.truncateReason}`);
+    L.push(`  → 이 경우 뒤쪽 프로젝트가 통째로 누락됩니다.`);
+  } else {
+    L.push(`  조회 완료 (중단 없음)`);
+  }
+  L.push('');
+
+  // 가져온 에픽의 프로젝트별 분포 = "원래 에픽이 없는 것"인지 구분하는 핵심
+  L.push(`[4] 가져온 에픽의 프로젝트별 분포`);
+  const byProj = {};
+  (_timelineEpics || []).forEach(e => {
+    const k = e.fields?.project?.key || '?';
+    byProj[k] = (byProj[k] || 0) + 1;
+  });
+  const entries = Object.entries(byProj).sort((a, b) => a[0].localeCompare(b[0]));
+  if (!entries.length) L.push('  (없음)');
+  entries.forEach(([k, v]) => L.push(`  ${k}: ${v}개`));
+  if (_allProjectKeys?.length) {
+    const missing = _allProjectKeys.filter(k => !byProj[k]);
+    if (missing.length) {
+      L.push('');
+      L.push(`  에픽이 0개인 프로젝트 (${missing.length}): ${missing.join(', ')}`);
+      L.push(`  → 조회가 끊기지 않았다면 해당 프로젝트에 에픽이 실제로 없거나`);
+      L.push(`     에픽 이슈타입 이름이 위 [2]의 목록과 다릅니다.`);
+    }
+  }
+  L.push('');
+
+  L.push(`[5] 현재 화면 필터`);
+  L.push(`  프로젝트 선택: ${document.getElementById('timeline-project-filter')?.value || '전체'}`);
+  L.push(`  완료 숨김: ${document.getElementById('timeline-hide-done')?.checked ? '켜짐' : '꺼짐'}`);
+  L.push(`  일정 미설정 포함: ${document.getElementById('timeline-show-undated')?.checked ? '켜짐' : '꺼짐'}`);
+  L.push(`  화면에 그려진 프로젝트 그룹: ${document.querySelectorAll('.tl-group').length}개`);
+
+  const text = L.join('\n');
+  console.info(text);
+  const win = window.open('', '_blank', 'width=720,height=640,scrollbars=yes');
+  if (win) {
+    win.document.title = '타임라인 진단';
+    const pre = win.document.createElement('pre');
+    pre.style.cssText = 'font:12px/1.6 ui-monospace,Consolas,monospace;padding:16px;white-space:pre-wrap;word-break:break-all;';
+    pre.textContent = text;
+    win.document.body.appendChild(pre);
+  } else {
+    alert(text);
   }
 }
 
