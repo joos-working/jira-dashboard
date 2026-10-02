@@ -1232,7 +1232,18 @@
     }
 
     /* ===== TIMELINE TAB (Jira-style gantt) ===== */
-    :root { --tl-label-w: 280px; --tl-row-h: 34px; }
+    /* 막대 색은 흰 글자 대비 4.5:1 이상을 확보한 값. 배경에 묻히지 않도록 opacity 대신 색 자체로 구분한다. */
+    :root {
+      --tl-label-w: 280px; --tl-row-h: 34px;
+      --tl-done: #17724E;   /* 흰 글자 대비 ≈ 6.0:1 */
+      --tl-prog: #0052CC;   /* ≈ 8.6:1 */
+      --tl-todo: #4F3FA8;   /* ≈ 7.6:1 */
+    }
+    [data-theme="dark"] {
+      --tl-done: #19815A;   /* 흰 글자 대비 ≈ 4.8:1 */
+      --tl-prog: #1B63D8;   /* ≈ 5.5:1 */
+      --tl-todo: #6554C0;   /* ≈ 5.9:1 */
+    }
 
     .tl-toolbar { display:flex; align-items:center; gap:10px; margin-bottom:12px; flex-wrap:wrap; }
     .tl-title { font-size:18px; font-weight:700; color:var(--text); margin-right:2px; }
@@ -1295,17 +1306,29 @@
     .tl-minor-cell.now { background:var(--primary-light); color:var(--primary); font-weight:700; }
 
     /* body */
-    .tl-group { border-bottom:2px solid var(--border2); }
-    .tl-group-head { display:flex; background:var(--surface3); cursor:pointer; position:sticky; z-index:12; }
+    /* 프로젝트 경계: 위아래 굵은 구분선 + 프로젝트별 색 띠로 묶음을 명확히 */
+    .tl-group { border-bottom:3px solid var(--border2); }
+    .tl-group:last-child { border-bottom:none; }
+    .tl-group-head {
+      display:flex; cursor:pointer; position:sticky; z-index:12;
+      background:var(--surface3); border-top:2px solid var(--border2);
+    }
     .tl-group-head:hover { background:var(--border); }
     .tl-group-label {
       position:sticky; left:0; z-index:14;
       width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
       background:var(--surface3); border-right:1px solid var(--border2);
-      display:flex; align-items:center; gap:6px; padding:8px 12px;
+      display:flex; align-items:center; gap:6px; padding:9px 12px 9px 9px;
       font-size:12px; font-weight:700; color:var(--text);
+      border-left:4px solid var(--tl-accent, var(--primary));
     }
     .tl-group-head:hover .tl-group-label { background:var(--border); }
+    /* 소속 행에도 같은 색 띠를 얇게 이어 붙여 어느 프로젝트인지 추적 가능하게 */
+    .tl-group .tl-row .tl-label { border-left:4px solid var(--tl-accent, var(--primary)); padding-left:9px; }
+    .tl-group .tl-row .tl-label::before {
+      content:''; position:absolute; left:0; top:0; bottom:0; width:4px;
+      background:var(--surface); opacity:0.55;
+    }
     .tl-caret { font-size:10px; color:var(--text3); transition:transform 0.15s; display:inline-block; }
     .tl-caret.collapsed { transform:rotate(-90deg); }
     .tl-group-track { flex:0 0 auto; position:relative; }
@@ -1330,12 +1353,13 @@
       border-radius:4px; display:flex; align-items:center; padding:0 8px;
       font-size:11px; font-weight:600; color:#fff; cursor:pointer;
       overflow:hidden; white-space:nowrap;
-      box-shadow:0 1px 2px rgba(0,0,0,0.12);
+      box-shadow:0 1px 2px rgba(0,0,0,0.18), inset 0 0 0 1px rgba(255,255,255,0.14);
+      text-shadow:0 1px 1px rgba(0,0,0,0.35);
       transition:box-shadow 0.15s, height 0.15s; z-index:3;
     }
-    .tl-bar:hover { height:24px; z-index:5; box-shadow:0 3px 8px rgba(0,0,0,0.25); }
-    .tl-bar.done { opacity:0.55; }
-    .tl-bar-fill { position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,0.28); pointer-events:none; }
+    .tl-bar:hover { height:24px; z-index:5; box-shadow:0 3px 10px rgba(0,0,0,0.3); }
+    /* 진행 완료 구간은 어둡게 덮는다. 밝게 덮으면 흰 글자가 묻힌다. */
+    .tl-bar-fill { position:absolute; left:0; top:0; bottom:0; background:rgba(0,0,0,0.26); pointer-events:none; }
     .tl-bar-txt { position:relative; z-index:1; overflow:hidden; text-overflow:ellipsis; }
     .tl-nobar { position:absolute; top:50%; transform:translateY(-50%); left:8px; font-size:10px; color:var(--text4); font-style:italic; }
 
@@ -6539,14 +6563,15 @@ function renderTimeline() {
       </div>
     </div>`;
 
-  groupArr.forEach(g => {
+  groupArr.forEach((g, gi) => {
     const collapsed = _tlCollapsed.has(g.key);
     const count = g.items.length + g.undated.length;
-    html += `<div class="tl-group">
+    const accent = projectColor(gi);
+    html += `<div class="tl-group" style="--tl-accent:${accent};">
       <div class="tl-group-head" onclick="toggleTimelineGroup('${escHtml(g.key)}')">
         <div class="tl-group-label">
           <span class="tl-caret${collapsed ? ' collapsed' : ''}">▼</span>
-          <span>${escHtml(g.key)}</span>
+          <span style="color:${accent};">${escHtml(g.key)}</span>
           <span style="font-weight:500;color:var(--text3);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.name)}</span>
           <span style="font-weight:400;color:var(--text4);margin-left:auto;flex-shrink:0;">${count}</span>
         </div>
@@ -6559,7 +6584,7 @@ function renderTimeline() {
         const e = x.epic;
         const status = e.fields?.status?.name || '';
         const cat = statusCategory(status, e.fields?.status?.statusCategory?.key);
-        const color = cat === 'done' ? '#36b37e' : cat === 'inprogress' ? '#0052CC' : '#6554c0';
+        const color = cat === 'done' ? 'var(--tl-done)' : cat === 'inprogress' ? 'var(--tl-prog)' : 'var(--tl-todo)';
         const prog = _timelineChildrenMap[e.key];
         const pct = prog && prog.total > 0 ? Math.round(prog.done / prog.total * 100) : 0;
 
