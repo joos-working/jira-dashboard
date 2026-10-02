@@ -2653,7 +2653,7 @@
           <option value="">전체 프로젝트</option>
         </select>
         <label class="tl-check"><input type="checkbox" id="timeline-hide-done" onchange="renderTimeline()"> 완료 숨김</label>
-        <label class="tl-check"><input type="checkbox" id="timeline-show-undated" onchange="renderTimeline()"> 일정 미설정 포함</label>
+        <label class="tl-check"><input type="checkbox" id="timeline-show-undated" onchange="renderTimeline()" checked> 일정 미설정 포함</label>
         <button class="btn btn-ghost btn-sm" onclick="toggleAllTimelineGroups()" id="tl-collapse-btn">모두 접기</button>
         <button class="btn btn-ghost btn-sm" onclick="loadTimelineEpics(true)" title="새로고침">↻</button>
         <span id="timeline-range-label" class="tl-range"></span>
@@ -5913,6 +5913,10 @@ let _tlCollapsed = new Set();       // 접힌 프로젝트 키
 let _tlCells = [];                  // [{start,end,label,major}]
 let _tlCellPx = 46;
 let _tlDidInitialScroll = false;
+let _tlStartFieldIds = null;        // 런타임 탐색된 시작일 후보 필드 id
+let _tlEndFieldIds = null;          // 런타임 탐색된 종료일 후보 필드 id
+let _tlEpicTypeNames = null;        // 에픽 계층 이슈타입 이름들
+let _tlDiag = null;                 // 진단 정보
 
 function initTimelineTab() {
   if (!_timelineLoaded) {
@@ -5922,21 +5926,77 @@ function initTimelineTab() {
   }
 }
 
+/**
+ * 시작/종료일 필드 id와 에픽 이슈타입 이름을 Jira 메타데이터에서 탐색.
+ * 사이트마다 customfield 번호와 이슈타입 이름이 다르므로 하드코딩하지 않는다.
+ */
+async function discoverTimelineMeta() {
+  if (_tlStartFieldIds && _tlEpicTypeNames) return;
+
+  // 1) 날짜 필드 탐색
+  try {
+    const fields = await jiraFetch('/rest/api/3/field');
+    const startRe = /^(start date|시작일|target start|목표 시작일|시작 날짜|baseline start)$/i;
+    const endRe   = /^(target end|목표 종료일|종료일|end date|종료 날짜|baseline end)$/i;
+    const isDate = f => {
+      const t = f.schema?.type;
+      return t === 'date' || t === 'datetime';
+    };
+    _tlStartFieldIds = fields.filter(f => isDate(f) && startRe.test(f.name || '')).map(f => f.id);
+    _tlEndFieldIds   = fields.filter(f => isDate(f) && endRe.test(f.name || '')).map(f => f.id);
+    // 느슨한 2차 탐색
+    if (!_tlStartFieldIds.length) {
+      _tlStartFieldIds = fields.filter(f => isDate(f) && /start|시작/i.test(f.name || '')).map(f => f.id);
+    }
+  } catch (e) {
+    console.warn('[timeline] field discovery failed:', e.message);
+  }
+  if (!_tlStartFieldIds || !_tlStartFieldIds.length) _tlStartFieldIds = ['customfield_10015'];
+  if (!_tlEndFieldIds) _tlEndFieldIds = [];
+
+  // 2) 에픽 계층 이슈타입 탐색 (hierarchyLevel 1 = Epic)
+  try {
+    const types = await jiraFetch('/rest/api/3/issuetype');
+    const names = new Set();
+    (types || []).forEach(t => {
+      if (t.hierarchyLevel === 1 || /^(epic|에픽)$/i.test(t.name || '')) names.add(t.name);
+    });
+    _tlEpicTypeNames = [...names];
+  } catch (e) {
+    console.warn('[timeline] issuetype discovery failed:', e.message);
+  }
+  if (!_tlEpicTypeNames || !_tlEpicTypeNames.length) _tlEpicTypeNames = ['Epic'];
+}
+
 async function loadTimelineEpics(force) {
   const loadingEl = document.getElementById('timeline-loading');
   const gridEl = document.getElementById('timeline-grid');
   if (!loadingEl || !gridEl) return;
-  if (force) { _timelineLoaded = false; _timelineEpics = null; }
+  if (force) { _timelineLoaded = false; _timelineEpics = null; _tlStartFieldIds = null; _tlEpicTypeNames = null; }
   gridEl.style.display = 'none';
   loadingEl.style.display = 'block';
   loadingEl.textContent = '에픽 로딩 중...';
   try {
-    // Jira Cloud 기본 Start date = customfield_10015
-    const fields = 'summary,status,project,created,updated,duedate,resolutiondate,customfield_10015,issuetype';
-    const data = await fetchAllIssues('issuetype = Epic ORDER BY project, created DESC', fields.split(','), (count) => {
+    loadingEl.textContent = 'Jira 필드 정보 확인 중...';
+    await discoverTimelineMeta();
+
+    const base = ['summary','status','project','created','updated','duedate','resolutiondate','issuetype'];
+    const fields = [...new Set([...base, ..._tlStartFieldIds, ..._tlEndFieldIds])];
+    const typeClause = _tlEpicTypeNames.map(n => `"${n.replace(/"/g, '\\"')}"`).join(',');
+    const jql = `issuetype in (${typeClause}) ORDER BY project, created DESC`;
+
+    loadingEl.textContent = '에픽 로딩 중...';
+    const data = await fetchAllIssues(jql, fields, (count) => {
       loadingEl.textContent = `에픽 로딩 중... ${count}개`;
     });
     _timelineEpics = data || [];
+    _tlDiag = {
+      startFields: _tlStartFieldIds,
+      endFields: _tlEndFieldIds,
+      epicTypes: _tlEpicTypeNames,
+      fetched: _timelineEpics.length,
+    };
+    console.info('[timeline] meta', _tlDiag);
     // children progress 집계 (state.issues 내 parent로 매칭)
     _timelineChildrenMap = {};
     for (const iss of state.issues) {
@@ -6202,10 +6262,17 @@ function renderTimeline() {
   if (projFilter) epics = epics.filter(e => e.fields?.project?.key === projFilter);
   if (hideDone) epics = epics.filter(e => statusCategory(e.fields?.status?.name || '', e.fields?.status?.statusCategory?.key) !== 'done');
 
-  // Jira 일정: Start date(customfield_10015) + Due date. 하나만 있으면 반대쪽을 추정.
+  // Jira 일정: 탐색된 시작일 필드 + 종료일/Due date. 하나만 있으면 반대쪽을 추정.
+  const pick = (f, ids) => {
+    for (const id of (ids || [])) {
+      if (f && f[id]) return f[id];
+    }
+    return null;
+  };
   const parsed = epics.map(e => {
-    const sRaw = e.fields?.customfield_10015 || null;
-    const dRaw = e.fields?.duedate || e.fields?.resolutiondate || null;
+    const f = e.fields || {};
+    const sRaw = pick(f, _tlStartFieldIds);
+    const dRaw = pick(f, _tlEndFieldIds) || f.duedate || f.resolutiondate || null;
     let s = tlParseDate(sRaw);
     let d = tlParseDate(dRaw);
     let inferred = false;
@@ -6232,8 +6299,14 @@ function renderTimeline() {
   const fmt = d => `${d.getFullYear()}.${String(d.getMonth() + 1).padStart(2, '0')}.${String(d.getDate()).padStart(2, '0')}`;
   const rangeEl = document.getElementById('timeline-range-label');
   if (rangeEl) {
-    const shown = dated.length + (showUndated ? undated.length : 0);
-    rangeEl.textContent = `${fmt(cells[0].start)} ~ ${fmt(new Date(cells[cells.length - 1].end.getTime() - 86400000))} · 에픽 ${shown}개`;
+    const total = _timelineEpics.length;
+    let txt = `${fmt(cells[0].start)} ~ ${fmt(new Date(cells[cells.length - 1].end.getTime() - 86400000))}`;
+    txt += ` · 에픽 ${total}개 (일정 ${dated.length} / 미설정 ${undated.length})`;
+    if (epics.length !== total) txt += ` · 필터로 ${total - epics.length}개 숨김`;
+    rangeEl.textContent = txt;
+    rangeEl.title = _tlDiag
+      ? `시작일 필드: ${_tlDiag.startFields.join(', ') || '없음'}\n종료일 필드: ${(_tlDiag.endFields||[]).join(', ') || 'duedate'}\n에픽 타입: ${_tlDiag.epicTypes.join(', ')}`
+      : '';
   }
 
   // 프로젝트별 그룹 (일정 없는 것도 같은 프로젝트에 포함)
