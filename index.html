@@ -5958,6 +5958,7 @@ let _tlDidInitialScroll = false;
 let _tlStartFieldIds = null;        // 런타임 탐색된 시작일 후보 필드 id
 let _tlEndFieldIds = null;          // 런타임 탐색된 종료일 후보 필드 id
 let _tlEpicTypeNames = null;        // 에픽 계층 이슈타입 이름들
+let _tlEpicTypeIds = null;          // 같은 이름이 여러 ID로 존재하므로 ID로 조회한다
 let _tlDiag = null;                 // 진단 정보
 let _tlTypeDiag = null;             // 이슈타입 탐색 상세 (전역/프로젝트별)
 
@@ -6003,12 +6004,14 @@ async function discoverTimelineMeta() {
   _tlTypeDiag = { global: [], perProject: {}, errors: [] };
   try {
     const names = new Set();
+    const ids = new Set();
+    const isEpicType = t => t.hierarchyLevel === 1 || /^(epic|에픽)$/i.test(t.name || '');
 
     try {
       const types = await jiraFetch('/rest/api/3/issuetype');
       (types || []).forEach(t => {
-        _tlTypeDiag.global.push(`${t.name}(h${t.hierarchyLevel ?? '?'})`);
-        if (t.hierarchyLevel === 1 || /^(epic|에픽)$/i.test(t.name || '')) names.add(t.name);
+        _tlTypeDiag.global.push(`${t.name}#${t.id}(h${t.hierarchyLevel ?? '?'})`);
+        if (isEpicType(t)) { names.add(t.name); if (t.id) ids.add(String(t.id)); }
       });
     } catch (e) {
       _tlTypeDiag.errors.push(`global: ${e.message}`);
@@ -6025,23 +6028,25 @@ async function discoverTimelineMeta() {
     }));
     results.forEach(r => {
       if (r.error) { _tlTypeDiag.errors.push(`${r.key}: ${r.error}`); return; }
-      const epicish = r.types.filter(t => t.hierarchyLevel === 1 || /^(epic|에픽)$/i.test(t.name || ''));
-      _tlTypeDiag.perProject[r.key] = epicish.map(t => t.name);
-      epicish.forEach(t => names.add(t.name));
+      const epicish = r.types.filter(isEpicType);
+      _tlTypeDiag.perProject[r.key] = epicish.map(t => `${t.name}#${t.id}`);
+      epicish.forEach(t => { names.add(t.name); if (t.id) ids.add(String(t.id)); });
     });
 
     _tlEpicTypeNames = [...names];
+    _tlEpicTypeIds = [...ids];
   } catch (e) {
     console.warn('[timeline] issuetype discovery failed:', e.message);
   }
   if (!_tlEpicTypeNames || !_tlEpicTypeNames.length) _tlEpicTypeNames = ['Epic'];
+  if (!_tlEpicTypeIds) _tlEpicTypeIds = [];
 }
 
 async function loadTimelineEpics(force) {
   const loadingEl = document.getElementById('timeline-loading');
   const gridEl = document.getElementById('timeline-grid');
   if (!loadingEl || !gridEl) return;
-  if (force) { _timelineLoaded = false; _timelineEpics = null; _tlStartFieldIds = null; _tlEpicTypeNames = null; }
+  if (force) { _timelineLoaded = false; _timelineEpics = null; _tlStartFieldIds = null; _tlEpicTypeNames = null; _tlEpicTypeIds = null; }
   gridEl.style.display = 'none';
   loadingEl.style.display = 'block';
   loadingEl.textContent = '에픽 로딩 중...';
@@ -6051,7 +6056,12 @@ async function loadTimelineEpics(force) {
 
     const base = ['summary','status','project','created','updated','duedate','resolutiondate','issuetype'];
     const fields = [...new Set([...base, ..._tlStartFieldIds, ..._tlEndFieldIds])];
-    const typeClause = _tlEpicTypeNames.map(n => `"${n.replace(/"/g, '\\"')}"`).join(',');
+    // 같은 이름("에픽")을 가진 이슈타입이 프로젝트마다 다른 ID로 존재하면
+    // 이름으로 지정한 JQL은 일부 ID로만 해석되어 나머지 프로젝트가 통째로 빠진다.
+    // ID가 있으면 ID로 조회한다.
+    const typeClause = _tlEpicTypeIds.length
+      ? _tlEpicTypeIds.join(',')
+      : _tlEpicTypeNames.map(n => `"${n.replace(/"/g, '\\"')}"`).join(',');
 
     // project 절이 없으면 쿼리가 느려져 타임아웃으로 앞쪽 프로젝트만 받게 된다
     loadingEl.textContent = '프로젝트 목록 확인 중...';
@@ -6109,7 +6119,8 @@ function showTimelineDiag() {
   if (_tlDiag) {
     L.push(`  시작일 필드: ${_tlDiag.startFields?.join(', ') || '없음'}`);
     L.push(`  종료일 필드: ${_tlDiag.endFields?.join(', ') || '(duedate 사용)'}`);
-    L.push(`  에픽 이슈타입(최종): ${_tlDiag.epicTypes?.join(', ') || '없음'}`);
+    L.push(`  에픽 이슈타입명: ${_tlDiag.epicTypes?.join(', ') || '없음'}`);
+    L.push(`  에픽 이슈타입 ID(조회에 사용): ${_tlEpicTypeIds?.join(', ') || '(ID 없음 → 이름으로 조회)'}`);
   } else {
     L.push('  아직 로딩되지 않음');
   }
