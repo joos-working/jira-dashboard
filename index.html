@@ -1335,7 +1335,8 @@
     .tl-caret.collapsed { transform:rotate(-90deg); }
     .tl-group-track { flex:0 0 auto; position:relative; }
 
-    .tl-row { display:flex; height:var(--tl-row-h); }
+    /* 막대가 없는 구간에서도 행이 읽히도록 아주 옅은 가로선을 남긴다 */
+    .tl-row { display:flex; height:var(--tl-row-h); box-shadow:inset 0 -1px 0 var(--tl-grid); }
     .tl-row:hover .tl-label { background:var(--surface2); }
     .tl-row:hover .tl-track { background:var(--tl-grid); }
     .tl-label {
@@ -6119,10 +6120,35 @@ async function loadTimelineEpics(force) {
     }
     _timelineLoaded = true;
     populateTimelineProjectFilter();
+    autoPickTimelineZoom();
     renderTimeline();
   } catch (e) {
     loadingEl.textContent = `에픽 로딩 실패: ${e.message}`;
   }
+}
+
+/**
+ * 데이터가 걸쳐 있는 기간에 맞춰 첫 줌 단계를 고른다.
+ * 항상 '주'로 열면 기간이 긴 프로젝트는 막대가 화면 밖으로 밀려
+ * 빈 화면만 보이게 된다.
+ */
+function autoPickTimelineZoom() {
+  let min = null, max = null;
+  (_timelineEpics || []).forEach(e => {
+    const f = e.fields || {};
+    const s = tlParseDate(_tlStartFieldIds.map(id => f[id]).find(Boolean));
+    const d = tlParseDate(f.duedate || f.resolutiondate || _tlEndFieldIds.map(id => f[id]).find(Boolean));
+    [s, d].forEach(x => {
+      if (!x) return;
+      if (!min || x < min) min = x;
+      if (!max || x > max) max = x;
+    });
+  });
+  if (!min || !max) return;
+  const months = (max - min) / (30.4 * 86400000);
+  const mode = months <= 5 ? 'week' : months <= 20 ? 'month' : 'quarter';
+  _timelineMode = mode;
+  document.querySelectorAll('.timeline-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
 }
 
 /**
