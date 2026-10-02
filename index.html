@@ -3341,18 +3341,18 @@ async function refreshData() {
  * 접근 가능한 전체 프로젝트 키 (페이지네이션 포함, 세션 캐시).
  * JQL에 project 절이 없으면 Jira 쿼리가 매우 느려져 타임아웃으로 일부만 받게 된다.
  */
-let _allProjectKeys = null;
+let _allProjects = null;        // [{id, key, name}]
 let _projectFetchError = null;
-async function getAllProjectKeys(force) {
+async function getAllProjects(force) {
   // 빈 배열은 캐시하지 않는다 (한 번 실패하면 영구히 빈 절로 조회하게 됨)
-  if (_allProjectKeys && _allProjectKeys.length && !force) return _allProjectKeys;
-  const keys = [];
+  if (_allProjects && _allProjects.length && !force) return _allProjects;
+  const list = [];
   _projectFetchError = null;
   try {
     let startAt = 0;
     for (let guard = 0; guard < 40; guard++) {
       const resp = await jiraFetch('/rest/api/3/project/search', { maxResults: 50, startAt });
-      (resp.values || []).forEach(p => keys.push(p.key));
+      (resp.values || []).forEach(p => list.push({ id: p.id, key: p.key, name: p.name }));
       if (resp.isLast || !resp.values || resp.values.length === 0) break;
       startAt += resp.values.length;
       if (typeof resp.total === 'number' && startAt >= resp.total) break;
@@ -3361,9 +3361,13 @@ async function getAllProjectKeys(force) {
     _projectFetchError = e.message;
     console.warn('[projects] fetch failed:', e.message);
   }
-  _allProjectKeys = keys;
-  console.info(`[projects] ${keys.length} keys:`, keys.join(','));
-  return keys;
+  _allProjects = list;
+  console.info(`[projects] ${list.length}:`, list.map(p => p.key).join(','));
+  return list;
+}
+
+async function getAllProjectKeys(force) {
+  return (await getAllProjects(force)).map(p => p.key);
 }
 
 async function loadDashboard() {
@@ -5955,6 +5959,7 @@ let _tlStartFieldIds = null;        // 런타임 탐색된 시작일 후보 필�
 let _tlEndFieldIds = null;          // 런타임 탐색된 종료일 후보 필드 id
 let _tlEpicTypeNames = null;        // 에픽 계층 이슈타입 이름들
 let _tlDiag = null;                 // 진단 정보
+let _tlTypeDiag = null;             // 이슈타입 탐색 상세 (전역/프로젝트별)
 
 function initTimelineTab() {
   if (!_timelineLoaded) {
@@ -5993,12 +5998,38 @@ async function discoverTimelineMeta() {
   if (!_tlEndFieldIds) _tlEndFieldIds = [];
 
   // 2) 에픽 계층 이슈타입 탐색 (hierarchyLevel 1 = Epic)
+  //    회사관리/팀관리 프로젝트가 섞이면 전역 목록만으로는 누락될 수 있어
+  //    프로젝트별 이슈타입도 함께 모은다. (예: 어떤 프로젝트는 "Epic", 다른 곳은 "에픽")
+  _tlTypeDiag = { global: [], perProject: {}, errors: [] };
   try {
-    const types = await jiraFetch('/rest/api/3/issuetype');
     const names = new Set();
-    (types || []).forEach(t => {
-      if (t.hierarchyLevel === 1 || /^(epic|에픽)$/i.test(t.name || '')) names.add(t.name);
+
+    try {
+      const types = await jiraFetch('/rest/api/3/issuetype');
+      (types || []).forEach(t => {
+        _tlTypeDiag.global.push(`${t.name}(h${t.hierarchyLevel ?? '?'})`);
+        if (t.hierarchyLevel === 1 || /^(epic|에픽)$/i.test(t.name || '')) names.add(t.name);
+      });
+    } catch (e) {
+      _tlTypeDiag.errors.push(`global: ${e.message}`);
+    }
+
+    const projects = await getAllProjects(false);
+    const results = await Promise.all(projects.map(async p => {
+      try {
+        const ts = await jiraFetch('/rest/api/3/issuetype/project', { projectId: p.id });
+        return { key: p.key, types: ts || [] };
+      } catch (e) {
+        return { key: p.key, types: [], error: e.message };
+      }
+    }));
+    results.forEach(r => {
+      if (r.error) { _tlTypeDiag.errors.push(`${r.key}: ${r.error}`); return; }
+      const epicish = r.types.filter(t => t.hierarchyLevel === 1 || /^(epic|에픽)$/i.test(t.name || ''));
+      _tlTypeDiag.perProject[r.key] = epicish.map(t => t.name);
+      epicish.forEach(t => names.add(t.name));
     });
+
     _tlEpicTypeNames = [...names];
   } catch (e) {
     console.warn('[timeline] issuetype discovery failed:', e.message);
@@ -6068,8 +6099,9 @@ function showTimelineDiag() {
   L.push('=== 타임라인 진단 ===');
   L.push('');
   L.push(`[1] 프로젝트 조회`);
-  L.push(`  접근 가능한 프로젝트: ${_allProjectKeys ? _allProjectKeys.length + '개' : '조회 안 함'}`);
-  if (_allProjectKeys?.length) L.push(`  키: ${_allProjectKeys.join(', ')}`);
+  const projKeys = (_allProjects || []).map(p => p.key);
+  L.push(`  접근 가능한 프로젝트: ${_allProjects ? projKeys.length + '개' : '조회 안 함'}`);
+  if (projKeys.length) L.push(`  키: ${projKeys.join(', ')}`);
   if (_projectFetchError) L.push(`  ⚠ 조회 오류: ${_projectFetchError}`);
   L.push('');
 
@@ -6077,9 +6109,20 @@ function showTimelineDiag() {
   if (_tlDiag) {
     L.push(`  시작일 필드: ${_tlDiag.startFields?.join(', ') || '없음'}`);
     L.push(`  종료일 필드: ${_tlDiag.endFields?.join(', ') || '(duedate 사용)'}`);
-    L.push(`  에픽 이슈타입: ${_tlDiag.epicTypes?.join(', ') || '없음'}`);
+    L.push(`  에픽 이슈타입(최종): ${_tlDiag.epicTypes?.join(', ') || '없음'}`);
   } else {
     L.push('  아직 로딩되지 않음');
+  }
+  if (_tlTypeDiag) {
+    L.push(`  전역 이슈타입 목록: ${_tlTypeDiag.global.join(', ') || '(조회 실패)'}`);
+    const pp = Object.entries(_tlTypeDiag.perProject);
+    if (pp.length) {
+      L.push(`  프로젝트별 에픽 타입:`);
+      pp.forEach(([k, v]) => L.push(`    ${k}: ${v.length ? v.join(', ') : '(없음)'}`));
+    }
+    if (_tlTypeDiag.errors.length) {
+      L.push(`  ⚠ 타입 조회 오류: ${_tlTypeDiag.errors.join(' | ')}`);
+    }
   }
   L.push('');
 
@@ -6104,8 +6147,8 @@ function showTimelineDiag() {
   const entries = Object.entries(byProj).sort((a, b) => a[0].localeCompare(b[0]));
   if (!entries.length) L.push('  (없음)');
   entries.forEach(([k, v]) => L.push(`  ${k}: ${v}개`));
-  if (_allProjectKeys?.length) {
-    const missing = _allProjectKeys.filter(k => !byProj[k]);
+  if (projKeys.length) {
+    const missing = projKeys.filter(k => !byProj[k]);
     if (missing.length) {
       L.push('');
       L.push(`  에픽이 0개인 프로젝트 (${missing.length}): ${missing.join(', ')}`);
