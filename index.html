@@ -1231,6 +1231,51 @@
       font-size: 9px; padding: 1px 4px; min-width: 14px;
     }
 
+    /* ===== TIMELINE TAB ===== */
+    .timeline-mode-btn {
+      padding: 5px 12px; border:none; background:transparent; color:var(--text2);
+      font-size:12px; font-weight:600; cursor:pointer; border-radius:var(--radius-sm);
+      font-family:var(--font); transition:all var(--transition);
+    }
+    .timeline-mode-btn:hover { background:var(--surface); color:var(--text); }
+    .timeline-mode-btn.active { background:var(--primary); color:#fff; }
+    .tl-header-row { display:flex; position:sticky; top:0; z-index:10; background:var(--surface); border-bottom:2px solid var(--border); }
+    .tl-label-col { width:260px; flex-shrink:0; border-right:1px solid var(--border); background:var(--surface2); font-size:12px; font-weight:600; color:var(--text3); padding:10px 12px; display:flex; align-items:center; position:sticky; left:0; z-index:5; }
+    .tl-time-cells { display:flex; flex:1; }
+    .tl-time-cell { flex:1; min-width:60px; padding:6px 4px; text-align:center; font-size:11px; color:var(--text3); border-right:1px solid var(--border); font-weight:500; }
+    .tl-time-cell.today { background:var(--primary-light); color:var(--primary); font-weight:700; }
+    .tl-time-cell.weekend { background:var(--surface2); }
+    .tl-project-group { border-bottom:1px solid var(--border); }
+    .tl-project-header { display:flex; background:var(--surface3); font-weight:700; font-size:12px; color:var(--text); position:sticky; left:0; }
+    .tl-project-header .tl-label-col { background:var(--surface3); color:var(--text); font-weight:700; font-size:12px; }
+    .tl-row { display:flex; min-height:34px; border-bottom:1px solid var(--border); position:relative; }
+    .tl-row:hover { background:var(--surface2); }
+    .tl-row:hover .tl-label-col { background:var(--surface2); }
+    .tl-row .tl-label-col { font-weight:500; color:var(--text); background:var(--surface); font-size:12px; cursor:pointer; }
+    .tl-row .tl-label-col:hover { color:var(--primary); }
+    .tl-track { flex:1; position:relative; display:flex; }
+    .tl-track-cell { flex:1; min-width:60px; border-right:1px solid var(--border); }
+    .tl-track-cell.today { background:rgba(0,82,204,0.04); }
+    .tl-track-cell.weekend { background:var(--surface2); }
+    .tl-bar {
+      position:absolute; top:50%; transform:translateY(-50%); height:22px;
+      border-radius:4px; display:flex; align-items:center; padding:0 8px;
+      font-size:11px; font-weight:600; color:#fff; cursor:pointer;
+      overflow:hidden; white-space:nowrap; text-overflow:ellipsis;
+      box-shadow:0 1px 2px rgba(0,0,0,0.1);
+      transition:all 0.15s; z-index:2;
+    }
+    .tl-bar:hover { height:26px; z-index:3; box-shadow:0 2px 6px rgba(0,0,0,0.2); }
+    .tl-bar.done { opacity:0.6; }
+    .tl-bar-pct { position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,0.3); border-radius:4px 0 0 4px; pointer-events:none; }
+    .tl-today-line { position:absolute; top:0; bottom:0; width:2px; background:var(--danger); z-index:4; pointer-events:none; }
+    .tl-empty { padding:40px; text-align:center; color:var(--text3); font-size:13px; }
+    @media (max-width: 768px) {
+      .tl-label-col { width:140px; padding:8px; font-size:11px; }
+      .tl-time-cell { min-width:50px; font-size:10px; }
+      .tl-track-cell { min-width:50px; }
+    }
+
     /* ===== PURCHASE TAB GRID ===== */
     .purchase-row-3 { grid-template-columns: 1fr 1fr 1fr; }
     .purchase-row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
@@ -1758,6 +1803,10 @@
       <button class="nav-tab" data-tab="purchase" onclick="switchTab('purchase')">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
         <span>구매 현황</span>
+      </button>
+      <button class="nav-tab" data-tab="timeline" onclick="switchTab('timeline')">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><circle cx="7" cy="12" r="2"/><circle cx="14" cy="12" r="2"/><rect x="4" y="4" width="16" height="4" rx="1"/><rect x="4" y="16" width="12" height="4" rx="1"/></svg>
+        <span>타임라인</span>
       </button>
     </nav>
 
@@ -2507,6 +2556,38 @@
       </div>
     </div>
 
+    <!-- ===== 타임라인 탭 ===== -->
+    <div class="tab-panel" id="tab-timeline">
+      <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+        <h2 style="font-size:18px;font-weight:700;color:var(--text);margin-right:8px;">프로젝트 타임라인 <span style="font-size:12px;font-weight:400;color:var(--text3);">전체 프로젝트 에픽 간트</span></h2>
+        <div style="display:flex;align-items:center;gap:6px;background:var(--surface2);padding:3px;border-radius:var(--radius-sm);">
+          <button class="timeline-mode-btn active" data-mode="week" onclick="setTimelineMode('week')">주</button>
+          <button class="timeline-mode-btn" data-mode="month" onclick="setTimelineMode('month')">월</button>
+        </div>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <button class="btn btn-ghost btn-sm" onclick="shiftTimeline(-1)">◀</button>
+          <span id="timeline-range-label" style="font-size:12px;color:var(--text2);font-weight:600;min-width:160px;text-align:center;"></span>
+          <button class="btn btn-ghost btn-sm" onclick="shiftTimeline(1)">▶</button>
+          <button class="btn btn-outline btn-sm" onclick="resetTimeline()">오늘</button>
+        </div>
+        <select id="timeline-project-filter" onchange="renderTimeline()" style="font-size:12px;padding:4px 8px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);">
+          <option value="">전체 프로젝트</option>
+        </select>
+        <label style="font-size:12px;color:var(--text2);display:flex;align-items:center;gap:4px;cursor:pointer;">
+          <input type="checkbox" id="timeline-hide-done" onchange="renderTimeline()"> 완료 숨김
+        </label>
+        <button class="btn btn-ghost btn-sm" onclick="loadTimelineEpics(true)" title="새로고침">↻</button>
+      </div>
+      <div class="card">
+        <div class="card-body" style="padding:0;overflow:hidden;">
+          <div id="timeline-container" style="position:relative;overflow-x:auto;overflow-y:auto;max-height:calc(100vh - 220px);">
+            <div class="timeline-loading" id="timeline-loading" style="padding:60px;text-align:center;color:var(--text3);">탭을 선택하면 에픽을 불러옵니다...</div>
+            <div id="timeline-grid" style="display:none;"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
   </main>
 </div>
 
@@ -2526,6 +2607,7 @@
     <button class="mobile-menu-tab" onclick="switchTab('executive');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>경영진</button>
     <button class="mobile-menu-tab" onclick="switchTab('weekly');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>주간 계획</button>
     <button class="mobile-menu-tab" onclick="switchTab('purchase');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>구매 현황</button>
+    <button class="mobile-menu-tab" onclick="switchTab('timeline');closeMobileMenu()"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><circle cx="7" cy="12" r="2"/><circle cx="14" cy="12" r="2"/><rect x="4" y="4" width="16" height="4" rx="1"/><rect x="4" y="16" width="12" height="4" rx="1"/></svg>타임라인</button>
   </div>
 </div>
 
@@ -3069,6 +3151,7 @@ function switchTab(tab, fromPopstate) {
     _purchaseProjectKeys = identifyPurchaseProjects(state.issues);
     renderPurchase(getGlobalFilteredIssues().filter(i => isPurchaseIssue(i)));
   }
+  if (tab === 'timeline') initTimelineTab();
   // Push to browser history (skip when called from popstate to avoid loop)
   if (!fromPopstate && history.state?.tab !== tab) {
     const url = new URL(window.location.href);
@@ -5710,6 +5793,254 @@ function filterPurchaseIssues() {
   renderPurchaseIssuesTable(_getPurchaseProjectFiltered());
 }
 
+// ===== TIMELINE TAB =====
+let _timelineEpics = null;
+let _timelineChildrenMap = {}; // epicKey -> {total, done}
+let _timelineMode = 'week'; // 'week' | 'month'
+let _timelineOffset = 0; // 0 = 현재 기준
+let _timelineLoaded = false;
+
+function initTimelineTab() {
+  if (!_timelineLoaded) {
+    loadTimelineEpics(false);
+  } else {
+    renderTimeline();
+  }
+}
+
+async function loadTimelineEpics(force) {
+  const loadingEl = document.getElementById('timeline-loading');
+  const gridEl = document.getElementById('timeline-grid');
+  if (!loadingEl || !gridEl) return;
+  if (force) { _timelineLoaded = false; _timelineEpics = null; }
+  gridEl.style.display = 'none';
+  loadingEl.style.display = 'block';
+  loadingEl.textContent = '에픽 로딩 중...';
+  try {
+    // Jira Cloud 기본 Start date = customfield_10015
+    const fields = 'summary,status,project,created,updated,duedate,resolutiondate,customfield_10015,issuetype';
+    const data = await fetchAllIssues('issuetype = Epic ORDER BY project, created DESC', fields.split(','));
+    _timelineEpics = data || [];
+    // children progress 집계 (state.issues 내 parent로 매칭)
+    _timelineChildrenMap = {};
+    for (const iss of state.issues) {
+      const parentKey = iss.fields?.parent?.key;
+      if (!parentKey) continue;
+      if (!_timelineChildrenMap[parentKey]) _timelineChildrenMap[parentKey] = { total:0, done:0 };
+      _timelineChildrenMap[parentKey].total++;
+      const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
+      if (cat === 'done') _timelineChildrenMap[parentKey].done++;
+    }
+    _timelineLoaded = true;
+    populateTimelineProjectFilter();
+    renderTimeline();
+  } catch (e) {
+    loadingEl.textContent = `에픽 로딩 실패: ${e.message}`;
+  }
+}
+
+function populateTimelineProjectFilter() {
+  const sel = document.getElementById('timeline-project-filter');
+  if (!sel || !_timelineEpics) return;
+  const projects = {};
+  _timelineEpics.forEach(e => {
+    const key = e.fields?.project?.key;
+    const name = e.fields?.project?.name;
+    if (key) projects[key] = name || key;
+  });
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">전체 프로젝트</option>' +
+    Object.entries(projects).sort((a,b)=>a[0].localeCompare(b[0]))
+      .map(([k,v]) => `<option value="${k}">${escHtml(k)} — ${escHtml(v)}</option>`).join('');
+  if (cur) sel.value = cur;
+}
+
+function setTimelineMode(mode) {
+  _timelineMode = mode;
+  _timelineOffset = 0;
+  document.querySelectorAll('.timeline-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  renderTimeline();
+}
+
+function shiftTimeline(dir) {
+  _timelineOffset += dir;
+  renderTimeline();
+}
+
+function resetTimeline() {
+  _timelineOffset = 0;
+  renderTimeline();
+}
+
+function getTimelineRange() {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let start, end, cells, cellLabel, cellUnit;
+  if (_timelineMode === 'week') {
+    // 12주 기본, 월요일 시작
+    const monday = new Date(today);
+    const dow = (monday.getDay() + 6) % 7;
+    monday.setDate(monday.getDate() - dow - 14); // 2주 전부터
+    monday.setDate(monday.getDate() + _timelineOffset * 7 * 12);
+    start = monday;
+    cells = [];
+    const nWeeks = 12;
+    for (let i = 0; i < nWeeks; i++) {
+      const d = new Date(monday);
+      d.setDate(monday.getDate() + i * 7);
+      const month = d.getMonth() + 1;
+      const weekOfMonth = Math.ceil(d.getDate() / 7);
+      cells.push({ start: new Date(d), end: new Date(d.getFullYear(), d.getMonth(), d.getDate() + 7), label: `${month}/${d.getDate()}` });
+    }
+    end = new Date(cells[cells.length - 1].end);
+    cellUnit = 7 * 86400000;
+  } else {
+    // 6개월
+    const base = new Date(today.getFullYear(), today.getMonth() + _timelineOffset * 6 - 1, 1);
+    cells = [];
+    for (let i = 0; i < 6; i++) {
+      const s = new Date(base.getFullYear(), base.getMonth() + i, 1);
+      const e = new Date(base.getFullYear(), base.getMonth() + i + 1, 1);
+      cells.push({ start: s, end: e, label: `${s.getFullYear()}/${s.getMonth()+1}` });
+    }
+    start = cells[0].start;
+    end = cells[cells.length - 1].end;
+    cellUnit = null;
+  }
+  return { start, end, cells };
+}
+
+function renderTimeline() {
+  if (!_timelineLoaded) return;
+  const loadingEl = document.getElementById('timeline-loading');
+  const gridEl = document.getElementById('timeline-grid');
+  if (!loadingEl || !gridEl) return;
+
+  const { start, end, cells } = getTimelineRange();
+
+  // 라벨 업데이트
+  const labelEl = document.getElementById('timeline-range-label');
+  if (labelEl) {
+    const fmt = d => `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+    labelEl.textContent = `${fmt(start)} ~ ${fmt(new Date(end.getTime() - 86400000))}`;
+  }
+
+  const projFilter = document.getElementById('timeline-project-filter')?.value || '';
+  const hideDone = document.getElementById('timeline-hide-done')?.checked;
+
+  // 에픽 필터 + 그룹핑
+  let epics = _timelineEpics.slice();
+  if (projFilter) epics = epics.filter(e => e.fields?.project?.key === projFilter);
+  if (hideDone) epics = epics.filter(e => statusCategory(e.fields?.status?.name||'', e.fields?.status?.statusCategory?.key) !== 'done');
+
+  // Jira의 start/end 기본 + 폴백
+  const epicInfo = epics.map(e => {
+    const startDateStr = e.fields?.customfield_10015 || null;
+    const dueStr = e.fields?.duedate || e.fields?.resolutiondate || null;
+    const createdStr = e.fields?.created;
+    let s = startDateStr ? new Date(startDateStr) : (createdStr ? new Date(createdStr) : null);
+    let d = dueStr ? new Date(dueStr) : null;
+    if (s && !d) d = new Date(s.getTime() + 7 * 86400000); // 종료 없으면 1주
+    if (!s && d) s = new Date(d.getTime() - 7 * 86400000);
+    return { epic: e, start: s, end: d };
+  }).filter(x => x.start && x.end);
+
+  // 현재 시야에 걸치는 것만
+  const visible = epicInfo.filter(x => x.end >= start && x.start <= end);
+
+  // 프로젝트별 그룹
+  const groups = {};
+  visible.forEach(x => {
+    const key = x.epic.fields?.project?.key || '?';
+    const name = x.epic.fields?.project?.name || key;
+    if (!groups[key]) groups[key] = { key, name, items: [] };
+    groups[key].items.push(x);
+  });
+
+  const groupArr = Object.values(groups).sort((a,b) => a.key.localeCompare(b.key));
+
+  if (!groupArr.length) {
+    loadingEl.style.display = 'block';
+    loadingEl.textContent = '해당 범위에 에픽이 없습니다.';
+    gridEl.style.display = 'none';
+    return;
+  }
+
+  loadingEl.style.display = 'none';
+  gridEl.style.display = 'block';
+
+  const totalMs = end.getTime() - start.getTime();
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  // 헤더
+  let html = `<div class="tl-header-row">
+    <div class="tl-label-col">프로젝트 / 에픽</div>
+    <div class="tl-time-cells">`;
+  cells.forEach(c => {
+    const isToday = today >= c.start && today < c.end;
+    const dow = c.start.getDay();
+    const weekend = (_timelineMode === 'week' && (dow === 0 || dow === 6));
+    html += `<div class="tl-time-cell${isToday ? ' today' : ''}${weekend ? ' weekend' : ''}">${c.label}</div>`;
+  });
+  html += `</div></div>`;
+
+  // today line position (percent across the time cells area)
+  let todayPct = null;
+  if (today >= start && today <= end) {
+    todayPct = ((today.getTime() - start.getTime()) / totalMs) * 100;
+  }
+
+  groupArr.forEach(g => {
+    html += `<div class="tl-project-group">
+      <div class="tl-project-header"><div class="tl-label-col">${escHtml(g.key)} — ${escHtml(g.name)} <span style="font-weight:400;color:var(--text3);margin-left:6px;">(${g.items.length})</span></div><div class="tl-track"></div></div>`;
+    g.items.sort((a,b) => a.start - b.start);
+    g.items.forEach(x => {
+      const e = x.epic;
+      const status = e.fields?.status?.name || '';
+      const cat = statusCategory(status, e.fields?.status?.statusCategory?.key);
+      const barColor = cat === 'done' ? 'var(--success)' : cat === 'inprogress' ? 'var(--primary)' : 'var(--purple)';
+      const barClass = cat === 'done' ? 'tl-bar done' : 'tl-bar';
+      // 진행률 (하위 작업 기반)
+      const prog = _timelineChildrenMap[e.key];
+      const pct = prog && prog.total > 0 ? Math.round(prog.done / prog.total * 100) : 0;
+
+      // bar 위치 계산 (뷰 밖은 clamp)
+      const bStart = Math.max(x.start.getTime(), start.getTime());
+      const bEnd = Math.min(x.end.getTime(), end.getTime());
+      const leftPct = ((bStart - start.getTime()) / totalMs) * 100;
+      const widthPct = Math.max(0.5, ((bEnd - bStart) / totalMs) * 100);
+      const fmt = d => `${d.getFullYear()}.${String(d.getMonth()+1).padStart(2,'0')}.${String(d.getDate()).padStart(2,'0')}`;
+      const tooltip = `${e.key} ${e.fields?.summary || ''}\n${fmt(x.start)} ~ ${fmt(x.end)}\n상태: ${status}${prog ? ` / 진행 ${pct}% (${prog.done}/${prog.total})` : ''}`;
+
+      html += `<div class="tl-row">
+        <div class="tl-label-col" title="${escHtml(e.key)} — ${escHtml(e.fields?.summary||'')}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}', '_blank')">
+          <span style="color:${barColor};font-weight:700;font-size:11px;margin-right:6px;">${escHtml(e.key)}</span>
+          <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(e.fields?.summary||'')}</span>
+        </div>
+        <div class="tl-track">`;
+      cells.forEach(c => {
+        const isToday = today >= c.start && today < c.end;
+        const dow = c.start.getDay();
+        const weekend = (_timelineMode === 'week' && (dow === 0 || dow === 6));
+        html += `<div class="tl-track-cell${isToday ? ' today' : ''}${weekend ? ' weekend' : ''}"></div>`;
+      });
+      html += `<div class="${barClass}" style="left:${leftPct}%;width:${widthPct}%;background:${barColor};" title="${escHtml(tooltip)}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}', '_blank')">`;
+      if (pct > 0) html += `<div class="tl-bar-pct" style="width:${pct}%;"></div>`;
+      html += `<span style="position:relative;z-index:1;">${escHtml(e.fields?.summary||e.key).slice(0, 40)}${pct > 0 ? ` · ${pct}%` : ''}</span>`;
+      html += `</div>`;
+      if (todayPct !== null) {
+        // today line 각 row에도
+      }
+      html += `</div></div>`;
+    });
+  });
+
+  gridEl.innerHTML = html;
+
+  // today 라인: 전체 그리드 위에 한 번 그리기 (optional, already shown via cell background)
+}
+
 // ===== STALE ISSUES =====
 function renderStaleIssues(issues) {
   const now = new Date();
@@ -6595,6 +6926,9 @@ function escHtml(str) {
     </button>
     <button class="mobile-bottom-tab" id="btn-bottom-purchase" onclick="switchTab('purchase')">
       <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>구매 현황
+    </button>
+    <button class="mobile-bottom-tab" id="btn-bottom-timeline" onclick="switchTab('timeline')">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><circle cx="7" cy="12" r="2"/><circle cx="14" cy="12" r="2"/><rect x="4" y="4" width="16" height="4" rx="1"/><rect x="4" y="16" width="12" height="4" rx="1"/></svg>타임라인
     </button>
   </div>
 </nav>
