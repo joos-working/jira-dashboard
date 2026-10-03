@@ -1291,7 +1291,7 @@
       width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
       background:var(--surface); border-right:1px solid var(--border);
       display:flex; align-items:flex-end; padding:0 16px 9px;
-      font-size:11px; font-weight:600; color:var(--text4);
+      font-size:11px; font-weight:700; color:var(--text2);
       letter-spacing:.02em;
     }
     .tl-head-scale { position:relative; }
@@ -1299,17 +1299,17 @@
     .tl-scale-minor { display:flex; height:24px; }
     .tl-major-cell {
       flex:0 0 auto; display:flex; align-items:center; padding-left:10px;
-      font-size:11px; font-weight:600; color:var(--text2);
+      font-size:11.5px; font-weight:700; color:var(--text);
       border-left:1px solid var(--tl-grid-strong);
       white-space:nowrap; overflow:hidden;
     }
     .tl-minor-cell {
       flex:0 0 auto; display:flex; align-items:center; justify-content:center;
-      font-size:10px; color:var(--text4);
+      font-size:10.5px; font-weight:600; color:var(--text3);
       border-left:1px solid var(--tl-grid);
       white-space:nowrap; overflow:hidden;
     }
-    .tl-minor-cell.now { color:var(--primary); font-weight:700; }
+    .tl-minor-cell.now { color:var(--primary); font-weight:800; }
 
     /* body — 프로젝트마다 고유 색을 아주 옅게 깔아 띠로 구분한다.
        sticky 라벨 열은 반투명이면 막대가 비쳐 보이므로 surface 위에 틴트를 올려 불투명하게 합성한다. */
@@ -1333,14 +1333,14 @@
       width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
       border-right:1px solid var(--border);
       display:flex; align-items:center; gap:8px; padding:9px 16px;
-      font-size:12px; font-weight:600; color:var(--text);
+      font-size:12.5px; font-weight:700; color:var(--text);
     }
     .tl-group-dot { width:8px; height:8px; border-radius:2px; flex-shrink:0; }
     .tl-group-head:hover { filter:brightness(0.97); }
     [data-theme="dark"] .tl-group-head:hover { filter:brightness(1.25); }
     .tl-group-count {
-      margin-left:auto; flex-shrink:0; font-size:10px; font-weight:600;
-      color:var(--text4); background:var(--surface3);
+      margin-left:auto; flex-shrink:0; font-size:10.5px; font-weight:700;
+      color:var(--text2); background:var(--surface3);
       padding:1px 7px; border-radius:var(--radius-full);
     }
     .tl-caret { font-size:9px; color:var(--text4); transition:transform 0.15s; display:inline-block; }
@@ -1356,10 +1356,10 @@
       width:var(--tl-label-w); flex:0 0 var(--tl-label-w);
       border-right:1px solid var(--border);
       display:flex; align-items:center; gap:7px; padding:0 16px 0 31px;
-      font-size:12px; color:var(--text2); cursor:pointer; overflow:hidden;
+      font-size:12px; font-weight:600; color:var(--text); cursor:pointer; overflow:hidden;
     }
     .tl-label:hover .tl-label-txt { color:var(--primary); }
-    .tl-label-key { font-size:10px; font-weight:600; flex-shrink:0; color:var(--text4); }
+    .tl-label-key { font-size:10.5px; font-weight:700; flex-shrink:0; }
     .tl-label-txt { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
     /* 트랙: 틴트 위에 세로 격자를 얹는다 (셀 폭은 --tl-cell 로 주입) */
     .tl-track, .tl-group-track {
@@ -1376,7 +1376,7 @@
     .tl-bar {
       position:absolute; top:50%; transform:translateY(-50%); height:22px;
       border-radius:6px; display:flex; align-items:center; padding:0 9px;
-      font-size:11px; font-weight:500; color:#fff; cursor:pointer;
+      font-size:11.5px; font-weight:700; color:#fff; cursor:pointer;
       overflow:hidden; white-space:nowrap;
       transition:box-shadow .15s, transform .15s; z-index:3;
     }
@@ -1384,7 +1384,7 @@
     /* 진행 완료 구간: 은은하게 밝혀 표시 (글자 대비를 해치지 않을 정도로만) */
     .tl-bar-fill { position:absolute; left:0; top:0; bottom:0; background:rgba(255,255,255,0.16); pointer-events:none; }
     .tl-bar-txt { position:relative; z-index:1; overflow:hidden; text-overflow:ellipsis; }
-    .tl-nobar { position:absolute; top:50%; transform:translateY(-50%); left:9px; font-size:10px; color:var(--text4); }
+    .tl-nobar { position:absolute; top:50%; transform:translateY(-50%); left:9px; font-size:10.5px; font-weight:600; color:var(--text3); }
 
     /* today marker spanning full canvas height */
     .tl-today { position:absolute; top:0; bottom:0; width:1px; background:var(--danger); opacity:.55; z-index:20; pointer-events:none; }
@@ -6630,7 +6630,7 @@ function renderTimeline() {
           <span class="tl-caret${collapsed ? ' collapsed' : ''}">▼</span>
           <span class="tl-group-dot" style="background:${accent};"></span>
           <span>${escHtml(g.key)}</span>
-          <span style="font-weight:400;color:var(--text4);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.name)}</span>
+          <span style="font-weight:500;color:var(--text2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${escHtml(g.name)}</span>
           <span class="tl-group-count">${count}</span>
         </div>
         <div class="tl-group-track" style="width:${totalPx}px;"></div>
@@ -6670,8 +6670,8 @@ function renderTimeline() {
         const e = x.epic;
         html += `<div class="tl-row">
           <div class="tl-label tl-tinted" title="${escHtml(e.key)} — ${escHtml(e.fields?.summary || '')}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}','_blank')">
-            <span class="tl-label-key" style="color:var(--text4);">${escHtml(e.key)}</span>
-            <span class="tl-label-txt" style="color:var(--text3);">${escHtml(e.fields?.summary || '')}</span>
+            <span class="tl-label-key" style="color:var(--text3);">${escHtml(e.key)}</span>
+            <span class="tl-label-txt" style="color:var(--text2);">${escHtml(e.fields?.summary || '')}</span>
           </div>
           <div class="tl-track" style="width:${totalPx}px;">
             <span class="tl-nobar" style="left:${Math.max(0, tlX(today) - 40)}px;">일정 미설정</span>
