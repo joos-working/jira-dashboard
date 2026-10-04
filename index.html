@@ -6000,6 +6000,7 @@ let _tlCollapsed = new Set();       // 접힌 프로젝트 키
 let _tlCells = [];                  // [{start,end,label,major}]
 let _tlCellPx = 46;
 let _tlDidInitialScroll = false;
+let _tlUserPickedZoom = false;      // 줌을 직접 고르면 자동 선택을 끈다
 let _tlStartFieldIds = null;        // 런타임 탐색된 시작일 후보 필드 id
 let _tlEndFieldIds = null;          // 런타임 탐색된 종료일 후보 필드 id
 let _tlEpicTypeNames = null;        // 에픽 계층 이슈타입 이름들
@@ -6130,22 +6131,30 @@ async function loadTimelineEpics(force) {
       jql,
     };
     console.info('[timeline] meta', _tlDiag);
-    // children progress 집계 (state.issues 내 parent로 매칭)
-    _timelineChildrenMap = {};
-    for (const iss of state.issues) {
-      const parentKey = iss.fields?.parent?.key;
-      if (!parentKey) continue;
-      if (!_timelineChildrenMap[parentKey]) _timelineChildrenMap[parentKey] = { total:0, done:0 };
-      _timelineChildrenMap[parentKey].total++;
-      const cat = statusCategory(iss.fields?.status?.name||'', iss.fields?.status?.statusCategory?.key);
-      if (cat === 'done') _timelineChildrenMap[parentKey].done++;
-    }
     _timelineLoaded = true;
     populateTimelineProjectFilter();
-    autoPickTimelineZoom();
+    // 사용자가 줌을 직접 고른 뒤에는 자동 선택이 덮어쓰지 않는다
+    if (!_tlUserPickedZoom) autoPickTimelineZoom();
     renderTimeline();
   } catch (e) {
     loadingEl.textContent = `에픽 로딩 실패: ${e.message}`;
+  }
+}
+
+/**
+ * 에픽별 하위 작업 진행률을 state.issues 에서 다시 집계한다.
+ * 에픽 로드 시점에 한 번만 만들면 대시보드가 자동 갱신된 뒤에도
+ * 막대의 % 가 옛 값으로 남는다.
+ */
+function rebuildTimelineProgress() {
+  _timelineChildrenMap = {};
+  for (const iss of state.issues) {
+    const parentKey = iss.fields?.parent?.key;
+    if (!parentKey) continue;
+    if (!_timelineChildrenMap[parentKey]) _timelineChildrenMap[parentKey] = { total: 0, done: 0 };
+    _timelineChildrenMap[parentKey].total++;
+    const cat = statusCategory(iss.fields?.status?.name || '', iss.fields?.status?.statusCategory?.key);
+    if (cat === 'done') _timelineChildrenMap[parentKey].done++;
   }
 }
 
@@ -6281,6 +6290,7 @@ function populateTimelineProjectFilter() {
 
 function setTimelineMode(mode) {
   if (_timelineMode === mode) return;
+  _tlUserPickedZoom = true;
   _timelineMode = mode;
   document.querySelectorAll('.timeline-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
   const anchor = tlCenterDate() || new Date();
@@ -6491,13 +6501,32 @@ function panTimeline(dir) {
   tlAnimateScroll(c, c.scrollLeft + dir * step);
 }
 
-/** 가로 스크롤 시 날짜 입력칸이 보이는 구간을 따라가도록 (1회만 바인딩) */
+/**
+ * 왼쪽으로 벗어난 막대의 라벨을 보이는 구간으로 당겨 둔다.
+ * 기간이 긴 에픽은 막대가 화면을 가득 채우는데 라벨은 막대 시작점에 있어
+ * 스크롤하면 이름이 보이지 않는다.
+ */
+function tlSyncBarLabels() {
+  const c = document.getElementById('timeline-container');
+  if (!c) return;
+  const viewL = c.scrollLeft;
+  const viewR = viewL + c.clientWidth - tlLabelWidth();
+  c.querySelectorAll('.tl-bar').forEach(b => {
+    const l = +b.dataset.l, w = +b.dataset.w;
+    if (!w || l > viewR || l + w < viewL) return;      // 화면 밖이면 건드리지 않음
+    const off = l < viewL ? Math.min(viewL - l, Math.max(0, w - 72)) : 0;
+    b.style.paddingLeft = (9 + off) + 'px';
+  });
+}
+
+/** 가로 스크롤 시 날짜 입력칸과 막대 라벨을 보이는 구간에 맞춘다 (1회만 바인딩) */
 function tlBindScrollSync() {
   const c = document.getElementById('timeline-container');
   if (!c || c._tlSyncBound) return;
   c._tlSyncBound = true;
   let t = null;
   c.addEventListener('scroll', () => {
+    tlSyncBarLabels();
     if (t) clearTimeout(t);
     t = setTimeout(() => tlSyncDateInput(tlCenterDate()), 120);
   }, { passive: true });
@@ -6508,6 +6537,8 @@ function renderTimeline() {
   const loadingEl = document.getElementById('timeline-loading');
   const gridEl = document.getElementById('timeline-grid');
   if (!loadingEl || !gridEl) return;
+
+  rebuildTimelineProgress();
 
   const projFilter = document.getElementById('timeline-project-filter')?.value || '';
   const hideDone = document.getElementById('timeline-hide-done')?.checked;
@@ -6658,7 +6689,7 @@ function renderTimeline() {
             <span class="tl-label-txt">${escHtml(e.fields?.summary || '')}</span>
           </div>
           <div class="tl-track" style="width:${totalPx}px;">
-            <div class="tl-bar${cat === 'done' ? ' done' : ''}" style="left:${x0}px;width:${w}px;background:${color};${dash}" title="${escHtml(tip)}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}','_blank')">
+            <div class="tl-bar${cat === 'done' ? ' done' : ''}" data-l="${x0}" data-w="${w}" style="left:${x0}px;width:${w}px;background:${color};${dash}" title="${escHtml(tip)}" onclick="window.open('${JIRA_BROWSE}/browse/${e.key}','_blank')">
               ${pct > 0 ? `<div class="tl-bar-fill" style="width:${pct}%;"></div>` : ''}
               <span class="tl-bar-txt">${escHtml(e.fields?.summary || e.key)}${pct > 0 ? ` · ${pct}%` : ''}</span>
             </div>
@@ -6700,8 +6731,11 @@ function renderTimeline() {
       if (!el) return;
       if (el.clientWidth === 0 && tries > 0) { setTimeout(() => settle(tries - 1), 60); return; }
       el.scrollLeft = Math.max(0, tlX(today) + tlLabelWidth() - el.clientWidth / 2);
+      tlSyncBarLabels();
     };
     setTimeout(() => settle(12), 0);
+  } else {
+    tlSyncBarLabels();
   }
 }
 
